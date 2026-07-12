@@ -1,0 +1,5 @@
+# Review gate marker — one per worktree, written by scripts/review-ok.sh
+.review-passed
+
+# QA evidence (screenshots) captured by the /adversarial-qa skill
+.qa-evidence/

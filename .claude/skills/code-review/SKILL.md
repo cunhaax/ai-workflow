@@ -1,0 +1,330 @@
+---
+name: code-review
+description: >
+  Code review checklist, coding standards, and this repo's inlined
+  project-specific rules. Invoked as /code-review for an ad-hoc review, or
+  applied by the code-reviewer sub-agent in the /feature workflow.
+---
+
+# /code-review — Code Review
+
+Apply this skill to review code changes against project standards.
+
+---
+
+## Stance
+
+Treat the implementation as a hypothesis under attack. Your default
+assumption is that something is wrong; your job is to find what.
+
+Confirmation bias is the dominant failure mode of AI code review — guard
+against it by actively trying to disconfirm the implementation rather than
+verifying that it looks reasonable. If you cannot find a fault after
+genuine effort, that is itself a finding worth stating explicitly (see the
+Output Format section).
+
+---
+
+## Before Reviewing
+
+### Architecture Decision Records
+
+Check if a `docs/adr/` directory exists. If it does, list the ADRs you read by
+number in the review output. If none seemed relevant
+to the diff, say so explicitly — silence is not acceptable, since it is
+indistinguishable from skipping the step.
+
+If the diff contradicts an ADR, quote the contradicting ADR clause and the
+offending diff line, and flag it as `FAIL`.
+
+### Implementation Plan
+
+If plan text was provided (inline in the prompt, or via a file path), use it
+before reviewing. Use it as follows:
+- **Requirements** section: the source of truth for what should have been built —
+  used to verify Plan Compliance and that all specified edge cases are handled.
+- **Approach** section: the agreed implementation strategy — used to verify the
+  code follows the intended design rather than an ad-hoc alternative.
+- **Edge Cases** section: the enumerated scenarios that must be handled —
+  cross-reference against the code and tests.
+- **Test Strategy** section: the agreed test coverage — cross-reference against
+  the actual tests written.
+- **Files** section: the planned file manifest — cross-check against the diff. A
+  file in the diff that is not listed here (or listed but left untouched) is an
+  undiscussed change; flag the mismatch and judge whether it is in scope.
+- **Out of Scope** section: the explicit boundary — do NOT flag as missing
+  anything listed here, and DO flag as scope creep any code that strays into it.
+
+If no plan was provided, skip the Plan Compliance checklist section entirely.
+
+When flagging a plan compliance issue, **quote the exact line from the plan**
+that the diff violates, alongside the diff line that violates it. Paraphrasing
+the plan is not enough — the developer needs to see the literal mismatch.
+
+### Reading Beyond the Diff
+
+You may read any file in the repository. The diff is the unit under review,
+but surrounding code, tests, configuration, and migrations are fair context —
+and often necessary to judge whether the change is correct. Some
+project-specific rules below may explicitly require it (cross-referencing a
+sibling file, checking that a registration or annotation is present).
+
+---
+
+## Coding Standards
+
+### Single Responsibility
+
+**Functions:** A function should do one thing. If a function contains a
+conditional branch that handles a fundamentally different concern (e.g. an
+admin path bolted onto a regular-user path, or a parsing path inside a
+persistence call), flag it. Severity:
+- New function introduced with mixed concerns → `FAIL`
+- Existing function extended with a clearly unrelated branch → `FAIL`
+- Borderline case where extraction would hurt readability → `NEEDS_DECISION`
+
+**Classes:** A class has too many responsibilities if you can identify more than
+one independent reason it would need to change.
+
+When reviewing new code that touches an existing class:
+- If the new code **introduces** a class with too many responsibilities → `FAIL`
+- If the new code **significantly worsens** an existing violation (e.g., adding
+  several more methods to an already oversized class) → `FAIL`
+- If the new code **extends** an already-oversized class without making it
+  meaningfully worse → `NEEDS_DECISION`: flag the pre-existing debt and let the
+  developer decide whether to refactor now, file tech debt, or accept it
+
+### Error Handling
+- In business logic, never use generic catch-all error handling. At process
+  boundaries (top-level controllers, scheduled jobs, async task entry points)
+  a catch-all that logs and translates to a domain error is acceptable —
+  judge by *where* the catch lives, not just *what* it catches.
+- Every error must include context about what operation failed and why.
+- Errors in critical paths must be logged with structured fields.
+
+### Naming
+- Functions should describe what they do: `calculateShippingCost`, not `calc` or
+  `process`.
+- Boolean variables/functions should read as questions: `isValid`, `hasPermission`.
+
+### Tests
+
+You are responsible for both **test quality** (structure, naming, pattern) AND
+**test completeness** (coverage of the spec AND beyond). The `/adversarial-qa` skill is
+purely exploratory/adversarial in a running browser — it does not verify that
+the committed tests cover the plan, so that responsibility lives here.
+
+**Quality:**
+- Every public function with non-trivial behaviour must have tests covering
+  the happy path AND edge cases. Trivial delegators, generated code, plain
+  data classes, and pure getters are exempt — but if you exempt a function,
+  state which one and why in the review.
+- Test names must describe the scenario: `test_order_fails_when_inventory_insufficient`,
+  not `test_order_2`.
+- Use the Given-When-Then pattern.
+- Never test implementation details — test behaviour.
+
+**Completeness — against the plan:**
+- Every Requirement and every enumerated Edge Case in the plan must have at
+  least one test that would fail if the requirement were broken.
+- Every branch introduced in the implementation (error paths, validation
+  failures, authorization denials, empty/null handling) must be exercised.
+
+**Completeness — beyond the plan (critical analysis):**
+
+Read the implementation diff and actively try to break it. You are doing
+this through static reading, not by running the code — for each branch in
+the diff, mentally construct an input or sequence of events that would
+exercise it, then ask whether a test covers that input. The plan is a
+starting point, not a ceiling. For each category below, ask "given the
+actual code in the diff, what would I do to make this fail?":
+
+- **Implicit branches**: `if`, `when`/`switch`, `?:`, early returns, exception
+  handlers introduced by the implementation but not called out in the plan.
+  Each one is a behaviour worth testing.
+- **Boundary values**: 0, 1, max, min, off-by-one, empty collections,
+  single-element collections, exactly-at-limit vs just-over-limit. Plans
+  rarely enumerate these exhaustively.
+- **Input shapes the plan didn't mention**: null, blank strings, whitespace,
+  unicode, very long strings, leading/trailing spaces, mixed case, duplicates,
+  unsorted input.
+- **State and concurrency**: stale reads, double submits, retries on the same
+  resource, partial writes, what happens if the operation is invoked twice.
+- **External dependency failure modes**: timeouts, 4xx vs 5xx responses,
+  malformed payloads, slow responses — wherever the code calls out.
+- **Security-adjacent gaps**: authz checks on every entry point, not just the
+  one the plan mentioned; injection-shaped inputs on any field that hits a
+  query, template, or shell.
+
+If you find a gap of this kind, flag it as `FAIL` (or `NEEDS_DECISION` if it is
+genuinely ambiguous whether the case is in scope) with a concrete description
+of the missing test, not just "more tests needed".
+
+---
+
+## Project-Specific Rules ([PROJECT_NAME])
+
+<!-- Replace with YOUR project's hard constraints. These extend the base
+     standards above; violations carry the same severity. One bullet per rule,
+     each stating the rule AND its severity (FAIL / NEEDS_DECISION). Add
+     subsections (Persistence, Security, Privacy, View Layer, …) as the list
+     grows. This section is the one that accretes over time: every time an agent
+     produces bad output the base standards didn't catch, add a rule here (or,
+     better, encode it as a build-enforced test — see below).
+
+     Guidance for good rules:
+     - Name the exact symbol/file/pattern, so the reviewer can grep for it.
+     - State the failure mode, not just the prohibition ("otherwise X is
+       silently wrong").
+     - Scope to production code vs test code if the two differ.
+     - Say whether the rule is diff-scoped or repo-wide.
+
+     BUILD-ENFORCED RULES: when a rule is mechanically checkable, prefer
+     encoding it as an architecture/fitness test over prose here — tests don't
+     drift and the human never re-verifies them. For any rule that IS backed by
+     a test, the reviewer's job is only to check the diff does not WEAKEN the
+     enforcement (deleting/disabling the test, adding an unexplained exemption,
+     or restructuring code out of the test's scan scope). A weakened enforcement
+     is FAIL. List which rules are build-enforced so the reviewer doesn't
+     re-derive them by hand. -->
+
+- [TODO: your rule 1 — the constraint, the symbol/file it applies to, and its severity]
+- [TODO: your rule 2]
+
+---
+
+## Review Checklist
+
+Review every change against this checklist. For each item, state one of:
+
+- `PASS` — the rule applies to this diff and the diff complies. Cite specific
+  diff lines that demonstrate compliance for non-trivial items (test
+  coverage, edge cases, error paths, security-adjacent code). Routine
+  quality items (naming, readability) need only a brief explanation.
+- `PASS (N/A)` — the rule does not apply to this diff (e.g., security checks
+  on a CSS-only change). Briefly say why.
+- `FAIL` — rule violated, and you can cite the line and the rule that breaks.
+  Reserve `FAIL` for findings you are confident in. If unsure, prefer
+  `NEEDS_DECISION` or **Open Question** — false `FAIL`s burn developer
+  trust faster than missed issues.
+- `NEEDS_DECISION` — the correct approach is ambiguous and requires
+  developer input. State the options.
+- **Open Question** — concerns where the diff *might* be wrong but you
+  cannot verify from source alone (depends on runtime config, prod data
+  shape, deployment topology, external service behaviour). State the
+  question and what evidence would resolve it. Use this freely — it is
+  better to surface a hypothesis the developer can dismiss in 10 seconds
+  than to stay silent on a real risk.
+
+### Architecture
+
+_If a layer/architecture fitness test enforces boundaries (see the layer rule in
+`docs/AI-workflow.md`), do NOT re-derive them by hand — verify only that the diff
+does not **weaken** it: deleting or disabling the test, widening a package glob,
+adding an unexplained exemption, or moving code out of the scanned layer. A
+weakened enforcement is `FAIL`._
+
+- [ ] Changes respect service boundaries and existing ADRs
+- [ ] No business logic in infrastructure or API layers
+- [ ] No new dependencies introduced without justification
+
+### Plan Compliance _(skip if no plan was provided)_
+- [ ] Implementation follows the Approach described in the plan — no undiscussed
+  design alternatives introduced
+- [ ] All steps in the plan are accounted for in the changes
+- [ ] All requirements from the Requirements section are addressed
+- [ ] Files touched in the diff match the plan's Files manifest — no undiscussed
+  files (a file in the diff but not in the manifest is an undiscussed change)
+- [ ] No code introduced inside the plan's Out of Scope boundary
+
+### Code Quality
+- [ ] Every function has a single responsibility
+- [ ] Classes have a single reason to change — new classes assessed per the Single
+  Responsibility standard above; existing classes flagged if the change worsens
+  the violation
+- [ ] Error handling is specific, not generic catch-all
+- [ ] Code is readable — a new team member could follow the logic without extra context
+- [ ] No implicit assumptions that should be explicit (add comments or types)
+
+### Edge Cases
+- [ ] All edge cases identified in the plan are explicitly handled _(if plan provided)_
+- [ ] Null/empty/zero/negative inputs are handled where applicable
+- [ ] Concurrent access scenarios are considered where applicable
+- [ ] Failure modes of external dependencies are handled (timeouts, retries, fallbacks)
+
+### Tests
+- [ ] Tests cover the happy path
+- [ ] Tests cover every Requirement and Edge Case identified in the plan _(if plan provided)_
+- [ ] Every branch introduced by the implementation (error paths, validation
+  failures, authorization denials, null/empty handling) is exercised
+- [ ] Boundary values are tested where applicable (0, 1, max, min,
+  off-by-one, empty/single-element collections, exactly-at-limit vs
+  just-over-limit)
+- [ ] Implicit input shapes are covered where applicable (null, blank,
+  whitespace, unicode, very long, duplicates, mixed case)
+- [ ] State/concurrency scenarios are covered where applicable (double
+  submit, retry, partial writes, idempotency)
+- [ ] External dependency failure modes are covered where the code calls
+  out (timeouts, 4xx/5xx, malformed responses)
+- [ ] Critical analysis performed: list any plausible scenarios the plan did
+  not enumerate that should also be tested, and flag missing ones as `FAIL`
+- [ ] Test names describe the scenario being tested
+- [ ] Tests follow the Given-When-Then pattern
+- [ ] No tests that only verify implementation details
+
+### Project-Specific ([PROJECT_NAME])
+<!-- One checklist item per rule in the "Project-Specific Rules" section above.
+     Keep the two in sync. Tag items "(if applicable)" when they only apply to
+     certain diffs. Delete these placeholders once you add your own. -->
+- [ ] [TODO: checklist item mirroring project rule 1]
+- [ ] [TODO: checklist item mirroring project rule 2]
+
+### Security (general)
+- [ ] No secrets or credentials in code
+- [ ] Input validation on all external inputs
+- [ ] Authorization checks where required
+
+---
+
+## Output Format
+
+```
+### Review Summary
+[1-2 sentence overall assessment]
+
+### PASS
+- [item]: [explanation; for non-trivial items, cite diff lines like
+  src/foo/Bar.ext:42-58]
+
+### PASS (N/A)
+- [item]: [why this category does not apply to this diff]
+
+### FAIL
+- [item]: [what's wrong, suggested fix, diff line reference]
+
+### NEEDS_DECISION
+- [item]: [the ambiguity and the options available]
+
+### Open Questions
+- [hypothesis]: [the question you cannot answer from source alone, and the
+  evidence that would resolve it — runtime config, prod data, deployment
+  topology, external service behaviour]
+
+### ADRs Reviewed
+[List ADR numbers you read, or state "none relevant" with one sentence why.]
+
+### Disconfirmation Attempt
+[REQUIRED if FAIL and NEEDS_DECISION are both empty]
+Describe specifically what you tried in order to find issues — which
+inputs you considered, which failure modes you probed, which edge
+cases you inspected, which diff sections you examined. A bare
+"looks good" or "no issues found" is not acceptable. State the methods
+you applied (pre-mortem, boundary probe, dependency-failure probe,
+adversarial input probe) and the specific outcomes.
+```
+
+If you find any `NEEDS_DECISION` items or **Open Questions**, clearly label
+them so the orchestrating agent can surface them to the developer. Do not
+make these decisions yourself.
+
+Do NOT modify any code. Output only the review.
