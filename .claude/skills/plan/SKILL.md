@@ -27,6 +27,24 @@ Before planning, collect all relevant context:
 
 ## Planning Rules
 
+- **The Approval Summary is what the developer approves.** It is read on a
+  phone, so constrain the units, not the total: goal in 1–2 sentences, one
+  line per acceptance criterion, one line per key decision, one line per
+  NEEDS_DECISION. There is no hard line cap — the per-item limits keep it
+  short. If the acceptance criteria grow past ~10, treat that as a signal
+  the task should be split into smaller slices, not that the summary should
+  be longer. Each acceptance criterion must be
+  user-visible behaviour, not implementation ("a visitor submitting an
+  invalid form sees the error next to the field", not "add a guard clause
+  in the controller"). Every `AC-n` MUST map to at least one Test Strategy
+  entry tagged `[AC-n]`; a criterion with no test is an incomplete plan.
+  Everything below the summary is the detailed contract the summary stands
+  on — the two must never disagree.
+- **The Contract section is written before Approach** and is what the
+  end-to-end tests are coded against. For full-stack slices it pins routes,
+  fields/params, response shapes, error rendering, and schema changes.
+  Deviating from an approved Contract during implementation is a material
+  change requiring re-approval. Mark it "None" for pure backend/infra work.
 - **Lead with intent.** The **Context & Decisions** section states, in a few
   sentences, what problem this solves and the shape of the solution — then lists
   every decision taken during planning and every alternative considered and
@@ -84,6 +102,24 @@ Before planning, collect all relevant context:
 ```markdown
 # Implementation Plan: [Feature Name]
 
+## Approval Summary
+**Goal:** [1–2 sentences — what the user gains]
+
+**Acceptance Criteria** — each user-visible and testable:
+- AC-1: [one line: given/when/then]
+- AC-2: [...]
+
+**Key decisions:** [2–3 bullets, one line each]
+
+**Risk flags:** security surface: [yes/no] · new persisted field: [yes/no] ·
+sensitive-category data: [yes/no] · schema migration: [yes/no] ·
+new dependency: [yes/no] · new/changed route: [yes/no]
+
+**NEEDS_DECISION:** [one line each, or "None"]
+
+*(The summary above is what the developer approves; everything below is the
+detailed contract it stands on.)*
+
 ## Source
 [User prompt summary / external doc title + URL]
 
@@ -95,6 +131,14 @@ with its reason.]
 ## Requirements
 [Complete feature requirements — quoted from the source or reproduced verbatim
 from the prompt. Do not summarize.]
+
+## Contract  _(full-stack slices; "None" for pure backend/infra work)_
+- Routes: [METHOD /path — purpose, required authority]
+- Form fields / params: [name, type, validation rule]
+- Response shape: [full page / fragment + target / redirect (per the
+  project's redirect convention, if any)]
+- Error rendering: [where errors surface, message keys]
+- Schema: [tables/columns added or changed]
 
 ## Approach
 [Step-by-step implementation strategy. Point at existing patterns to follow by
@@ -113,7 +157,9 @@ name where one applies.]
 1. [Edge case]: [handling strategy]
 
 ## Test Strategy
-- [Test]: [what it verifies]
+- [AC-1] [test name]: [what it verifies]
+- [AC-2] [...]
+- [edge-N] [test name]: [what it verifies]
 
 ## Environment & Preconditions
 [Non-behavioural setup the implementer needs — e.g. "migration edited in place,

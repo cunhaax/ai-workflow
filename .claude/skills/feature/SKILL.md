@@ -57,10 +57,16 @@ infer "trivial" from your own read of the plan — the user has to ask.
 #### Step 1c — Present plan and critique for approval
 
 Present BOTH the plan and the critique to the user for approval, using
-whatever mechanism the harness provides for exiting plan mode. Make
-clear which sections are the plan and which are the critique — do not
-interleave them. The user reads both together and decides whether to
-approve as-is, amend the plan based on critique findings, or request a
+whatever mechanism the harness provides for exiting plan mode.
+
+**Lead with the approval screen**: the plan's **Approval Summary** first,
+immediately followed by the critique's **Confidence** verdict and its top
+findings (any suggested amendments the user is likely to want). This is
+what the user reads on a phone. The full plan and the full critique follow
+below, clearly separated — make clear which sections are the plan and which
+are the critique; do not interleave them. The user reads the approval
+screen (and drills into the detail only where needed) and decides whether
+to approve as-is, amend the plan based on critique findings, or request a
 re-plan.
 
 Do not proceed until the plan is approved. On a substantive change (new
@@ -185,6 +191,11 @@ or a session transcript:
 
 - **Plan summary** — the requirements and approach in a few sentences, plus a
   link to the source spec if there was one.
+- **Acceptance criteria → test table** — one row per `AC-n` from the plan's
+  Approval Summary: the criterion, and the committed test(s) tagged `[AC-n]`
+  that prove it. This is the reviewer's traceability skim — a criterion
+  without a test row must not reach the PR (the code-reviewer enforces
+  this earlier).
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
   that was raised, and the decision the user made on each.
 - **QA outcome** — findings with their dispositions (fixed / deferred with

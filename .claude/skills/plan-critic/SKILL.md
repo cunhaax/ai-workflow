@@ -67,6 +67,20 @@ vision/strategy that the plan does not acknowledge.
 
 ---
 
+## Base Lenses (any project handling personal data)
+
+- **Personal-data leakage** — new data or rendering paths reaching public
+  surfaces, logs, analytics, or URLs. Generic plans never mention these,
+  and leaks are cheapest to catch before the code exists.
+
+<!-- When the product grows consent and retention/deletion flows, add
+     lenses for them here: consent lifecycle (not-given / withdrawn /
+     re-consent) and right to erasure (how new data dies: cascade, TTL, or
+     an explicit reason to retain). Until those flows exist as product
+     features, per-plan attention to them is noise. -->
+
+---
+
 ## Project-Specific Lenses
 
 <!-- Replace with YOUR product's high-risk areas — the places where generic

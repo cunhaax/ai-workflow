@@ -41,6 +41,13 @@ offending diff line, and flag it as `FAIL`.
 
 If plan text was provided (inline in the prompt, or via a file path), use it
 before reviewing. Use it as follows:
+- **Approval Summary / Acceptance Criteria**: the human-approved contract.
+  Verify every `AC-n` has a committed test (via the `[AC-n]` tags in Test
+  Strategy) that would fail if the criterion were broken — a criterion
+  without one is `FAIL`.
+- **Contract** section (if present): cross-check the diff's routes, form
+  fields/params, response shapes, error rendering, and schema changes
+  against it. An undiscussed deviation from the approved Contract is `FAIL`.
 - **Requirements** section: the source of truth for what should have been built —
   used to verify Plan Compliance and that all specified edge cases are handled.
 - **Approach** section: the agreed implementation strategy — used to verify the
@@ -160,6 +167,43 @@ If you find a gap of this kind, flag it as `FAIL` (or `NEEDS_DECISION` if it is
 genuinely ambiguous whether the case is in scope) with a concrete description
 of the missing test, not just "more tests needed".
 
+### Privacy and Data Protection
+
+Prefer build-enforced tests over prose here (same doctrine as the
+build-enforced guidance below). Any project holding personal data should
+implement these three fitness tests — until they exist, they are backlog
+items, not per-PR checklist prose:
+
+1. **Deletion by design** — every table with a user FK either cascades on
+   account deletion or appears in an explicit, commented allowlist.
+2. **Public-surface whitelist** — the model rendered on public/
+   unauthenticated surfaces is a distinct type whose fields are asserted
+   against a whitelist, so a sensitive field cannot be added silently. (If
+   public pages currently render from the full domain object, that
+   restructuring is the prerequisite — worth its own task.)
+3. **No personal data in logs** — log statements must not reference
+   sensitive/user-content field symbols or contact-detail fields.
+
+For any of these that IS implemented, the reviewer's only duty is the
+standard build-enforced check: the diff must not WEAKEN the enforcement
+(deleting or disabling the test, adding an unexplained allowlist entry,
+restructuring code out of the test's scan scope). A weakened enforcement
+is `FAIL`. For any not yet implemented, check the corresponding invariant
+by hand only on diffs that touch it (new user-FK tables; public-view
+rendering; new/changed log statements).
+
+Prose residue the tests cannot catch (diff-scoped, manual):
+
+- **Indirect serialization into logs** — logging rich objects (`toString()`
+  of an entity, dumped request params) that embed personal data. `FAIL`.
+- **Personal data in URLs** — emails, phone numbers, or values embedding
+  them in query params or path segments; URLs land in access logs and
+  browser history. `FAIL`.
+
+Consent, retention, and data-classification rules are deliberately NOT
+per-PR review items — they are product flows to be built as tasks and then
+protected by tests, not per-diff checklist prose.
+
 ---
 
 ## Project-Specific Rules ([PROJECT_NAME])
@@ -186,7 +230,20 @@ of the missing test, not just "more tests needed".
      enforcement (deleting/disabling the test, adding an unexplained exemption,
      or restructuring code out of the test's scan scope). A weakened enforcement
      is FAIL. List which rules are build-enforced so the reviewer doesn't
-     re-derive them by hand. -->
+     re-derive them by hand.
+
+     PRIVACY (fill per project — anchors the privacy fitness tests and the
+     log/URL residue rules above to this codebase):
+     - [SENSITIVE_CATEGORIES]: which data categories are sensitive here
+       (e.g. GDPR Art. 9: political views, religious views, orientation)
+       and the doc that defines them ([COMPLIANCE_DOC path]).
+     - [PUBLIC_SURFACES]: which views/endpoints are public/unauthenticated
+       (name the controller/view the whitelist test covers).
+     - [IDENTIFIER_EXEMPTIONS]: identifiers that are public by design and
+       exempt from the log/URL rules (e.g. public usernames).
+     - [PRIVACY_TESTS]: which of the three privacy fitness tests exist, and
+       where — so the reviewer knows which invariants are build-enforced
+       and which still need the by-hand check. -->
 
 - [TODO: your rule 1 — the constraint, the symbol/file it applies to, and its severity]
 - [TODO: your rule 2]
@@ -232,6 +289,10 @@ weakened enforcement is `FAIL`._
 - [ ] Implementation follows the Approach described in the plan — no undiscussed
   design alternatives introduced
 - [ ] All steps in the plan are accounted for in the changes
+- [ ] Every acceptance criterion (`AC-n`) in the Approval Summary maps to a
+  committed test tagged `[AC-n]` that would fail if the criterion were broken
+- [ ] Diff matches the plan's Contract section — routes, fields, response
+  shapes, error rendering, schema _(skip if Contract is "None")_
 - [ ] All requirements from the Requirements section are addressed
 - [ ] Files touched in the diff match the plan's Files manifest — no undiscussed
   files (a file in the diff but not in the manifest is an undiscussed change)
@@ -278,6 +339,16 @@ weakened enforcement is `FAIL`._
      certain diffs. Delete these placeholders once you add your own. -->
 - [ ] [TODO: checklist item mirroring project rule 1]
 - [ ] [TODO: checklist item mirroring project rule 2]
+
+### Privacy and Data Protection
+- [ ] Privacy fitness tests not weakened — no deleted/disabled test, no
+  unexplained allowlist entry, no code restructured out of scan scope
+- [ ] Invariants without a backing test yet, checked by hand where the diff
+  touches them: deletion-by-design (new user-FK tables), public-surface
+  whitelist (public-view rendering), no personal data in logs (new/changed
+  log statements)
+- [ ] No indirect serialization of personal data into logs (rich-object
+  `toString()`, dumped request params) and no personal data in URLs
 
 ### Security (general)
 - [ ] No secrets or credentials in code
