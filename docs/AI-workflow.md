@@ -12,7 +12,8 @@ is not enough. The quality of AI output depends heavily on the structure,
 constraints, and standards already embedded in the repository. By combining
 well-documented guidelines with purpose-built sub-agents — each operating in its
 own context window — we replicate the roles of a real development team: planner,
-plan critic, developer, code reviewer, and QA.
+plan critic, code reviewer, and QA. (Implementation is deliberately not
+delegated — the main agent plays the developer, as the workflow below shows.)
 
 This template is deliberately **Claude-native**: the sub-agents and skills live
 directly in `.claude/`, using Claude Code's own mechanisms (sub-agent
@@ -165,7 +166,12 @@ Produces a structured implementation plan before any code is written: gather
 context (external specs, module `AGENTS.md` files, ADRs, product docs), reproduce
 the **complete** requirements verbatim (the plan's Requirements section is the
 spec other agents validate against), enumerate every edge case, and propose a
-test strategy. Key convention: **tests are the plan's deterministic oracle** —
+test strategy. The plan opens with an **Approval Summary** — goal, numbered
+acceptance criteria (`AC-n`), key decisions, risk flags — sized for a phone
+screen; that summary is what the developer approves. A **Contract** section
+pins routes, fields, response shapes, and schema changes for full-stack slices
+before the Approach, and every `AC-n` must map to a Test Strategy entry tagged
+`[AC-n]`. Key convention: **tests are the plan's deterministic oracle** —
 every claim the plan makes about user-visible behavior must map to a committed
 end-to-end test, and the plan must **not** contain a separate "manual
 verification / QA checklist" (convert any "try X and confirm Y" into a committed
@@ -207,6 +213,13 @@ genuine effort, that is itself a finding to state). Notable points:
   standards. Any mechanically checkable subset should be build-enforced (see
   *Deterministic enforcement* below); for those the reviewer only checks that the
   diff doesn't weaken the enforcement.
+- A **Privacy and Data Protection** section takes the same fitness-test-first
+  stance: three recommended build-enforced tests (deletion-by-design,
+  public-surface whitelist, no personal data in logs) plus a small manual
+  residue (indirect serialization into logs, personal data in URLs).
+  Consent, retention, and data-classification rules are deliberately NOT
+  per-PR review items — they are product flows to build and then protect
+  with tests.
 
 See `.claude/skills/code-review/SKILL.md` for the full checklist and output format.
 
@@ -232,6 +245,12 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   push and PR) — independent evidence for the human reviewer that tests pass,
   replacing trust in a session transcript. <!-- [TODO: add a CI workflow for
   your platform.] -->
+- **Secret and dependency scanning** — wire a secret scanner (e.g. gitleaks)
+  and a dependency audit into `[CHECK_CMD]` and CI, so committed credentials
+  and known-vulnerable dependencies fail the build instead of relying on
+  reviewer attention. These are the cheapest security gates in the pipeline.
+  <!-- [TODO: pick the scanners for your stack and add them to
+  [CHECK_CMD]/CI.] -->
 
 Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
@@ -301,12 +320,16 @@ gates. Highlights of the definition:
    project's sensitive areas; no new endpoints/persisted fields/dependencies)
    **and the user explicitly said "skip the critic"**. Do not infer "trivial"
    yourself — the user has to ask.
-3. **Present plan and critique together** for approval; exit plan mode only after
-   approval. Re-plan → re-critique → re-present on changes, leading with a delta
-   against the previous version; fold amendments the user accepts into the plan
-   text itself.
-4. **Implement**, running tests once a coherent unit is complete. Material scope
-   changes send you back into plan mode.
+3. **Present plan and critique together** for approval — leading with the
+   approval screen: the plan's Approval Summary followed by the critique's
+   Confidence verdict and top findings; the full plan and critique follow
+   below. Exit plan mode only after approval. Re-plan → re-critique →
+   re-present on changes, leading with a delta against the previous version;
+   fold amendments the user accepts into the plan text itself.
+4. **Implement** — acceptance tests from the plan's Test Strategy first (the
+   `[AC-n]`-tagged ones encode the approved contract and may not be weakened
+   to pass), then code until green, running the suite once a coherent unit is
+   complete. Material scope changes send you back into plan mode.
 5. **Code review** via the `code-reviewer` sub-agent (pass the approved plan and
    the latest test output). Relay all `NEEDS_DECISION` items to the user; fix
    `FAIL` items and re-run. **Do not push or open a PR until the reviewer passes
@@ -321,9 +344,11 @@ gates. Highlights of the definition:
    wait for direction; deferred findings become `known-issue` GitHub issues.
 7. **Open the PR** only after the code review passes and every QA finding is
    dispositioned (or QA was skipped, no UI surface). The PR body carries the
-   pipeline's conclusions — plan summary, review outcome with decisions, QA
-   dispositions, test evidence — and flags security-surface changes with a
-   recommendation for a second, independent `code-reviewer` pass before merging.
+   pipeline's conclusions — plan summary, the acceptance-criteria → test
+   table (`AC-n` → the committed tests that prove it), review outcome with
+   decisions, QA dispositions, test evidence — and flags security-surface
+   changes with a recommendation for a second, independent `code-reviewer`
+   pass before merging.
 
 See `.claude/skills/feature/SKILL.md` for the authoritative step list and rules.
 

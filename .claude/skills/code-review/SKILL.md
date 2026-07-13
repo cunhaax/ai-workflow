@@ -27,6 +27,19 @@ Output Format section).
 
 ## Before Reviewing
 
+### Selecting the diff
+
+In the `/feature` workflow the implementation is committed before review, so
+a bare `git diff` (working tree) shows nothing — review the branch's
+committed changes against its base: `git diff [DEFAULT_BRANCH]...HEAD` (or
+`git log -p [DEFAULT_BRANCH]..HEAD`). Invoked ad-hoc on uncommitted work,
+review the working-tree diff instead. If unsure what changed, check
+`git status` and `git log --oneline` first.
+
+Note for ad-hoc use: the push gate records a commit SHA
+(`scripts/review-ok.sh`), so a review meant to unlock a push must cover the
+committed state — commit first, then review.
+
 ### Architecture Decision Records
 
 Check if a `docs/adr/` directory exists. If it does, list the ADRs you read by
@@ -63,6 +76,13 @@ before reviewing. Use it as follows:
   anything listed here, and DO flag as scope creep any code that strays into it.
 
 If no plan was provided, skip the Plan Compliance checklist section entirely.
+
+**Test evidence.** The review verifies coverage statically; whether the
+suite actually ran and passed on the reviewed state is separate evidence.
+In the `/feature` workflow that evidence is passed in (the summary of the
+latest `[TEST_CMD]` run). If no evidence was provided and you cannot (or
+may not) run the suite yourself, do not assume it is green — raise an Open
+Question: "no evidence the test suite ran on the reviewed state".
 
 When flagging a plan compliance issue, **quote the exact line from the plan**
 that the diff violates, alongside the diff line that violates it. Paraphrasing
@@ -130,6 +150,10 @@ the committed tests cover the plan, so that responsibility lives here.
   not `test_order_2`.
 - Use the Given-When-Then pattern.
 - Never test implementation details — test behaviour.
+- Tests that encode the plan's Test Strategy (the `[AC-n]`-tagged ones
+  especially) are the contract, not implementation detail: a diff that
+  weakens, loosens, or deletes one so the suite passes is `FAIL` unless the
+  review input documents an approved plan deviation covering it.
 
 **Completeness — against the plan:**
 - Every Requirement and every enumerated Edge Case in the plan must have at

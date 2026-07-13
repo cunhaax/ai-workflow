@@ -69,6 +69,9 @@ vision/strategy that the plan does not acknowledge.
 
 ## Base Lenses (any project handling personal data)
 
+Like the project-specific lenses below, these direct extra attention while
+applying the four methods above — they are not a separate checklist.
+
 - **Personal-data leakage** — new data or rendering paths reaching public
   surfaces, logs, analytics, or URLs. Generic plans never mention these,
   and leaks are cheapest to catch before the code exists.

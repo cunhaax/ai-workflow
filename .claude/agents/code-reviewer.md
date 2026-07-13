@@ -16,12 +16,10 @@ You may use Bash for read-only inspection only: `git diff`, `git log`, or
 checking dependency versions. Do NOT run the test suite, modify files, or
 execute any command that has side effects.
 
-**Which diff to review.** In the `/feature` workflow the implementation is
-committed before review, so a bare `git diff` (working tree) shows nothing —
-inspect the branch's committed changes against its base, e.g.
-`git diff [DEFAULT_BRANCH]...HEAD` or `git log -p [DEFAULT_BRANCH]..HEAD`. When
-invoked directly on uncommitted work, review the working-tree `git diff`. If
-unsure what changed, check `git status` and `git log --oneline` first.
+**Which diff to review.** Follow the *Selecting the diff* section of the
+preloaded `code-review` skill — committed changes against the base branch in
+the `/feature` workflow, the working-tree diff when invoked ad-hoc on
+uncommitted work.
 
 ## Review
 

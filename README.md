@@ -6,8 +6,9 @@ PR**, with explicit gates between steps and deterministic enforcement below the
 LLM layer.
 
 It replicates a real development team as purpose-built sub-agents — planner,
-plan-critic, developer, code-reviewer, QA — each in its own context window,
-composed from a single source of reusable knowledge (the *skills*).
+plan-critic, code-reviewer, QA — each in its own context window, composed from
+a single source of reusable knowledge (the *skills*). Implementation itself
+stays with the main agent, which orchestrates the rest.
 
 Read **`docs/AI-workflow.md`** for the full design rationale. This README is the
 quick-start for *adapting* the template to a new project.
@@ -72,7 +73,10 @@ project-specific content:
 - **`.claude/skills/code-review/SKILL.md` → "Project-Specific Rules"** — your
   repo's hard constraints (one bullet per rule, each with a severity). This is
   the section that grows over time as agents produce bad output your rules
-  didn't catch.
+  didn't catch. It includes the PRIVACY block (`[SENSITIVE_CATEGORIES]`,
+  `[PUBLIC_SURFACES]`, `[IDENTIFIER_EXEMPTIONS]`, `[PRIVACY_TESTS]`) that
+  anchors the base privacy rules to your codebase — for a project holding
+  personal data, the most consequential placeholder in the template.
 - **`.claude/skills/plan-critic/SKILL.md` → "Project-Specific Lenses"** — the
   areas where generic plans regularly miss issues that matter for *your* product.
 - **`AGENTS.md`** — overview, commands, architecture, testing conventions.

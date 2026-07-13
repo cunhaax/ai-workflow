@@ -90,9 +90,18 @@ After approval, retain the plan text — you will pass it to the
 
 ### Step 2 — Implement
 
-Implement the approved plan in small logical steps. Run the test suite once a
-coherent unit of work is complete (e.g., after finishing a module or a meaningful
-set of related changes) — not after every individual step.
+**Acceptance tests first.** Before implementing, write the end-to-end tests
+from the plan's Test Strategy — at minimum the `[AC-n]`-tagged ones. They
+encode the approved contract, so drift from the plan surfaces as a failing
+test during implementation instead of a surprise at review. Tests derived
+from the plan may not be weakened, loosened, or rewritten to make them pass
+— if one turns out to be wrong, treat it as a plan deviation (below): flag
+it, don't silently adjust it.
+
+Then implement the approved plan in small logical steps until the suite is
+green. Run the test suite once a coherent unit of work is complete (e.g.,
+after finishing a module or a meaningful set of related changes) — not after
+every individual step.
 
 If you discover something during implementation that changes what needs to be built,
 stop and assess the impact:
