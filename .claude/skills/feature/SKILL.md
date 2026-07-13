@@ -81,12 +81,12 @@ If the user approves the plan conditional on adopting specific critique
 amendments ("approved, but also address point 2"), you may fold those
 specific amendments into the plan text yourself before implementing — that
 is transcribing an accepted decision, not fresh planning, so it does not
-need another planner round. The `code-reviewer` and `adversarial-qa` sub-agents receive
+need another planner round. The `code-critic` and `adversarial-qa` sub-agents receive
 only the plan text — an amendment that lives only in the conversation is
 invisible to them.
 
 After approval, retain the plan text — you will pass it to the
-`code-reviewer` and `adversarial-qa` sub-agents later.
+`code-critic` and `adversarial-qa` sub-agents later.
 
 ### Step 2 — Implement
 
@@ -122,19 +122,19 @@ Commit your work first — the review must cover the committed state, because
 `scripts/review-ok.sh` (Step 6) records the reviewed commit SHA and the pre-push
 hook compares against it.
 
-Invoke the `code-reviewer` sub-agent to review all changes against project
+Invoke the `code-critic` sub-agent to review all changes against project
 standards. Pass the approved plan text, and include the summary output of the
 most recent full `[TEST_CMD]` run (Step 3). The reviewer is not allowed to run
 the test suite itself — it verifies coverage statically and needs evidence
 that the committed tests actually ran and passed, rather than taking the
 implementer's word for it.
 
-**Escalate the model on the security surface.** The `code-reviewer` runs on
+**Escalate the model on the security surface.** The `code-critic` runs on
 Sonnet by default (see its wrapper). If the diff touches the security surface
 — `[SECURITY_SURFACE]` <!-- [TODO: name the concrete files/areas — e.g. the
 security config, route definitions, token/session handling, sensitive data
 fields, or making a path segment user-controlled] --> — invoke the
-`code-reviewer` with its model overridden to `opus` for that review: Opus is
+`code-critic` with its model overridden to `opus` for that review: Opus is
 the stronger bug-finder, and this surface is where a missed finding is most
 expensive. Sonnet stays the default everywhere else. (This is the model-tier
 counterpart to the second-reviewer-pass recommendation in Step 9.)
@@ -147,9 +147,9 @@ to the user**. Wait for answers before proceeding.
 ### Step 6 — Fix FAIL items
 
 If the reviewer found critical issues (`FAIL`), fix them and re-invoke the
-`code-reviewer`. Repeat until no critical issues remain.
+`code-critic`. Repeat until no critical issues remain.
 
-Do not push or open a PR until the `code-reviewer` has passed with no FAIL
+Do not push or open a PR until the `code-critic` has passed with no FAIL
 items (see *Rules — non-negotiable* in AGENTS.md). Re-run the reviewer after
 any later change, including fixes prompted by Step 8 QA findings.
 
@@ -203,7 +203,7 @@ or a session transcript:
 - **Acceptance criteria → test table** — one row per `AC-n` from the plan's
   Approval Summary: the criterion, and the committed test(s) tagged `[AC-n]`
   that prove it. This is the reviewer's traceability skim — a criterion
-  without a test row must not reach the PR (the code-reviewer enforces
+  without a test row must not reach the PR (the code-critic enforces
   this earlier).
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
   that was raised, and the decision the user made on each.
@@ -215,19 +215,17 @@ or a session transcript:
 
 If the branch touches the security surface (`[SECURITY_SURFACE]`), say so
 explicitly in the PR body, and give that surface a second, independent look
-before merging by re-running the `code-reviewer` sub-agent in a fresh context.
+before merging by re-running the `code-critic` sub-agent in a fresh context.
 A single reviewer pass is the last line of defense there; the project's own
 review is the no-cost way to get a second.
 
-<!-- SKILL-NAME SHADOWING NOTE (Claude Code): this template names a skill
-     `code-review`, which shadows Claude Code's bundled skill of the same name.
-     A consequence is that `/code-review ultra` (the bundled skill's cloud-review
-     argument) does NOT reach the cloud review in a project using this template —
-     it resolves to this repo's checklist. If you want an occasional, billed
-     deep cloud pass on an especially high-stakes change, use `/ultrareview`
-     (the alias Claude Code still ships). It is a user-launched choice, not a
-     standard step. Delete this note if you rename the skill or don't use
-     Claude Code. -->
+<!-- SKILL NAMING NOTE (Claude Code): the review skill is named `code-critic`
+     precisely so it does NOT shadow Claude Code's bundled `code-review` skill
+     (project skills shadow bundled skills completely). The bundled
+     `/code-review` — including `/code-review ultra`, the billed cloud review —
+     therefore stays reachable as an optional, user-launched deep pass on an
+     especially high-stakes change. It is not a standard step. Do not rename
+     the skill back to `code-review` unless you want the shadowing. -->
 
 ---
 
@@ -242,7 +240,7 @@ review is the no-cost way to get a second.
   sub-agent, regardless of platform.
 - NEVER enter plan mode from within a sub-agent — only the main agent presents
   plans for review.
-- NEVER present work to the user before the `code-reviewer` sub-agent has reviewed
+- NEVER present work to the user before the `code-critic` sub-agent has reviewed
   it.
 - If a sub-agent flags `NEEDS_DECISION`, you MUST relay ALL flagged items to the
   user and wait. Do not make these decisions yourself.

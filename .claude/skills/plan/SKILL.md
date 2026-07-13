@@ -53,7 +53,7 @@ Before planning, collect all relevant context:
   Nothing load-bearing may live only in the chat.
 - The **Requirements** section MUST capture the complete feature requirements
   exactly as specified by the user or the linked spec. Do not summarize or omit
-  details — the `code-reviewer` cross-checks every requirement and edge case in
+  details — the `code-critic` cross-checks every requirement and edge case in
   this section against the committed tests. If they come from a document, quote
   them; if from the user's prompt, reproduce them in full.
 - The **Files** section MUST list every file the change touches, each tagged

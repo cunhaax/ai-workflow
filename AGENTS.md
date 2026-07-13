@@ -11,7 +11,7 @@ code — this file is the map, not the territory.
 ## Rules — non-negotiable
 
 These apply to **every** agent — the main agent and every sub-agent (planner,
-plan-critic, code-reviewer, adversarial-qa). Nothing enforces them automatically; following
+plan-critic, code-critic, adversarial-qa). Nothing enforces them automatically; following
 them is your responsibility.
 
 1. **Use the project's canonical commands.** Build, run, stop, and test only
@@ -33,7 +33,7 @@ them is your responsibility.
    If you believe the branch must change, STOP and ask first.
 
 4. **Get reviewed before pushing.** Never `git push` or open a PR until the
-   `code-reviewer` sub-agent has passed with no FAIL items. After a pass, record
+   `code-critic` sub-agent has passed with no FAIL items. After a pass, record
    it with `scripts/review-ok.sh` — the committed pre-push hook
    (`githooks/pre-push`) blocks any push whose commit does not match the
    recorded review. Any commit made after the review requires a re-review.

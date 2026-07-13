@@ -6,7 +6,7 @@ PR**, with explicit gates between steps and deterministic enforcement below the
 LLM layer.
 
 It replicates a real development team as purpose-built sub-agents — planner,
-plan-critic, code-reviewer, QA — each in its own context window, composed from
+plan-critic, code-critic, QA — each in its own context window, composed from
 a single source of reusable knowledge (the *skills*). Implementation itself
 stays with the main agent, which orchestrates the rest.
 
@@ -22,13 +22,15 @@ CLAUDE.md                    # Thin: imports AGENTS.md via @AGENTS.md
 ├── agents/                  # Sub-agent definitions (frontmatter + inline prompt)
 │   ├── planner.md           # Orchestration + skills: [plan]
 │   ├── plan-critic.md       # Orchestration + skills: [plan-critic]
-│   ├── code-reviewer.md     # Orchestration + skills: [code-review]
+│   ├── code-critic.md       # Orchestration + skills: [code-critic]
 │   └── adversarial-qa.md    # Orchestration + skills: [adversarial-qa]  (+ Playwright)
 └── skills/                  # The reusable knowledge, one directory per skill
     ├── feature/SKILL.md     # The full workflow (plan→critique→…→PR)
     ├── plan/SKILL.md
     ├── plan-critic/SKILL.md
-    ├── code-review/SKILL.md # Base standards + a Project-Specific Rules placeholder
+    ├── code-critic/SKILL.md # Base standards + a Project-Specific Rules placeholder
+                             #   (named code-critic to avoid shadowing Claude Code's
+                             #   bundled code-review skill)
     └── adversarial-qa/SKILL.md
 docs/
 ├── adr/                     # Architecture Decision Records (add your own)
@@ -70,7 +72,7 @@ The template ships with the **reusable** content intact and every
 Sections marked `<!-- ... -->` with a `[TODO: ...]` are where you write your own
 project-specific content:
 
-- **`.claude/skills/code-review/SKILL.md` → "Project-Specific Rules"** — your
+- **`.claude/skills/code-critic/SKILL.md` → "Project-Specific Rules"** — your
   repo's hard constraints (one bullet per rule, each with a severity). This is
   the section that grows over time as agents produce bad output your rules
   didn't catch. It includes the PRIVACY block (`[SENSITIVE_CATEGORIES]`,
@@ -91,7 +93,7 @@ Once per clone:
 git config core.hooksPath githooks
 ```
 
-After the `code-reviewer` passes with no FAIL items, record it:
+After the `code-critic` passes with no FAIL items, record it:
 
 ```sh
 scripts/review-ok.sh          # writes HEAD's SHA to .review-passed
@@ -102,7 +104,7 @@ recorded review. Human bypass: `git push --no-verify`.
 
 ## Evolving the system
 
-- **Start small.** Begin with the planner and code-reviewer; add QA and
+- **Start small.** Begin with the planner and code-critic; add QA and
   plan-critic once the basic loop is stable.
 - **Track failure patterns.** Every time an agent produces bad output your rules
   didn't catch, add a rule to the relevant skill in `.claude/skills/`.

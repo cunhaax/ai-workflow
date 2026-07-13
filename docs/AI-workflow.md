@@ -12,7 +12,7 @@ is not enough. The quality of AI output depends heavily on the structure,
 constraints, and standards already embedded in the repository. By combining
 well-documented guidelines with purpose-built sub-agents — each operating in its
 own context window — we replicate the roles of a real development team: planner,
-plan critic, code reviewer, and QA. (Implementation is deliberately not
+plan critic, code critic, and QA. (Implementation is deliberately not
 delegated — the main agent plays the developer, as the workflow below shows.)
 
 This template is deliberately **Claude-native**: the sub-agents and skills live
@@ -39,13 +39,13 @@ project-root/
 │   ├── agents/                            # Sub-agent definitions (frontmatter + inline prompt)
 │   │   ├── planner.md                     # Orchestration + skills: [plan]
 │   │   ├── plan-critic.md                 # Orchestration + skills: [plan-critic]
-│   │   ├── code-reviewer.md               # Orchestration + skills: [code-review]
+│   │   ├── code-critic.md                 # Orchestration + skills: [code-critic]
 │   │   └── adversarial-qa.md              # Orchestration + skills: [adversarial-qa]  (+ Playwright tools)
 │   └── skills/                            # Reusable knowledge, one directory per skill
 │       ├── feature/SKILL.md               # Full workflow (plan → critique → implement → review → QA)
 │       ├── plan/SKILL.md
 │       ├── plan-critic/SKILL.md
-│       ├── code-review/SKILL.md           # Base standards + a Project-Specific Rules section
+│       ├── code-critic/SKILL.md           # Base standards + a Project-Specific Rules section
 │       └── adversarial-qa/SKILL.md
 ├── githooks/
 │   └── pre-push                           # Review gate: blocks pushes of unreviewed commits
@@ -62,7 +62,7 @@ project-root/
 
 > Note: there is no `feature` sub-agent. `feature` is a workflow skill
 > (`.claude/skills/feature/SKILL.md`) the **main** agent runs; it orchestrates
-> the planner, plan-critic, code-reviewer, and adversarial-qa sub-agents.
+> the planner, plan-critic, code-critic, and adversarial-qa sub-agents.
 
 ### Why This Structure
 
@@ -96,7 +96,7 @@ Supporting pieces:
 - **`docs/product-context/`** contains product vision, strategy, and
   requirements — the RAG context the planner and plan-critic ground their work in.
 - **Project-specific rules** are inlined directly into the relevant skill (e.g.
-  the `## Project-Specific Rules` section inside `.claude/skills/code-review/SKILL.md`).
+  the `## Project-Specific Rules` section inside `.claude/skills/code-critic/SKILL.md`).
   Inlining keeps the rules where the reviewer is already reading.
 - **Module-level `AGENTS.md`** files are the place for constraints in critical
   areas (e.g. auth, payments) where mistakes are expensive.
@@ -193,14 +193,14 @@ does **not** rewrite the plan — concrete suggestions go in a "Suggested Plan
 Amendments" section; the developer decides what to adopt. See
 `.claude/skills/plan-critic/SKILL.md` for the methods and output format.
 
-### `.claude/skills/code-review/SKILL.md` — `/code-review`
+### `.claude/skills/code-critic/SKILL.md` — `/code-critic`
 
 Reviews a diff against project standards from an adversarial stance (assume
 something is wrong; guard against confirmation bias; if you find nothing after
 genuine effort, that is itself a finding to state). Notable points:
 
 - **It owns test completeness**, not just test quality. Because `/adversarial-qa` is
-  exploratory (below), code-review verifies that committed tests cover every
+  exploratory (below), code-critic verifies that committed tests cover every
   Requirement and Edge Case in the plan **and** the branches/boundaries/inputs
   the plan did not enumerate (critical-analysis pass).
 - Verdicts are `PASS`, `PASS (N/A)`, `FAIL`, `NEEDS_DECISION`, plus an
@@ -221,7 +221,7 @@ genuine effort, that is itself a finding to state). Notable points:
   per-PR review items — they are product flows to build and then protect
   with tests.
 
-See `.claude/skills/code-review/SKILL.md` for the full checklist and output format.
+See `.claude/skills/code-critic/SKILL.md` for the full checklist and output format.
 
 ## Deterministic enforcement — below the LLM layer
 
@@ -231,13 +231,13 @@ mechanically, so neither the agents nor the human re-verify them by hand:
 - **Architecture / fitness tests** encode the mechanically checkable review
   rules as build failures (layer direction, banned APIs, required
   registrations/annotations, reserved route segments, and so on). The
-  code-review skill tells the reviewer to verify only that a diff doesn't
+  code-critic skill tells the reviewer to verify only that a diff doesn't
   *weaken* these tests, not to re-derive the rules. Start with the layer rule
   (*Your first fitness test*, below). <!-- [TODO: add fitness tests for your
-  stack and list them in the code-review skill's Project-Specific Rules
+  stack and list them in the code-critic skill's Project-Specific Rules
   section.] -->
 - **The pre-push review gate** (`githooks/pre-push`, enabled once per clone
-  via `git config core.hooksPath githooks`): after a code-reviewer pass with
+  via `git config core.hooksPath githooks`): after a code-critic pass with
   no FAIL items, the agent records the reviewed HEAD with `scripts/review-ok.sh`;
   the hook refuses to push any other commit, so post-review changes force a
   re-review. Human bypass: `git push --no-verify`.
@@ -286,7 +286,7 @@ enforcement (a false green is worse than an honest gap the reviewer still sees).
 | Go                  | depguard or arch-go                              |
 
 Wire it into `[CHECK_CMD]` and CI so it gates merges, then relink the
-`code-review` skill (its *Architecture* checklist) to "verify the diff doesn't
+`code-critic` skill (its *Architecture* checklist) to "verify the diff doesn't
 *weaken* the layer test" rather than re-deriving boundaries by hand. Add further
 fitness tests the same way — one per mechanically checkable rule.
 
@@ -294,7 +294,7 @@ fitness tests the same way — one per mechanically checkable rule.
 
 **Exploratory and adversarial — not a re-verification of the spec.** Committed
 end-to-end tests encode the plan's Requirements deterministically (and
-code-review checks their completeness); `/adversarial-qa`'s job is to go **beyond** them.
+code-critic checks their completeness); `/adversarial-qa`'s job is to go **beyond** them.
 It drives the feature in the **running app** via the Playwright MCP, probes past
 the happy path (narrow viewports, keyboard-only nav, browser back button,
 multi-tab forms, weird/long/XSS paste, mid-edit reloads, stale state after a
@@ -330,7 +330,7 @@ gates. Highlights of the definition:
    `[AC-n]`-tagged ones encode the approved contract and may not be weakened
    to pass), then code until green, running the suite once a coherent unit is
    complete. Material scope changes send you back into plan mode.
-5. **Code review** via the `code-reviewer` sub-agent (pass the approved plan and
+5. **Code review** via the `code-critic` sub-agent (pass the approved plan and
    the latest test output). Relay all `NEEDS_DECISION` items to the user; fix
    `FAIL` items and re-run. **Do not push or open a PR until the reviewer passes
    with no FAIL items** — after a pass, record it with `scripts/review-ok.sh`
@@ -347,7 +347,7 @@ gates. Highlights of the definition:
    pipeline's conclusions — plan summary, the acceptance-criteria → test
    table (`AC-n` → the committed tests that prove it), review outcome with
    decisions, QA dispositions, test evidence — and flags security-surface
-   changes with a recommendation for a second, independent `code-reviewer`
+   changes with a recommendation for a second, independent `code-critic`
    pass before merging.
 
 See `.claude/skills/feature/SKILL.md` for the authoritative step list and rules.
@@ -367,9 +367,9 @@ usable as an interactive main agent (`claude --agent <name>`).
   ADRs, product docs in `docs/product-context/`, and touched-module `AGENTS.md`
   files; applies the preloaded `plan-critic` skill; surfaces concerns without
   rewriting the plan.
-- **`code-reviewer`** — strict reviewer. Bash for **read-only** inspection only
+- **`code-critic`** — strict reviewer. Bash for **read-only** inspection only
   (`git diff`, `git log`, dependency/version checks); never runs the test suite
-  or mutates files; applies the preloaded `code-review` skill; outputs the review
+  or mutates files; applies the preloaded `code-critic` skill; outputs the review
   only.
 - **`adversarial-qa`** — QA engineer. Not a code-quality review; applies the preloaded `adversarial-qa`
   skill to drive the running app and surface what the plan and tests missed.
@@ -380,7 +380,7 @@ The frontmatter each sub-agent carries:
 |------------------|--------------------------------|--------|--------|----------------|---------------|
 | `planner`        | Read, Bash, WebFetch           | opus   | high   | plan           | plan          |
 | `plan-critic`    | Read, Bash                     | opus   | high   | plan           | plan-critic   |
-| `code-reviewer`  | Read, Bash                     | sonnet | high   | —              | code-review   |
+| `code-critic`    | Read, Bash                     | sonnet | high   | —              | code-critic   |
 | `adversarial-qa` | Read, Bash, Playwright MCP set | sonnet | medium | —              | adversarial-qa |
 
 The `planner` and `plan-critic` carry `permissionMode: plan` so they stay
@@ -388,28 +388,28 @@ read-only; the `planner` also carries `WebFetch` so it — and only it — can p
 the external specs a prompt links to; the `adversarial-qa` sub-agent lists the Playwright
 `browser_*` MCP tools so it can drive the app. Each lists exactly the one skill
 it applies, so that skill's full body is preloaded at startup. Example —
-`.claude/agents/code-reviewer.md`:
+`.claude/agents/code-critic.md`:
 
 ```markdown
 ---
-name: code-reviewer
+name: code-critic
 description: "Reviews code changes against project standards after implementation is complete. MUST be invoked before presenting any work to the user. Produces a structured review with PASS/FAIL/NEEDS_DECISION per item."
 tools: Read, Bash
 model: sonnet
 effort: high
 skills:
-  - code-review
+  - code-critic
 ---
 
-# Code Reviewer Agent
+# Code Critic Agent
 
 You are a strict code reviewer for a production system.
 
-You may use Bash for read-only inspection only … Apply the `/code-review` skill
+You may use Bash for read-only inspection only … Apply the `/code-critic` skill
 to review the changes. Output only the review.
 ```
 
-The `skills: [code-review]` line preloads the full `/code-review` checklist and
+The `skills: [code-critic]` line preloads the full `/code-critic` checklist and
 standards into the sub-agent's context at startup, so the body only needs the
 orchestration.
 
@@ -433,7 +433,7 @@ follows the `/feature` skill (`.claude/skills/feature/SKILL.md`):
    critique; the user reads them together and decides.
 5. **Main agent** (interactive) → implements the approved plan. You can steer and
    course-correct during this phase.
-6. **Code-reviewer sub-agent** (isolated) → reads its standards, checklist,
+6. **Code-critic sub-agent** (isolated) → reads its standards, checklist,
    project-specific rules, and the approved plan → returns a structured review,
    including verification that committed tests cover the spec and beyond.
 7. `NEEDS_DECISION` / `Open Question` items → main agent relays them to you → you
@@ -442,7 +442,7 @@ follows the `/feature` skill (`.claude/skills/feature/SKILL.md`):
 8. **QA sub-agent** (isolated) → drives the running app in a browser via
    Playwright, probing **beyond** the plan and committed tests for anything that
    looks wrong → returns findings with evidence. (It does not re-check the
-   Requirements — that is locked down by the committed tests and code-review.)
+   Requirements — that is locked down by the committed tests and code-critic.)
 9. PR is opened only after the code review passes and every QA finding is
    dispositioned (or QA was skipped for lack of a UI surface).
 
@@ -469,7 +469,7 @@ flowchart TB
     Main{{Main agent<br/>orchestrator}}
     Planner[[planner]]
     Critic[[plan-critic]]
-    Reviewer[[code-reviewer]]
+    Reviewer[[code-critic]]
     QA[[adversarial-qa]]
     App([Running app])
 
@@ -526,7 +526,7 @@ Any sub-agent can be invoked directly for an interactive session:
 
 ```bash
 # Claude Code
-claude --agent code-reviewer
+claude --agent code-critic
 ```
 
 When invoked directly, the agent runs as the main agent with full interactivity —
@@ -555,43 +555,41 @@ orchestrated cycle — useful for reviewing code you wrote manually, planning a
 spike, or running QA on one area. Skills live in `.claude/skills/`
 (project-scoped) or `~/.claude/skills/` (personal). Each is a directory with a
 `SKILL.md` that holds the full knowledge — the same file the matching sub-agent
-preloads. For example, `/code-review` and the `code-reviewer` sub-agent both use
-`.claude/skills/code-review/SKILL.md`:
+preloads. For example, `/code-critic` and the `code-critic` sub-agent both use
+`.claude/skills/code-critic/SKILL.md`:
 
 ```markdown
 ---
-name: code-review
+name: code-critic
 description: >
   Code review checklist, coding standards, and this repo's inlined
-  project-specific rules. Invoked as /code-review for an ad-hoc review, or
-  preloaded by the code-reviewer sub-agent in the /feature workflow.
+  project-specific rules. Invoked as /code-critic for an ad-hoc review, or
+  preloaded by the code-critic sub-agent in the /feature workflow.
 ---
 
-# /code-review — Code Review
+# /code-critic — Code Review
 
 Apply this skill to review code changes against project standards.
 … (full checklist, standards, and Project-Specific Rules) …
 ```
 
 The five wired-up commands are `/feature`, `/plan`, `/plan-critic`,
-`/code-review`, and `/adversarial-qa`. `/feature` is the primary entry point — it triggers
+`/code-critic`, and `/adversarial-qa`. `/feature` is the primary entry point — it triggers
 the full orchestrated workflow; the others invoke individual steps ad-hoc.
 
-**Naming note (Claude Code).** `/code-review` is also a skill Claude Code
-**bundles by default**. A project skill of the same name intentionally
-*overrides* the bundled one — project skills shadow bundled skills completely and
-by design ([Skills docs](https://code.claude.com/docs/en/skills) use
-`code-review` as their own example) — so `/code-review` here always resolves to
-this repo's checklist, and the `code-reviewer` sub-agent's `skills: [code-review]`
-preload uses the same repo copy. One consequence: `ultra` is the bundled skill's
-cloud-review argument, and it is shadowed too, so **`/code-review ultra` does not
-launch a cloud review in a project using this template** — use `/ultrareview`
-instead, the alias Claude Code still ships (upstream now prefers
-`/code-review ultra`, which is shadowed here), for that occasional, billed deep
-pass. If you rename the skill or don't use Claude Code, this note doesn't apply.
-Also note `/plan` shares a name with Claude Code's built-in *plan-mode* command
-(a separate mechanism from skills), so if you invoke `/plan` ad-hoc, confirm your
-build runs this repo's planning skill.
+**Naming note (Claude Code).** Claude Code **bundles** a skill named
+`code-review`, and project skills shadow bundled skills completely and by
+design ([Skills docs](https://code.claude.com/docs/en/skills) use
+`code-review` as their own example). This template deliberately names its
+review skill `code-critic` to avoid that collision: `/code-critic` always
+resolves to this repo's checklist — the same copy the `code-critic`
+sub-agent preloads via `skills: [code-critic]` — while the bundled
+`/code-review` (including `/code-review ultra`, the billed deep cloud review)
+stays reachable as an optional, user-launched pass on especially high-stakes
+changes. Do not rename the skill back to `code-review` unless you want the
+shadowing. Also note `/plan` shares a name with Claude Code's built-in
+*plan-mode* command (a separate mechanism from skills), so if you invoke
+`/plan` ad-hoc, confirm your build runs this repo's planning skill.
 
 #### Skills vs sub-agents vs slash commands
 
@@ -603,7 +601,7 @@ Three concepts, two directories under `.claude/`:
   what context to read, output format, file constraints, and the tools/model the
   agent runs with. They preload their skill via the `skills:` frontmatter field.
 - **Slash commands** are just the skills invoked directly (`/plan`,
-  `/code-review`, …), skipping the orchestration layer, for interactive ad-hoc
+  `/code-critic`, …), skipping the orchestration layer, for interactive ad-hoc
   use. `/feature` is the exception — its skill triggers the full orchestrated
   workflow.
 
@@ -614,11 +612,11 @@ instead of duplicating the steps.
 
 ## Evolving the System
 
-- **Start small.** Begin with the planner and code-reviewer; add QA and
+- **Start small.** Begin with the planner and code-critic; add QA and
   plan-critic once the basic workflow is stable.
 - **Track failure patterns.** Every time an agent produces bad output your rules
   didn't catch, add a rule to the relevant skill in `.claude/skills/` (this is
-  how the code-review skill's Project-Specific Rules section grows).
+  how the code-critic skill's Project-Specific Rules section grows).
 - **Prefer build-enforced rules over prose.** When a new review rule is
   mechanically checkable, encode it as an architecture/fitness test instead of
   (or in addition to) skill text — tests don't drift, don't consume reviewer

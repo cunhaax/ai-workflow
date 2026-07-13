@@ -1,12 +1,13 @@
 ---
-name: code-review
+name: code-critic
 description: >
   Code review checklist, coding standards, and this repo's inlined
-  project-specific rules. Invoked as /code-review for an ad-hoc review, or
-  applied by the code-reviewer sub-agent in the /feature workflow.
+  project-specific rules. Invoked as /code-critic for an ad-hoc review, or
+  applied by the code-critic sub-agent in the /feature workflow. (Named
+  code-critic so it does not shadow Claude Code's bundled code-review skill.)
 ---
 
-# /code-review — Code Review
+# /code-critic — Code Review
 
 Apply this skill to review code changes against project standards.
 

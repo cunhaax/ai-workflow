@@ -1,7 +1,7 @@
 #!/bin/sh
 # Review gate: refuse to push commits that have not passed code review.
 #
-# The /feature workflow records a passing code-reviewer run by writing the
+# The /feature workflow records a passing code-critic run by writing the
 # reviewed commit SHA to .review-passed (gitignored, one per worktree) via
 # scripts/review-ok.sh. Any commit made after the review moves HEAD away from
 # the marker, so post-review changes cannot be pushed without a re-review.
@@ -35,7 +35,7 @@ done
 if [ "$blocked" -ne 0 ]; then
     echo "" >&2
     echo "The commit being pushed has not passed code review (Rule 4)." >&2
-    echo "  1. Run the code-reviewer sub-agent (or /code-review) on the committed state." >&2
+    echo "  1. Run the code-critic sub-agent (or /code-critic) on the committed state." >&2
     echo "  2. After it passes with no FAIL items, record it: scripts/review-ok.sh" >&2
     echo "  3. Push again." >&2
     echo "Human bypass: git push --no-verify" >&2

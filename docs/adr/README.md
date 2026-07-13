@@ -6,7 +6,7 @@ a boundary, a data model, a security model). The agents read these:
 - The **planner** reads relevant ADRs before drafting and flags any plan that
   contradicts one.
 - The **plan-critic** checks the plan for consistency against them.
-- The **code-reviewer** reads them, lists which it read, and flags any diff that
+- The **code-critic** reads them, lists which it read, and flags any diff that
   contradicts an ADR as `FAIL`.
 
 Keep them short and durable. A common lightweight format:
