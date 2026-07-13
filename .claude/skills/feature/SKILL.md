@@ -43,9 +43,8 @@ as markdown text.
 
 Skip this step ONLY if the change qualifies as trivial under ALL of:
 - diff is plausibly under ~50 lines of non-test code,
-- touches none of your project's sensitive areas <!-- [TODO: list them, e.g.
-  auth, security, privacy, payments, schema migrations, token/session
-  handling] -->,
+- touches none of the project's sensitive areas (the *Sensitive Areas*
+  section in `AGENTS.md` is the canonical list),
 - introduces no new public endpoints, no new persisted fields, no new
   external dependencies,
 - AND the user explicitly said "skip the critic" (or equivalent) in
@@ -131,10 +130,8 @@ implementer's word for it.
 
 **Escalate the model on the security surface.** The `code-critic` runs on
 Sonnet by default (see its wrapper). If the diff touches the security surface
-— `[SECURITY_SURFACE]` <!-- [TODO: name the concrete files/areas — e.g. the
-security config, route definitions, token/session handling, sensitive data
-fields, or making a path segment user-controlled] --> — invoke the
-`code-critic` with its model overridden to `opus` for that review: Opus is
+— the *Sensitive Areas* section in `AGENTS.md` is the canonical list — invoke
+the `code-critic` with its model overridden to `opus` for that review: Opus is
 the stronger bug-finder, and this surface is where a missed finding is most
 expensive. Sonnet stays the default everywhere else. (This is the model-tier
 counterpart to the second-reviewer-pass recommendation in Step 9.)
@@ -213,8 +210,9 @@ or a session transcript:
 - **Test evidence** — one line: the test count and result from the final
   `[TEST_CMD]` run.
 
-If the branch touches the security surface (`[SECURITY_SURFACE]`), say so
-explicitly in the PR body, and give that surface a second, independent look
+If the branch touches the security surface (the *Sensitive Areas* list in
+`AGENTS.md`), say so explicitly in the PR body, and give that surface a
+second, independent look
 before merging by re-running the `code-critic` sub-agent in a fresh context.
 A single reviewer pass is the last line of defense there; the project's own
 review is the no-cost way to get a second.

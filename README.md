@@ -67,7 +67,6 @@ The template ships with the **reusable** content intact and every
 | `[SINGLE_TEST_EXAMPLE]`| How to run one test                                       |
 | `[APP_URL]`            | Local app URL for QA (e.g. `http://localhost:3000`)       |
 | `[DEFAULT_BRANCH]`     | `main` / `master` — the branch reviews diff against       |
-| `[SECURITY_SURFACE]`   | The files/areas that constitute your security surface     |
 
 Sections marked `<!-- ... -->` with a `[TODO: ...]` are where you write your own
 project-specific content:
@@ -81,7 +80,9 @@ project-specific content:
   personal data, the most consequential placeholder in the template.
 - **`.claude/skills/plan-critic/SKILL.md` → "Project-Specific Lenses"** — the
   areas where generic plans regularly miss issues that matter for *your* product.
-- **`AGENTS.md`** — overview, commands, architecture, testing conventions.
+- **`AGENTS.md`** — overview, commands, architecture, testing conventions, and
+  the *Sensitive Areas* (security surface) list — the canonical list `/feature`
+  consults for the critic-skip, model-escalation, and PR-flag decisions.
 - **`docs/product-context/`** and **`docs/adr/`** — your vision/strategy docs and
   architecture decisions.
 

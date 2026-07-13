@@ -99,6 +99,14 @@ Before planning, collect all relevant context:
 
 ## Plan Template
 
+<!-- COUPLING NOTE: this template's section names and semantics are consumed
+     elsewhere — the code-critic skill cross-checks diffs against Approval
+     Summary / Contract / Requirements / Approach / Edge Cases / Test
+     Strategy / Files / Out of Scope, and the feature skill presents the
+     Approval Summary (Step 1c), writes the [AC-n]-tagged tests first
+     (Step 2), and builds the PR's AC → test table (Step 9). When adding,
+     renaming, or removing a section, update those consumers in sync. -->
+
 ```markdown
 # Implementation Plan: [Feature Name]
 

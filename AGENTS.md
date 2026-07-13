@@ -87,6 +87,22 @@ broken. Keep it to the map — link docs/ and docs/adr/ for depth.] -->
 
 <!-- [TODO: test framework, conventions, where tests live, how to run one.] -->
 
+## Sensitive Areas — the security surface
+
+The canonical list of files/areas where mistakes are expensive. The `/feature`
+workflow consults it at three points: the plan-critic skip criteria (Step 1b),
+reviewer model escalation (Step 4), and the PR security flag (Step 9). Keep
+the list short and concrete; if the rationale for an entry needs more than a
+line, link a page under `docs/` for the depth rather than expanding here.
+
+<!-- [TODO: one bullet per area — e.g. security config, auth/token/session
+handling, route definitions, sensitive data fields and their rendering paths,
+payment flows, schema migrations. Name concrete files/packages so an agent
+can match a diff against them.] -->
+
+- [TODO: sensitive area 1 — concrete file/package/pattern]
+- [TODO: sensitive area 2]
+
 ## Workflow for New Features
 
 Use the `/feature` slash command for non-trivial work: plan → critique →
