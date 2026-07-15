@@ -320,8 +320,8 @@ body is written for the **autonomous** case (a sub-agent), which also makes it
 usable as an interactive main agent (`claude --agent <name>`).
 
 - **`planner`** — senior architect. Reads the prompt, linked docs, module
-  `AGENTS.md` files, ADRs, and product docs; applies the preloaded `plan` skill;
-  returns plan text only (no files, no code).
+  `AGENTS.md` files, ADRs, and product docs; applies the preloaded `plan-draft`
+  skill; returns plan text only (no files, no code).
 - **`plan-critic`** — adversarial plan reviewer. Reads the plan text, relevant
   ADRs, product docs in `docs/product-context/`, and touched-module `AGENTS.md`
   files; applies the preloaded `plan-critic` skill; surfaces concerns without

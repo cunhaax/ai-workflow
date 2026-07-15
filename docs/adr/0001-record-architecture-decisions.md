@@ -18,7 +18,7 @@ silently re-litigated instead of respected.
 
 Every significant, hard-to-reverse decision — a chosen technology, a
 boundary, a data model, a security model — is recorded as a numbered ADR in
-this directory, using the format described in `README.md`. Superseded
+this directory, using the format described in `docs/adr/README.md`. Superseded
 decisions are not deleted; their status is updated to point at the ADR that
 replaces them.
 
