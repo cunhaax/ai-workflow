@@ -81,9 +81,12 @@ If no plan was provided, skip the Plan Compliance checklist section entirely.
 **Test evidence.** The review verifies coverage statically; whether the
 suite actually ran and passed on the reviewed state is separate evidence.
 In the `/feature` workflow that evidence is passed in (the summary of the
-latest `[TEST_CMD]` run). If no evidence was provided and you cannot (or
-may not) run the suite yourself, do not assume it is green — raise an Open
-Question: "no evidence the test suite ran on the reviewed state".
+latest `[TEST_CMD]` run). Treat that summary as a record of the run, not
+independent proof — it is produced by the implementing agent; CI running
+the suite on the pushed state is the independent evidence. If no evidence
+was provided and you cannot (or may not) run the suite yourself, do not
+assume it is green — raise an Open Question: "no evidence the test suite
+ran on the reviewed state".
 
 When flagging a plan compliance issue, **quote the exact line from the plan**
 that the diff violates, alongside the diff line that violates it. Paraphrasing

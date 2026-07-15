@@ -30,7 +30,11 @@ them is your responsibility.
 3. **Stay on the branch you were started on.** Commit directly onto the current
    branch. Never create, switch, or check out branches, and never
    `git worktree add` (restoring a file with `git checkout -- <path>` is fine).
-   If you believe the branch must change, STOP and ask first.
+   If you believe the branch must change, STOP and ask first. Feature work
+   assumes the **human** starts the session on a fresh feature branch — the
+   code review diffs against the default branch and the PR targets it, neither
+   of which works from the default branch itself. If you start on the default
+   branch, STOP and ask before planning.
 
 4. **Get reviewed before pushing.** Never `git push` or open a PR until the
    `code-critic` sub-agent has passed with no FAIL items. After a pass, record

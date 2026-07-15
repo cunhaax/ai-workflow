@@ -14,6 +14,16 @@
 # Note: pushing an ANNOTATED tag always blocks — the hook sees the tag
 # object's SHA, which can never equal the reviewed commit SHA. Use
 # --no-verify when pushing release tags.
+#
+# Note: the marker holds a single SHA, so pushing several refs at once can
+# only succeed if they all point at the reviewed commit. Push one branch at
+# a time — the single-branch flow of AGENTS.md Rule 3 does this naturally.
+#
+# Scope: this gate deterministically enforces FRESHNESS (the pushed commit
+# is exactly the one reviewed; any later commit forces a re-review). It does
+# not verify the review's verdict — review-ok.sh records whatever it is told.
+# The verdict is covered by the ask-rule in .claude/settings.json (a human
+# approves every recording) and by CI as independent test evidence.
 
 [ "$SKIP_REVIEW_GATE" = "1" ] && exit 0
 

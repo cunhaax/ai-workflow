@@ -6,7 +6,7 @@ permissionMode: plan
 model: opus
 effort: high
 skills:
-  - plan
+  - plan-draft
 ---
 
 # Planner Agent
@@ -24,7 +24,7 @@ Before planning, read to understand context:
 
 ## Planning
 
-Apply the `/plan` skill to produce the implementation plan.
+Apply the `/plan-draft` skill to produce the implementation plan.
 
 ## Output
 
