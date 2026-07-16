@@ -80,6 +80,11 @@ ensure_ignored() { # $1 = literal .gitignore line
 
 # --- template-owned: overwritten on every run ------------------------------
 
+# A plain POSIX pipeline only surfaces the last stage's exit status, so a
+# failing `find` below would be invisible — guard its roots up front instead.
+[ -d "$TEMPLATE_DIR/.claude/skills" ] && [ -d "$TEMPLATE_DIR/.claude/agents" ] \
+    || die "template clone is missing .claude/skills or .claude/agents — corrupted checkout?"
+
 echo "Template-owned files (installed/updated):"
 
 ( CDPATH='' cd -- "$TEMPLATE_DIR" && find .claude/skills .claude/agents -type f ! -name '.DS_Store' ) \
@@ -116,7 +121,8 @@ ensure_ignored ".qa-evidence/"
 
 if rev=$(git -C "$TEMPLATE_DIR" rev-parse --short HEAD 2>/dev/null); then
     printf '%s\n' "$rev" > "$TARGET/.claude/ai-workflow-template.rev"
-    echo "Installed from template revision $rev (recorded in .claude/ai-workflow-template.rev)."
+    echo "Installed from template revision $rev (recorded in .claude/ai-workflow-template.rev" \
+         "— commit that file with the install, so the repo history shows template updates)."
 fi
 
 # --- conditional warnings ---------------------------------------------------

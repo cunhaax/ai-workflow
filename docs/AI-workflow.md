@@ -572,7 +572,8 @@ the ownership split described above:
   scaffolding — are created only if missing and **never overwritten**.
 
 It also appends the gate's two `.gitignore` entries, records the installed
-template revision in `.claude/ai-workflow-template.rev`, warns when the
+template revision in `.claude/ai-workflow-template.rev` (meant to be
+committed, so the repo history shows template-version bumps), warns when the
 target's `settings.json` has drifted from the template's gate rules or when
 `core.hooksPath` is not enabled in the clone, and prints the manual
 adaptation steps.

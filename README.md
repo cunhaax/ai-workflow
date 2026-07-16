@@ -85,9 +85,10 @@ Files come in two ownership classes:
   scaffolding. Created only if missing, **never overwritten**.
 
 The script also appends the two `.gitignore` entries the gate needs, records
-the installed template revision in `.claude/ai-workflow-template.rev`, and
-prints the remaining manual steps (fill in `AGENTS.md` and
-`docs/agent-rules/`, rename the CI example, enable the hook).
+the installed template revision in `.claude/ai-workflow-template.rev` (commit
+it — the repo history then shows every template update), and prints the
+remaining manual steps (fill in `AGENTS.md` and `docs/agent-rules/`, rename
+the CI example, enable the hook).
 
 **Updating later** is the same command: `git pull` in the template clone, then
 re-run `scripts/install.sh` against your repo. Template-owned files are
