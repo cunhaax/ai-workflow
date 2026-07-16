@@ -11,7 +11,7 @@ a single source of reusable knowledge (the *skills*). Implementation itself
 stays with the main agent, which orchestrates the rest.
 
 Read **`docs/AI-workflow.md`** for the full design rationale. This README is the
-quick-start for *adapting* the template to a new project.
+quick-start for *installing and adapting* the template in a new project.
 
 ## What's in here
 
@@ -30,18 +30,22 @@ CLAUDE.md                    # Thin: imports AGENTS.md via @AGENTS.md
     ├── feature/SKILL.md     # The full workflow (plan→critique→…→PR)
     ├── plan-draft/SKILL.md  # (named plan-draft to avoid Claude Code's built-in /plan)
     ├── plan-critic/SKILL.md
-    ├── code-critic/SKILL.md # Base standards + a Project-Specific Rules placeholder
-    │                        #   (named code-critic to avoid shadowing Claude Code's
-    │                        #   bundled code-review skill)
+    ├── code-critic/SKILL.md # Base review standards (named code-critic to avoid
+    │                        #   shadowing Claude Code's bundled code-review skill)
     └── adversarial-qa/SKILL.md
 .github/workflows/
 └── ci.yml.example           # CI skeleton — rename to ci.yml and fill in
 docs/
 ├── adr/                     # Architecture Decision Records (ADR 0001 included)
+├── agent-rules/             # Project-owned skill extensions, read at runtime:
+│   ├── code-critic.md       #   your review rules + privacy anchors
+│   └── plan-critic.md       #   your product's risk lenses
 ├── product-context/         # Vision, strategy, requirements (add your own)
 └── AI-workflow.md           # The full guide to this system
 githooks/pre-push            # Review gate: blocks pushing unreviewed commits
-scripts/review-ok.sh         # Records a passing review for the current HEAD
+scripts/
+├── install.sh               # Installs/updates the template in a target repo
+└── review-ok.sh             # Records a passing review for the current HEAD
 .gitignore                   # Ignores .review-passed and .qa-evidence/
 ```
 
@@ -54,39 +58,72 @@ body into the sub-agent at startup). The *same* skill also backs its `/slash`
 command for ad-hoc use, so the knowledge lives in exactly one place — no
 duplication, nothing to drift.
 
-## Adapting it to your project — the placeholders
+**Project-agnostic knowledge, project-owned extensions.** The skills and
+sub-agents contain no project-specific text. They name your commands, app URL,
+and default branch *by role* from `AGENTS.md` → *Commands*, and they read your
+own review rules and risk lenses from `docs/agent-rules/` at runtime (a missing
+file means base rules only). You never edit `.claude/` to adapt the template —
+which is also what makes the knowledge layer copyable between projects, and
+installable once at user level (`~/.claude/`) or as a Claude Code plugin later,
+without edits.
 
-The template ships with the **reusable** content intact and every
-**project-specific** decision left as a placeholder. Search the tree for `[` and
-`TODO` and fill in:
+## Installing into a project
 
-| Placeholder            | Replace with                                              |
-|------------------------|----------------------------------------------------------|
-| `[PROJECT_NAME]`       | Your project's name                                       |
-| `[BUILD_CMD]`          | Build command (e.g. `make build`, `npm run build`)        |
-| `[TEST_CMD]`           | Run-all-tests command                                     |
-| `[CHECK_CMD]`          | All-checks-incl-tests command                             |
-| `[RUN_CMD]`            | Start the dev server                                      |
-| `[STOP_CMD]`           | Stop the dev server                                       |
-| `[SINGLE_TEST_EXAMPLE]`| How to run one test                                       |
-| `[APP_URL]`            | Local app URL for QA (e.g. `http://localhost:3000`)       |
-| `[DEFAULT_BRANCH]`     | `main` / `master` — the branch reviews diff against       |
+From a clone of this template:
 
-Sections marked `<!-- ... -->` with a `[TODO: ...]` are where you write your own
-project-specific content:
+```sh
+scripts/install.sh /path/to/your-repo
+```
 
-- **`.claude/skills/code-critic/SKILL.md` → "Project-Specific Rules"** — your
-  repo's hard constraints (one bullet per rule, each with a severity). This is
-  the section that grows over time as agents produce bad output your rules
-  didn't catch. It includes the PRIVACY block (`[SENSITIVE_CATEGORIES]`,
-  `[PUBLIC_SURFACES]`, `[IDENTIFIER_EXEMPTIONS]`, `[PRIVACY_TESTS]`) that
-  anchors the base privacy rules to your codebase — for a project holding
-  personal data, the most consequential placeholder in the template.
-- **`.claude/skills/plan-critic/SKILL.md` → "Project-Specific Lenses"** — the
-  areas where generic plans regularly miss issues that matter for *your* product.
-- **`AGENTS.md`** — overview, commands, architecture, testing conventions, and
-  the *Sensitive Areas* (security surface) list — the canonical list `/feature`
-  consults for the critic-skip, model-escalation, and PR-flag decisions.
+Files come in two ownership classes:
+
+- **Template-owned** — the skills, sub-agents, git hook, `review-ok.sh`, and
+  the workflow guide. Copied verbatim and **overwritten on every re-run**;
+  they contain nothing project-specific.
+- **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
+  `.claude/settings.json`, the CI example, and the ADR / product-context
+  scaffolding. Created only if missing, **never overwritten**.
+
+The script also appends the two `.gitignore` entries the gate needs, records
+the installed template revision in `.claude/ai-workflow-template.rev`, and
+prints the remaining manual steps (fill in `AGENTS.md` and
+`docs/agent-rules/`, rename the CI example, enable the hook).
+
+**Updating later** is the same command: `git pull` in the template clone, then
+re-run `scripts/install.sh` against your repo. Template-owned files are
+refreshed; everything you filled in stays untouched.
+
+## Adapting it to your project — where your content goes
+
+You never edit the skills. All project-specific content lives in files you own:
+
+- **`AGENTS.md`** — overview, architecture, testing conventions, the
+  *Sensitive Areas* (security surface) list — the canonical list `/feature`
+  consults for the critic-skip, model-escalation, and PR-flag decisions — and
+  the *Commands* section, the single home of every `[PLACEHOLDER]`:
+
+  | Placeholder            | Replace with                                              |
+  |------------------------|----------------------------------------------------------|
+  | `[PROJECT_NAME]`       | Your project's name                                       |
+  | `[BUILD_CMD]`          | Build command (e.g. `make build`, `npm run build`)        |
+  | `[TEST_CMD]`           | Run-all-tests command                                     |
+  | `[CHECK_CMD]`          | All-checks-incl-tests command                             |
+  | `[RUN_CMD]`            | Start the dev server                                      |
+  | `[STOP_CMD]`           | Stop the dev server                                       |
+  | `[SINGLE_TEST_EXAMPLE]`| How to run one test                                       |
+  | `[APP_URL]`            | Local app URL for QA (e.g. `http://localhost:3000`)       |
+  | `[DEFAULT_BRANCH]`     | `main` / `master` — the branch reviews diff against       |
+
+- **`docs/agent-rules/code-critic.md`** — your repo's hard review constraints
+  (one bullet per rule, each with a severity), read by the `code-critic` skill
+  on every review. This is the file that grows over time as agents produce bad
+  output the base rules didn't catch. It includes the privacy anchors
+  (sensitive categories, public surfaces, identifier exemptions, existing
+  privacy tests) that bind the base privacy rules to your codebase — for a
+  project holding personal data, the most consequential file in the template.
+- **`docs/agent-rules/plan-critic.md`** — the areas where generic plans
+  regularly miss issues that matter for *your* product, read by the
+  `plan-critic` skill on every critique.
 - **`docs/product-context/`** and **`docs/adr/`** — your vision/strategy docs and
   architecture decisions.
 
@@ -133,5 +170,5 @@ of which works from the default branch itself. Then drive the work with
 See *Evolving the System* in `docs/AI-workflow.md` (the canonical version —
 this section deliberately doesn't restate it). The short version: start small
 (planner + code-critic first); every time an agent's bad output slips past
-the rules, add a rule to the relevant skill — or better, a build-enforced
-fitness test; keep `AGENTS.md` lean.
+the rules, add a rule to `docs/agent-rules/code-critic.md` — or better, a
+build-enforced fitness test; keep `AGENTS.md` lean.

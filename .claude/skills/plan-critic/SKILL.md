@@ -86,28 +86,14 @@ applying the four methods above — they are not a separate checklist.
 
 ## Project-Specific Lenses
 
-<!-- Replace with YOUR product's high-risk areas — the places where generic
-     plans regularly miss issues that matter for this product. These are NOT a
-     checklist; they direct extra attention while applying the four methods
-     above. Delete the placeholders and write 4–7 concrete lenses.
+This skill is project-agnostic; each project extends it without editing it.
+If `docs/agent-rules/plan-critic.md` exists in the repository, read it now —
+it lists this product's high-risk areas, the places where generic plans
+regularly miss issues that matter here. Like the base lenses above, they
+direct extra attention while applying the four methods; they are not a
+separate checklist.
 
-     Good lenses name a concrete failure surface and why it is easy to get
-     wrong, e.g.:
-       - "[Sensitive-data category] must never leak into [context]; any plan
-          touching [visibility / export / analytics] needs explicit consent
-          consideration."
-       - "[State machine X] visibility/permission rules across [viewer types];
-          the state space is non-obvious."
-       - "[Abuse vector] on [flow]: spam, enumeration, scraping, harassment." -->
-
-When applying the methods above, give explicit attention to:
-
-- [TODO: high-risk area 1 — what to watch and why it's easy to miss]
-- [TODO: high-risk area 2]
-- [TODO: high-risk area 3]
-
-These are not a checklist; they are areas where generic plans regularly miss
-issues that matter for this product.
+If the file does not exist, apply the base lenses alone.
 
 ---
 
