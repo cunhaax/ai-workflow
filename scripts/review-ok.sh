@@ -14,6 +14,11 @@
 
 set -eu
 
+if [ "$(git config core.hooksPath || true)" != "githooks" ]; then
+    echo "WARNING: core.hooksPath is not 'githooks' — the pre-push review gate is NOT active in this clone." >&2
+    echo "Enable it once per clone: git config core.hooksPath githooks" >&2
+fi
+
 sha="$(git rev-parse HEAD)"
 echo "$sha" > "$(git rev-parse --show-toplevel)/.review-passed"
 echo "Recorded review pass for commit $(git rev-parse --short HEAD)."

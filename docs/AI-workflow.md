@@ -36,17 +36,20 @@ project-root/
 ├── AGENTS.md                              # Lean project guide (canonical)
 ├── CLAUDE.md                              # Thin: imports AGENTS.md via `@AGENTS.md`
 ├── .claude/
+│   ├── settings.json                      # Permission rules guarding the review gate
 │   ├── agents/                            # Sub-agent definitions (frontmatter + inline prompt)
-│   │   ├── planner.md                     # Orchestration + skills: [plan]
+│   │   ├── planner.md                     # Orchestration + skills: [plan-draft]
 │   │   ├── plan-critic.md                 # Orchestration + skills: [plan-critic]
 │   │   ├── code-critic.md                 # Orchestration + skills: [code-critic]
 │   │   └── adversarial-qa.md              # Orchestration + skills: [adversarial-qa]  (+ Playwright tools)
 │   └── skills/                            # Reusable knowledge, one directory per skill
 │       ├── feature/SKILL.md               # Full workflow (plan → critique → implement → review → QA)
-│       ├── plan/SKILL.md
+│       ├── plan-draft/SKILL.md
 │       ├── plan-critic/SKILL.md
 │       ├── code-critic/SKILL.md           # Base standards + a Project-Specific Rules section
 │       └── adversarial-qa/SKILL.md
+├── .github/workflows/
+│   └── ci.yml.example                     # CI skeleton — rename to ci.yml and fill in
 ├── githooks/
 │   └── pre-push                           # Review gate: blocks pushes of unreviewed commits
 ├── scripts/
@@ -160,68 +163,44 @@ linked file is the source of truth. Keep each `SKILL.md` focused (Claude Code
 recommends under ~500 lines; move bulky reference material into sibling files in
 the skill's directory).
 
-### `.claude/skills/plan/SKILL.md` — `/plan`
+### `.claude/skills/plan-draft/SKILL.md` — `/plan-draft`
 
-Produces a structured implementation plan before any code is written: gather
-context (external specs, module `AGENTS.md` files, ADRs, product docs), reproduce
-the **complete** requirements verbatim (the plan's Requirements section is the
-spec other agents validate against), enumerate every edge case, and propose a
-test strategy. The plan opens with an **Approval Summary** — goal, numbered
-acceptance criteria (`AC-n`), key decisions, risk flags — sized for a phone
-screen; that summary is what the developer approves. A **Contract** section
-pins routes, fields, response shapes, and schema changes for full-stack slices
-before the Approach, and every `AC-n` must map to a Test Strategy entry tagged
-`[AC-n]`. Key convention: **tests are the plan's deterministic oracle** —
-every claim the plan makes about user-visible behavior must map to a committed
-end-to-end test, and the plan must **not** contain a separate "manual
-verification / QA checklist" (convert any "try X and confirm Y" into a committed
-test assertion). Ambiguities are flagged as `NEEDS_DECISION` in the plan, never
-asked directly from inside a sub-agent. Output is plan text only — no files, no
-code. See `.claude/skills/plan/SKILL.md` for the rules and the plan template.
+Produces the implementation plan before any code is written. The design
+choices worth knowing: the plan opens with a phone-sized **Approval Summary**
+(the thing the developer actually approves), pins a **Contract** section
+before the Approach, and treats **tests as the plan's deterministic oracle** —
+every user-visible claim maps to a committed test tagged `[AC-n]`, and manual
+"try X and confirm Y" checklists are banned (each becomes a test assertion
+instead). Ambiguities surface as `NEEDS_DECISION` in the plan, never as
+questions asked from inside a sub-agent. The skill file holds the full rules
+and the plan template. (Named `plan-draft` so it cannot collide with Claude
+Code's built-in plan-mode `/plan` command.)
 
 ### `.claude/skills/plan-critic/SKILL.md` — `/plan-critic`
 
-Attacks a **draft plan** before it becomes commitment — load-bearing logic:
-if the plan is wrong, downstream review and QA mostly verify that the wrong thing
-was built correctly. Applies four methods, each of which must produce findings or
-an explicit "no concerns, because…": (1) **pre-mortem**, (2) **inversion**,
-(3) **load-bearing assumptions**, (4) **consistency** with ADRs and product
-intent. A **Project-Specific Lenses** section (fill it in per product) directs
-extra attention to the areas where generic plans regularly miss issues that
-matter. It critiques the plan's substance, not its writing or formatting, and
-does **not** rewrite the plan — concrete suggestions go in a "Suggested Plan
-Amendments" section; the developer decides what to adopt. See
-`.claude/skills/plan-critic/SKILL.md` for the methods and output format.
+Attacks a **draft plan** before it becomes commitment — if the plan is wrong,
+downstream review and QA mostly verify that the wrong thing was built
+correctly. Four mandatory methods (pre-mortem, inversion, load-bearing
+assumptions, consistency with ADRs and product intent), each of which must
+produce findings or an explicit "no concerns, because…". It critiques
+substance, not writing, and never rewrites the plan — suggestions go in a
+"Suggested Plan Amendments" section; the developer decides what to adopt.
+The skill file holds the methods, the project-specific lenses to fill in,
+and the output format.
 
 ### `.claude/skills/code-critic/SKILL.md` — `/code-critic`
 
-Reviews a diff against project standards from an adversarial stance (assume
-something is wrong; guard against confirmation bias; if you find nothing after
-genuine effort, that is itself a finding to state). Notable points:
-
-- **It owns test completeness**, not just test quality. Because `/adversarial-qa` is
-  exploratory (below), code-critic verifies that committed tests cover every
-  Requirement and Edge Case in the plan **and** the branches/boundaries/inputs
-  the plan did not enumerate (critical-analysis pass).
-- Verdicts are `PASS`, `PASS (N/A)`, `FAIL`, `NEEDS_DECISION`, plus an
-  **Open Question** category for risks that cannot be confirmed from source alone
-  (runtime config, prod data shape, deployment topology).
-- It reads beyond the diff (surrounding code, tests, migrations) and reports
-  which **ADRs** it read (or "none relevant" with a reason).
-- A `## Project-Specific Rules` section inlines the repo's hard constraints
-  (fill it in per project). Violations carry the same severity as the base
-  standards. Any mechanically checkable subset should be build-enforced (see
-  *Deterministic enforcement* below); for those the reviewer only checks that the
-  diff doesn't weaken the enforcement.
-- A **Privacy and Data Protection** section takes the same fitness-test-first
-  stance: three recommended build-enforced tests (deletion-by-design,
-  public-surface whitelist, no personal data in logs) plus a small manual
-  residue (indirect serialization into logs, personal data in URLs).
-  Consent, retention, and data-classification rules are deliberately NOT
-  per-PR review items — they are product flows to build and then protect
-  with tests.
-
-See `.claude/skills/code-critic/SKILL.md` for the full checklist and output format.
+Reviews the diff from an adversarial stance (assume something is wrong; a
+review that finds nothing must document its disconfirmation attempt). Two
+design points matter to the system as a whole: it **owns test completeness**
+— because `/adversarial-qa` is exploratory, verifying that committed tests
+cover the plan *and* the branches/boundaries the plan never enumerated lives
+here — and its verdicts (`PASS` / `PASS (N/A)` / `FAIL` / `NEEDS_DECISION` /
+**Open Question**) are what the `/feature` gates key on. Project-specific
+rules and the privacy rules are inlined in the skill; any mechanically
+checkable rule should graduate to a build-enforced test (below), after which
+the reviewer only checks that the diff doesn't weaken the enforcement. The
+skill file holds the full standards, checklist, and output format.
 
 ## Deterministic enforcement — below the LLM layer
 
@@ -240,17 +219,26 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   via `git config core.hooksPath githooks`): after a code-critic pass with
   no FAIL items, the agent records the reviewed HEAD with `scripts/review-ok.sh`;
   the hook refuses to push any other commit, so post-review changes force a
-  re-review. Human bypass: `git push --no-verify`.
-- **CI** (e.g. a `.github/workflows/ci.yml` that runs `[CHECK_CMD]` on every
-  push and PR) — independent evidence for the human reviewer that tests pass,
-  replacing trust in a session transcript. <!-- [TODO: add a CI workflow for
-  your platform.] -->
+  re-review. Human bypass: `git push --no-verify`. Be precise about the trust
+  boundary: the hook deterministically enforces **freshness** (the pushed
+  commit is exactly the reviewed one), not the review's **verdict** —
+  `review-ok.sh` records whatever it is told. The verdict is covered by the
+  `ask` rule in `.claude/settings.json` (recording a pass always surfaces a
+  human approval prompt in Claude Code, and the bypass flags are denied to
+  agents, best-effort) and by CI as independent test evidence. `review-ok.sh`
+  also warns when `core.hooksPath` is unset, so a clone that skipped the
+  one-time setup finds out instead of running gateless.
+- **CI** — independent evidence for the human reviewer that tests pass on the
+  pushed state, replacing trust in a session transcript (or in a test summary
+  pasted by the implementing agent). A ready-to-adapt skeleton ships as
+  `.github/workflows/ci.yml.example` — rename to `ci.yml` and replace the
+  placeholders.
 - **Secret and dependency scanning** — wire a secret scanner (e.g. gitleaks)
   and a dependency audit into `[CHECK_CMD]` and CI, so committed credentials
   and known-vulnerable dependencies fail the build instead of relying on
   reviewer attention. These are the cheapest security gates in the pipeline.
-  <!-- [TODO: pick the scanners for your stack and add them to
-  [CHECK_CMD]/CI.] -->
+  The CI skeleton includes gitleaks. <!-- [TODO: add a dependency audit for
+  your stack and mirror both scanners into [CHECK_CMD] for local runs.] -->
 
 Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
@@ -294,63 +282,34 @@ fitness tests the same way — one per mechanically checkable rule.
 
 **Exploratory and adversarial — not a re-verification of the spec.** Committed
 end-to-end tests encode the plan's Requirements deterministically (and
-code-critic checks their completeness); `/adversarial-qa`'s job is to go **beyond** them.
-It drives the feature in the **running app** via the Playwright MCP, probes past
-the happy path (narrow viewports, keyboard-only nav, browser back button,
-multi-tab forms, weird/long/XSS paste, mid-edit reloads, stale state after a
-failed submit), and surfaces anything that looks wrong — even outside the
-feature's plan — rather than working around it. Before reporting, it checks
-open `known-issue` GitHub issues and lists matches as known/deferred instead
-of re-triaging them. If the server won't start or Playwright is unavailable it
-STOPs and reports the blocker (no curl/SQL substitutes). Findings cite
-evidence saved under `.qa-evidence/`. See `.claude/skills/adversarial-qa/SKILL.md` for the
-probe list and output format.
+code-critic checks their completeness); `/adversarial-qa`'s job is to go
+**beyond** them. It drives the feature in the **running app** via the
+Playwright MCP, probes past the happy path, and surfaces anything that looks
+wrong — even outside the feature's plan — rather than working around it. It
+checks open `known-issue` GitHub issues so already-deferred findings are
+reported as known instead of re-triaged, and STOPs on blockers (server won't
+start, Playwright unavailable) with no curl/SQL substitutes. Evidence
+screenshots land in `.qa-evidence/` — gitignored and session-local, which is
+why deferred findings must be fully described in their `known-issue` issue.
+The skill file holds the probe list and output format.
 
 ### `.claude/skills/feature/SKILL.md` — `/feature`
 
 The full lifecycle the **main** agent runs for non-trivial work:
-**plan → critique → implement → test → code-review → QA → PR**, with explicit
-gates. Highlights of the definition:
-
-1. **Enter plan mode first** (a structural gate — edit tools are blocked until
-   approval), then delegate to the `planner` sub-agent (passing the user's prompt
-   verbatim; the planner fetches any external specs).
-2. **Critique** via the `plan-critic` sub-agent. Skip **only** if the change is
-   trivial under **all** criteria (≲50 lines non-test; touches none of the
-   project's sensitive areas; no new endpoints/persisted fields/dependencies)
-   **and the user explicitly said "skip the critic"**. Do not infer "trivial"
-   yourself — the user has to ask.
-3. **Present plan and critique together** for approval — leading with the
-   approval screen: the plan's Approval Summary followed by the critique's
-   Confidence verdict and top findings; the full plan and critique follow
-   below. Exit plan mode only after approval. Re-plan → re-critique →
-   re-present on changes, leading with a delta against the previous version;
-   fold amendments the user accepts into the plan text itself.
-4. **Implement** — acceptance tests from the plan's Test Strategy first (the
-   `[AC-n]`-tagged ones encode the approved contract and may not be weakened
-   to pass), then code until green, running the suite once a coherent unit is
-   complete. Material scope changes send you back into plan mode.
-5. **Code review** via the `code-critic` sub-agent (pass the approved plan and
-   the latest test output). Relay all `NEEDS_DECISION` items to the user; fix
-   `FAIL` items and re-run. **Do not push or open a PR until the reviewer passes
-   with no FAIL items** — after a pass, record it with `scripts/review-ok.sh`
-   (the pre-push hook enforces it); re-run the reviewer after any later change,
-   including QA-driven fixes. For a diff that touches the security surface,
-   escalate the reviewer's model to `opus` (the stronger bug-finder) for that
-   review.
-6. **Exploratory QA** via the `adversarial-qa` sub-agent — only for changes with a UI
-   surface (templates/views, static assets, view/fragment-rendering
-   controllers); otherwise state that QA was skipped and why. Relay findings and
-   wait for direction; deferred findings become `known-issue` GitHub issues.
-7. **Open the PR** only after the code review passes and every QA finding is
-   dispositioned (or QA was skipped, no UI surface). The PR body carries the
-   pipeline's conclusions — plan summary, the acceptance-criteria → test
-   table (`AC-n` → the committed tests that prove it), review outcome with
-   decisions, QA dispositions, test evidence — and flags security-surface
-   changes with a recommendation for a second, independent `code-critic`
-   pass before merging.
-
-See `.claude/skills/feature/SKILL.md` for the authoritative step list and rules.
+**plan → critique → implement → test → code-review → QA → PR**. The
+authoritative step list lives in the skill; the orchestration view is
+diagrammed under *How It Works* below. The gates worth naming: the session
+must start on a human-created feature branch (agents may not create one —
+Rule 3); plan mode is entered before any planning (a structural block on
+edit tools until approval); the plan-critic may be skipped only for trivial
+changes **and** only when the user explicitly asks; `[AC-n]` acceptance tests
+are written before implementation and may not be weakened to pass; no push or
+PR until the code-critic passes with no FAIL items (recorded via
+`scripts/review-ok.sh`, enforced by the pre-push hook), with the reviewer's
+model escalated to Opus on security-surface diffs; QA runs only for changes
+with a UI surface; and the PR body carries the pipeline's conclusions (plan
+summary, AC → test table, review outcome with decisions, QA dispositions,
+test evidence).
 
 ## Sub-agents — orchestration over the skills
 
@@ -361,8 +320,8 @@ body is written for the **autonomous** case (a sub-agent), which also makes it
 usable as an interactive main agent (`claude --agent <name>`).
 
 - **`planner`** — senior architect. Reads the prompt, linked docs, module
-  `AGENTS.md` files, ADRs, and product docs; applies the preloaded `plan` skill;
-  returns plan text only (no files, no code).
+  `AGENTS.md` files, ADRs, and product docs; applies the preloaded `plan-draft`
+  skill; returns plan text only (no files, no code).
 - **`plan-critic`** — adversarial plan reviewer. Reads the plan text, relevant
   ADRs, product docs in `docs/product-context/`, and touched-module `AGENTS.md`
   files; applies the preloaded `plan-critic` skill; surfaces concerns without
@@ -374,44 +333,24 @@ usable as an interactive main agent (`claude --agent <name>`).
 - **`adversarial-qa`** — QA engineer. Not a code-quality review; applies the preloaded `adversarial-qa`
   skill to drive the running app and surface what the plan and tests missed.
 
-The frontmatter each sub-agent carries:
+Each sub-agent's frontmatter pins its tools, model, effort, permission mode,
+and the one skill it preloads. The four files in `.claude/agents/` are the
+source of truth — each is one screen long, so their values are deliberately
+not restated here (a table of them is exactly the kind of verbatim copy that
+drifts). The design choices behind those values:
 
-| Sub-agent        | tools                          | model  | effort | permissionMode | skills        |
-|------------------|--------------------------------|--------|--------|----------------|---------------|
-| `planner`        | Read, Bash, WebFetch           | opus   | high   | plan           | plan          |
-| `plan-critic`    | Read, Bash                     | opus   | high   | plan           | plan-critic   |
-| `code-critic`    | Read, Bash                     | sonnet | high   | —              | code-critic   |
-| `adversarial-qa` | Read, Bash, Playwright MCP set | sonnet | medium | —              | adversarial-qa |
-
-The `planner` and `plan-critic` carry `permissionMode: plan` so they stay
-read-only; the `planner` also carries `WebFetch` so it — and only it — can pull
-the external specs a prompt links to; the `adversarial-qa` sub-agent lists the Playwright
-`browser_*` MCP tools so it can drive the app. Each lists exactly the one skill
-it applies, so that skill's full body is preloaded at startup. Example —
-`.claude/agents/code-critic.md`:
-
-```markdown
----
-name: code-critic
-description: "Reviews code changes against project standards after implementation is complete. MUST be invoked before presenting any work to the user. Produces a structured review with PASS/FAIL/NEEDS_DECISION per item."
-tools: Read, Bash
-model: sonnet
-effort: high
-skills:
-  - code-critic
----
-
-# Code Critic Agent
-
-You are a strict code reviewer for a production system.
-
-You may use Bash for read-only inspection only … Apply the `/code-critic` skill
-to review the changes. Output only the review.
-```
-
-The `skills: [code-critic]` line preloads the full `/code-critic` checklist and
-standards into the sub-agent's context at startup, so the body only needs the
-orchestration.
+- `planner` and `plan-critic` carry `permissionMode: plan`, so they stay
+  read-only structurally, not just by instruction.
+- Only the `planner` carries `WebFetch` — external specs enter the pipeline
+  at exactly one point.
+- `adversarial-qa` lists the Playwright `browser_*` MCP tools so it can
+  drive the app.
+- The plan-stage critics run on the stronger model tier (a bad plan poisons
+  everything downstream); the `code-critic` runs a tier lower by default and
+  is escalated by the `/feature` workflow on security-surface diffs.
+- Each agent lists exactly the one skill it applies, so that skill's full
+  body is preloaded into its context at startup and the agent body only
+  needs the orchestration (what to read, what to output, what not to touch).
 
 ## How It Works
 
@@ -556,24 +495,11 @@ spike, or running QA on one area. Skills live in `.claude/skills/`
 (project-scoped) or `~/.claude/skills/` (personal). Each is a directory with a
 `SKILL.md` that holds the full knowledge — the same file the matching sub-agent
 preloads. For example, `/code-critic` and the `code-critic` sub-agent both use
-`.claude/skills/code-critic/SKILL.md`:
+`.claude/skills/code-critic/SKILL.md` — see that file for the shape: a `name`,
+a `description` the tool matches invocations against, and a body that is the
+knowledge itself.
 
-```markdown
----
-name: code-critic
-description: >
-  Code review checklist, coding standards, and this repo's inlined
-  project-specific rules. Invoked as /code-critic for an ad-hoc review, or
-  preloaded by the code-critic sub-agent in the /feature workflow.
----
-
-# /code-critic — Code Review
-
-Apply this skill to review code changes against project standards.
-… (full checklist, standards, and Project-Specific Rules) …
-```
-
-The five wired-up commands are `/feature`, `/plan`, `/plan-critic`,
+The five wired-up commands are `/feature`, `/plan-draft`, `/plan-critic`,
 `/code-critic`, and `/adversarial-qa`. `/feature` is the primary entry point — it triggers
 the full orchestrated workflow; the others invoke individual steps ad-hoc.
 
@@ -587,9 +513,10 @@ sub-agent preloads via `skills: [code-critic]` — while the bundled
 `/code-review` (including `/code-review ultra`, the billed deep cloud review)
 stays reachable as an optional, user-launched pass on especially high-stakes
 changes. Do not rename the skill back to `code-review` unless you want the
-shadowing. Also note `/plan` shares a name with Claude Code's built-in
-*plan-mode* command (a separate mechanism from skills), so if you invoke
-`/plan` ad-hoc, confirm your build runs this repo's planning skill.
+shadowing. The planning skill follows the same principle from the other
+direction: it is named `plan-draft` rather than `plan` because Claude Code's
+built-in *plan-mode* command already answers to `/plan` (a separate mechanism
+from skills), and the rename removes the collision instead of documenting it.
 
 #### Skills vs sub-agents vs slash commands
 
@@ -600,7 +527,7 @@ Three concepts, two directories under `.claude/`:
 - **Sub-agents** (`.claude/agents/<name>.md`) compose a skill with orchestration —
   what context to read, output format, file constraints, and the tools/model the
   agent runs with. They preload their skill via the `skills:` frontmatter field.
-- **Slash commands** are just the skills invoked directly (`/plan`,
+- **Slash commands** are just the skills invoked directly (`/plan-draft`,
   `/code-critic`, …), skipping the orchestration layer, for interactive ad-hoc
   use. `/feature` is the exception — its skill triggers the full orchestrated
   workflow.

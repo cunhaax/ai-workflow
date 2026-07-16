@@ -18,6 +18,13 @@ code-review → QA → PR.
 
 ### Step 1 — Draft, critique, and approve the plan
 
+**Preconditions — check the branch first.** The workflow assumes the human
+started this session on a fresh feature branch: the code review (Step 4)
+diffs against `[DEFAULT_BRANCH]` and Step 9 opens a PR targeting it, neither
+of which works from `[DEFAULT_BRANCH]` itself. If the session is on
+`[DEFAULT_BRANCH]`, STOP and ask the user to create a feature branch — you
+may not create or switch branches yourself (Rule 3 in `AGENTS.md`).
+
 **Enter plan mode now**, before drafting. Plan mode is a structural
 commitment: while in plan mode the harness blocks edit tools, so the
 workflow cannot skip the approval gate even if the agent is tempted to
@@ -124,9 +131,11 @@ hook compares against it.
 Invoke the `code-critic` sub-agent to review all changes against project
 standards. Pass the approved plan text, and include the summary output of the
 most recent full `[TEST_CMD]` run (Step 3). The reviewer is not allowed to run
-the test suite itself — it verifies coverage statically and needs evidence
-that the committed tests actually ran and passed, rather than taking the
-implementer's word for it.
+the test suite itself — it verifies coverage statically and needs a record
+that the committed tests ran and passed on the reviewed state. That summary
+comes from you, the implementer, so it is a record, not independent proof —
+CI running `[CHECK_CMD]` on the pushed branch is the independent evidence
+(see *Deterministic enforcement* in `docs/AI-workflow.md`).
 
 **Escalate the model on the security surface.** The `code-critic` runs on
 Sonnet by default (see its wrapper). If the diff touches the security surface
@@ -181,9 +190,12 @@ a PR and wait for direction on each (fix now, defer, or ignore).
 For each finding the user chooses to **defer**, file a GitHub issue labeled
 `known-issue` (`gh issue create --label known-issue …`) describing the
 behaviour, where it lives, the QA pass that found it, and sign it with model
-attribution. The QA skill checks that label on every pass, so deferred
-findings are reported as known instead of being re-triaged each time. Do not
-file issues for findings the user chooses to ignore outright.
+attribution. QA screenshots under `.qa-evidence/` are session-local
+(gitignored), so the issue body must stand alone: include reproduction steps
+and describe in words what the screenshot showed. The QA skill checks that
+label on every pass, so deferred findings are reported as known instead of
+being re-triaged each time. Do not file issues for findings the user chooses
+to ignore outright.
 
 ### Step 9 — Open PR
 
@@ -205,8 +217,10 @@ or a session transcript:
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
   that was raised, and the decision the user made on each.
 - **QA outcome** — findings with their dispositions (fixed / deferred with
-  issue number / ignored), or "skipped: no UI surface". Reference
-  `.qa-evidence/` paths where a finding needs proof.
+  issue number / ignored), or "skipped: no UI surface". Describe each finding
+  in words — `.qa-evidence/` is gitignored and session-local, so its paths
+  are dead links to anyone reading the PR; the durable record for a deferred
+  finding is its `known-issue` issue.
 - **Test evidence** — one line: the test count and result from the final
   `[TEST_CMD]` run.
 

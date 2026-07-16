@@ -1,16 +1,17 @@
 ---
-name: plan
+name: plan-draft
 description: >
   Planning rules and plan template for drafting implementation plans.
-  Invoked as /plan for an ad-hoc planning session, or used by the planner
-  sub-agent in the /feature workflow.
+  Invoked as /plan-draft for an ad-hoc planning session, or used by the
+  planner sub-agent in the /feature workflow. (Named plan-draft so it does
+  not collide with Claude Code's built-in plan-mode /plan command.)
 ---
 
-# /plan — Implementation Planning
+# /plan-draft — Implementation Planning
 
 Use this skill to produce a structured implementation plan before writing any code.
-Can be invoked standalone (`/plan`) or applied by the `planner` sub-agent during the
-`/feature` workflow.
+Can be invoked standalone (`/plan-draft`) or applied by the `planner` sub-agent
+during the `/feature` workflow.
 
 ---
 

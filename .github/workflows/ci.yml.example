@@ -1,0 +1,44 @@
+# Example CI workflow — rename to ci.yml and replace the placeholders.
+#
+# CI is the independent evidence that the tests pass on the pushed state.
+# The code-critic receives a test summary from the implementing agent, which
+# is a record of the run, not independent proof — CI is what replaces trust
+# in a session transcript (see docs/AI-workflow.md, "Deterministic
+# enforcement").
+#
+# GitHub Actions ignores this file until it is renamed to ci.yml.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so secret scanning can inspect all commits on the branch.
+          fetch-depth: 0
+
+      # [TODO: set up your toolchain — e.g. actions/setup-node, actions/setup-java,
+      #  actions/setup-python — with the version pinned.]
+
+      # The canonical all-checks command (AGENTS.md Rule 1). This should run the
+      # full test suite, the architecture/fitness tests, and any linters.
+      - name: All checks
+        run: "[CHECK_CMD]"
+
+      # Secret scanning — committed credentials fail the build instead of
+      # relying on reviewer attention.
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # [TODO: add a dependency audit for your stack — e.g. `npm audit
+      #  --audit-level=high`, `pip-audit`, `gradle dependencyCheckAnalyze` —
+      #  so known-vulnerable dependencies fail the build.]
