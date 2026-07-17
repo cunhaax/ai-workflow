@@ -28,6 +28,8 @@ CLAUDE.md                    # Thin: imports AGENTS.md via @AGENTS.md
 │   └── adversarial-qa.md    # Orchestration + skills: [adversarial-qa]  (+ Playwright)
 └── skills/                  # The reusable knowledge, one directory per skill
     ├── feature/SKILL.md     # The full workflow (plan→critique→…→PR)
+    ├── init-workflow/SKILL.md # Post-install setup + doctor: fills AGENTS.md,
+    │                        #   seeds agent-rules, validates the gate
     ├── plan-draft/SKILL.md  # (named plan-draft to avoid Claude Code's built-in /plan)
     ├── plan-critic/SKILL.md
     ├── code-critic/SKILL.md # Base review standards (named code-critic to avoid
@@ -87,12 +89,20 @@ Files come in two ownership classes:
 The script also appends the two `.gitignore` entries the gate needs, records
 the installed template revision in `.claude/ai-workflow-template.rev` (commit
 it — the repo history then shows every template update), and prints the
-remaining manual steps (fill in `AGENTS.md` and `docs/agent-rules/`, rename
-the CI example, enable the hook).
+remaining steps.
+
+**Then adapt it**: open the project in Claude Code and run **`/init-workflow`**.
+It detects your build/test commands and default branch, drafts the `AGENTS.md`
+sections from the real codebase, interviews you to seed `docs/agent-rules/`,
+and validates the whole setup (hook, `core.hooksPath`, settings, `.gitignore`,
+CI). Everything is proposed and confirmed before it is written; whatever you
+defer stays an explicit TODO. The section below is the manual map of the same
+work.
 
 **Updating later** is the same command: `git pull` in the template clone, then
 re-run `scripts/install.sh` against your repo. Template-owned files are
-refreshed; everything you filled in stays untouched.
+refreshed; everything you filled in stays untouched. Re-run `/init-workflow`
+afterwards — in doctor mode it reports anything the update newly expects.
 
 ## Adapting it to your project — where your content goes
 
