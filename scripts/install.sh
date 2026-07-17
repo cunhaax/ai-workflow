@@ -151,13 +151,14 @@ fi
 cat <<'EOF'
 
 Done. If this was a first install, finish the adaptation:
-  1. Fill in AGENTS.md — project overview, Commands (incl. app URL and
-     default branch), Architecture, Testing, Sensitive Areas.
-  2. Fill in docs/agent-rules/code-critic.md (project review rules + privacy
-     anchors) and docs/agent-rules/plan-critic.md (product risk lenses).
+  1. Enable the review gate:  git config core.hooksPath githooks
+  2. Open the project in Claude Code and run /init-workflow — it detects
+     your commands, fills AGENTS.md, seeds docs/agent-rules/, and validates
+     the setup. (Manual alternative: the "Adapting" section of the template
+     README.)
   3. Rename .github/workflows/ci.yml.example to ci.yml and fill in the
      toolchain steps.
-  4. Enable the review gate:  git config core.hooksPath githooks
-To update later: git pull in the template clone, then re-run this script.
-Project-owned files are never overwritten.
+To update later: git pull in the template clone, re-run this script, then
+re-run /init-workflow in the project — in doctor mode it reports anything
+the update newly expects. Project-owned files are never overwritten.
 EOF

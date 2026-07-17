@@ -46,6 +46,7 @@ project-root/
 │   │   └── adversarial-qa.md              # Orchestration + skills: [adversarial-qa]  (+ Playwright tools)
 │   └── skills/                            # Reusable knowledge, one directory per skill
 │       ├── feature/SKILL.md               # Full workflow (plan → critique → implement → review → QA)
+│       ├── init-workflow/SKILL.md         # Post-install setup + doctor (fills AGENTS.md, seeds agent-rules)
 │       ├── plan-draft/SKILL.md
 │       ├── plan-critic/SKILL.md
 │       ├── code-critic/SKILL.md           # Base review standards (project rules live in docs/agent-rules/)
@@ -72,6 +73,8 @@ project-root/
 > Note: there is no `feature` sub-agent. `feature` is a workflow skill
 > (`.claude/skills/feature/SKILL.md`) the **main** agent runs; it orchestrates
 > the planner, plan-critic, code-critic, and adversarial-qa sub-agents.
+> `init-workflow` is likewise a main-agent skill with no sub-agent wrapper —
+> setup is an interactive conversation, not delegated work.
 
 ### Why This Structure
 
@@ -331,6 +334,20 @@ with a UI surface; and the PR body carries the pipeline's conclusions (plan
 summary, AC → test table, review outcome with decisions, QA dispositions,
 test evidence).
 
+### `.claude/skills/init-workflow/SKILL.md` — `/init-workflow`
+
+The post-install adaptation pass, run by the **main** agent inside a freshly
+installed project (and re-run any time as a doctor). It fills the
+project-owned files with the project's real facts — detects the build/test
+commands and default branch, drafts the `AGENTS.md` sections from the actual
+codebase, interviews the user to seed `docs/agent-rules/` — and validates
+the whole setup (hook executable, `core.hooksPath`, `CLAUDE.md` import,
+`.gitignore`, settings, CI, no unfilled Commands placeholders). Everything
+is proposed and user-confirmed before writing; deferred items stay explicit
+TODOs. It never edits template-owned files — those update via
+`scripts/install.sh`. (Named `init-workflow` to avoid Claude Code's built-in
+`/init`.) The skill file holds the step list and the doctor checklist.
+
 ## Sub-agents — orchestration over the skills
 
 Each `.claude/agents/<name>.md` file is a Claude Code sub-agent definition: YAML
@@ -519,9 +536,11 @@ preloads. For example, `/code-critic` and the `code-critic` sub-agent both use
 a `description` the tool matches invocations against, and a body that is the
 knowledge itself.
 
-The five wired-up commands are `/feature`, `/plan-draft`, `/plan-critic`,
-`/code-critic`, and `/adversarial-qa`. `/feature` is the primary entry point — it triggers
-the full orchestrated workflow; the others invoke individual steps ad-hoc.
+The six wired-up commands are `/feature`, `/init-workflow`, `/plan-draft`,
+`/plan-critic`, `/code-critic`, and `/adversarial-qa`. `/feature` is the primary
+entry point — it triggers the full orchestrated workflow; `/init-workflow` is
+the one-time setup (and recurring doctor) pass; the others invoke individual
+steps ad-hoc.
 
 **Naming note (Claude Code).** Claude Code **bundles** a skill named
 `code-review`, and project skills shadow bundled skills completely and by
@@ -575,8 +594,12 @@ It also appends the gate's two `.gitignore` entries, records the installed
 template revision in `.claude/ai-workflow-template.rev` (meant to be
 committed, so the repo history shows template-version bumps), warns when the
 target's `settings.json` has drifted from the template's gate rules or when
-`core.hooksPath` is not enabled in the clone, and prints the manual
-adaptation steps.
+`core.hooksPath` is not enabled in the clone, and prints the remaining steps.
+
+Adaptation is then guided rather than manual: run `/init-workflow` in the
+project (see its skill summary above) to fill the project-owned files
+interactively and validate the setup. Re-run it after every template update —
+in doctor mode it reports anything the updated template newly expects.
 
 Because the skills are project-agnostic, the per-project copy is a
 distribution choice, not a hard requirement: the same skill and agent files
