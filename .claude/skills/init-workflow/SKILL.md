@@ -102,16 +102,18 @@ Interview briefly — a few questions, not a form:
   there a compliance doc? Which surfaces are public/unauthenticated? Any
   identifiers public by design? Do any of the three privacy fitness tests
   already exist?
-  → write the *Privacy anchors* section of `docs/agent-rules/code-critic.md`.
+  → draft the *Privacy anchors* section of `docs/agent-rules/code-critic.md`.
 - Any hard constraints the team already knows agents get wrong (framework
   conventions, forbidden APIs, required registrations)?
-  → write them as rules with severities, and mirror them in the *Checklist*
-  section.
+  → draft them as rules with severities, mirrored in the *Checklist* section.
 - What are this product's highest-risk areas — the places where a generic
   plan would miss something that matters here?
-  → write 4–7 lenses in `docs/agent-rules/plan-critic.md`.
+  → draft 4–7 lenses for `docs/agent-rules/plan-critic.md`.
 
-It is fine for these files to start thin — they are designed to accrete
+Then present the drafted content of both files in one block for
+confirmation before writing them — the same confirm-then-write pattern as
+Steps 2 and 3; an answered question is input to the draft, not approval of
+it. It is fine for these files to start thin — they are designed to accrete
 (see *Evolving the System* in `docs/AI-workflow.md`). Record only what the
 user confirms; keep the guidance comments in the files for future additions.
 
@@ -142,6 +144,9 @@ End with a short summary: what was written (file by file), what was
 deliberately deferred (the open TODOs and what they disable), the doctor
 checklist results, and the suggested next action — typically committing the
 setup changes, then starting the first feature on a fresh branch with
-`/feature`. Do not commit or push yourself unless the user asks — setup
+`/feature`. For each item still open — including deferrals found in doctor
+mode — offer to run the relevant step (2–4) for just that item now, so
+deferred TODOs are re-offered on every run rather than silently carried
+forward. Do not commit or push yourself unless the user asks — setup
 changes deserve the user's own review. (If asked to push, Rule 4 in
 `AGENTS.md` applies as always: code-critic pass, then `scripts/review-ok.sh`.)

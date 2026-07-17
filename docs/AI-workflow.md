@@ -556,6 +556,8 @@ shadowing. The planning skill follows the same principle from the other
 direction: it is named `plan-draft` rather than `plan` because Claude Code's
 built-in *plan-mode* command already answers to `/plan` (a separate mechanism
 from skills), and the rename removes the collision instead of documenting it.
+`init-workflow` follows suit: Claude Code bundles an `/init` command (it
+generates a `CLAUDE.md`), so the setup skill takes a distinct name.
 
 #### Skills vs sub-agents vs slash commands
 
