@@ -63,19 +63,24 @@ dependencies, infrastructure.] -->
 **Before building features, read the product docs** in `docs/product-context/`
 (vision, strategy, requirements). Architecture decision records are in `docs/adr/`.
 Sub-agent definitions and the coding-standard skills are in `.claude/agents/`
-and `.claude/skills/`.
+and `.claude/skills/`; their project-specific extensions (review rules, risk
+lenses) live in `docs/agent-rules/`.
 
 ## Commands
 
 <!-- Replace with YOUR project's canonical commands. Keep them behind a wrapper
-     (make/just/npm script/…) if one adds serialisation or environment setup. -->
+     (make/just/npm script/…) if one adds serialisation or environment setup.
+     The skills in .claude/skills/ reference these entries by role ("the
+     run-all-tests command") instead of hardcoding them, so this list is the
+     single place they are defined. -->
 
 - `[BUILD_CMD]` — build
 - `[TEST_CMD]` — run all tests
 - `[CHECK_CMD]` — all checks incl. tests
-- `[RUN_CMD]` — dev server
+- `[RUN_CMD]` — dev server (serves at `[APP_URL]`)
 - `[STOP_CMD]` — stop the dev server
 - single test: `[SINGLE_TEST_EXAMPLE]`
+- default branch: `[DEFAULT_BRANCH]` — reviews diff against it; PRs target it
 
 ## Architecture
 

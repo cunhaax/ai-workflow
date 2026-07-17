@@ -20,10 +20,11 @@ code-review → QA → PR.
 
 **Preconditions — check the branch first.** The workflow assumes the human
 started this session on a fresh feature branch: the code review (Step 4)
-diffs against `[DEFAULT_BRANCH]` and Step 9 opens a PR targeting it, neither
-of which works from `[DEFAULT_BRANCH]` itself. If the session is on
-`[DEFAULT_BRANCH]`, STOP and ask the user to create a feature branch — you
-may not create or switch branches yourself (Rule 3 in `AGENTS.md`).
+diffs against the default branch (named in `AGENTS.md` → *Commands*) and
+Step 9 opens a PR targeting it, neither of which works from the default
+branch itself. If the session is on the default branch, STOP and ask the
+user to create a feature branch — you may not create or switch branches
+yourself (Rule 3 in `AGENTS.md`).
 
 **Enter plan mode now**, before drafting. Plan mode is a structural
 commitment: while in plan mode the harness blocks edit tools, so the
@@ -120,7 +121,8 @@ stop and assess the impact:
 
 ### Step 3 — Run all tests
 
-All tests must pass before proceeding. Run `[TEST_CMD]`.
+All tests must pass before proceeding. Run the project's run-all-tests
+command (`AGENTS.md` → *Commands*).
 
 ### Step 4 — Code review
 
@@ -130,12 +132,12 @@ hook compares against it.
 
 Invoke the `code-critic` sub-agent to review all changes against project
 standards. Pass the approved plan text, and include the summary output of the
-most recent full `[TEST_CMD]` run (Step 3). The reviewer is not allowed to run
+most recent full test-suite run (Step 3). The reviewer is not allowed to run
 the test suite itself — it verifies coverage statically and needs a record
 that the committed tests ran and passed on the reviewed state. That summary
 comes from you, the implementer, so it is a record, not independent proof —
-CI running `[CHECK_CMD]` on the pushed branch is the independent evidence
-(see *Deterministic enforcement* in `docs/AI-workflow.md`).
+CI running the all-checks command on the pushed branch is the independent
+evidence (see *Deterministic enforcement* in `docs/AI-workflow.md`).
 
 **Escalate the model on the security surface.** The `code-critic` runs on
 Sonnet by default (see its wrapper). If the diff touches the security surface
@@ -222,7 +224,7 @@ or a session transcript:
   are dead links to anyone reading the PR; the durable record for a deferred
   finding is its `known-issue` issue.
 - **Test evidence** — one line: the test count and result from the final
-  `[TEST_CMD]` run.
+  full test-suite run.
 
 If the branch touches the security surface (the *Sensitive Areas* list in
 `AGENTS.md`), say so explicitly in the PR body, and give that surface a

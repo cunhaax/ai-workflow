@@ -26,8 +26,10 @@ the skills and that tool reference them — the split this template intentionall
 collapsed.)
 
 > This is a **template**. Project-specific rules, commands, and product context
-> are left as placeholders (search the tree for `[` and `TODO`). See the
-> top-level `README.md` for how to adapt it.
+> are left as placeholders, all in project-owned files — `AGENTS.md`,
+> `docs/agent-rules/`, `docs/product-context/` (search those for `[` and
+> `TODO`); the skills and sub-agents under `.claude/` are project-agnostic and
+> need no editing. See the top-level `README.md` for installing and adapting.
 
 ## Repository Structure
 
@@ -46,16 +48,20 @@ project-root/
 │       ├── feature/SKILL.md               # Full workflow (plan → critique → implement → review → QA)
 │       ├── plan-draft/SKILL.md
 │       ├── plan-critic/SKILL.md
-│       ├── code-critic/SKILL.md           # Base standards + a Project-Specific Rules section
+│       ├── code-critic/SKILL.md           # Base review standards (project rules live in docs/agent-rules/)
 │       └── adversarial-qa/SKILL.md
 ├── .github/workflows/
 │   └── ci.yml.example                     # CI skeleton — rename to ci.yml and fill in
 ├── githooks/
 │   └── pre-push                           # Review gate: blocks pushes of unreviewed commits
 ├── scripts/
+│   ├── install.sh                         # Installs/updates the template in a target repo
 │   └── review-ok.sh                       # Records a passing review for the current HEAD
 ├── docs/
 │   ├── adr/                               # Architecture Decision Records
+│   ├── agent-rules/                       # Project-owned skill extensions (read at runtime)
+│   │   ├── code-critic.md                 #   project review rules + privacy anchors
+│   │   └── plan-critic.md                 #   product risk lenses
 │   ├── product-context/                   # Product vision, strategy, requirements
 │   └── AI-workflow.md                     # This guide
 └── src/
@@ -98,9 +104,15 @@ Supporting pieces:
   maintained as human-facing documentation alongside the other docs.
 - **`docs/product-context/`** contains product vision, strategy, and
   requirements — the RAG context the planner and plan-critic ground their work in.
-- **Project-specific rules** are inlined directly into the relevant skill (e.g.
-  the `## Project-Specific Rules` section inside `.claude/skills/code-critic/SKILL.md`).
-  Inlining keeps the rules where the reviewer is already reading.
+- **Project-specific content lives outside the skills.** The skills are
+  project-agnostic: they name the project's commands, app URL, and default
+  branch *by role* from `AGENTS.md` → *Commands*, and read the project's own
+  review rules and risk lenses from `docs/agent-rules/<skill>.md` at runtime
+  (a missing file means base rules only — the code-critic states the absence
+  in its output rather than skipping silently). This split is what makes the
+  knowledge layer portable: the same skill files can be copied into any
+  project unchanged — or later installed once at user level (`~/.claude/`) or
+  packaged as a Claude Code plugin.
 - **Module-level `AGENTS.md`** files are the place for constraints in critical
   areas (e.g. auth, payments) where mistakes are expensive.
 
@@ -129,7 +141,8 @@ Brief description of the project, its purpose, and how it fits into the broader 
 - `[BUILD_CMD]` — Build the project
 - `[TEST_CMD]` — Run all tests
 - `[CHECK_CMD]` — All checks incl. tests
-- `[RUN_CMD]` — Dev server
+- `[RUN_CMD]` — Dev server (serves at `[APP_URL]`)
+- default branch: `[DEFAULT_BRANCH]`
 
 ## Project Structure
 - `src/api/` — HTTP handlers, request/response types
@@ -158,7 +171,9 @@ agents about which is canonical.)
 Skills live in `.claude/skills/<name>/SKILL.md` and contain reusable knowledge:
 standards, rules, checklists, and templates. They carry no orchestration
 concerns, so the same file backs both a workflow sub-agent (preloaded via
-`skills:`) and an ad-hoc slash command. Each summary below is a pointer — the
+`skills:`) and an ad-hoc slash command — and no project-specific content,
+which is what the `docs/agent-rules/` extension files and the `AGENTS.md`
+*Commands* section exist for. Each summary below is a pointer — the
 linked file is the source of truth. Keep each `SKILL.md` focused (Claude Code
 recommends under ~500 lines; move bulky reference material into sibling files in
 the skill's directory).
@@ -185,8 +200,9 @@ assumptions, consistency with ADRs and product intent), each of which must
 produce findings or an explicit "no concerns, because…". It critiques
 substance, not writing, and never rewrites the plan — suggestions go in a
 "Suggested Plan Amendments" section; the developer decides what to adopt.
-The skill file holds the methods, the project-specific lenses to fill in,
-and the output format.
+The skill file holds the methods and the output format; the project's own
+risk lenses live in `docs/agent-rules/plan-critic.md`, which the skill reads
+at critique time.
 
 ### `.claude/skills/code-critic/SKILL.md` — `/code-critic`
 
@@ -196,11 +212,13 @@ design points matter to the system as a whole: it **owns test completeness**
 — because `/adversarial-qa` is exploratory, verifying that committed tests
 cover the plan *and* the branches/boundaries the plan never enumerated lives
 here — and its verdicts (`PASS` / `PASS (N/A)` / `FAIL` / `NEEDS_DECISION` /
-**Open Question**) are what the `/feature` gates key on. Project-specific
-rules and the privacy rules are inlined in the skill; any mechanically
-checkable rule should graduate to a build-enforced test (below), after which
-the reviewer only checks that the diff doesn't weaken the enforcement. The
-skill file holds the full standards, checklist, and output format.
+**Open Question**) are what the `/feature` gates key on. The base standards
+(including the base privacy rules) live in the skill; the project's own
+rules and privacy anchors live in `docs/agent-rules/code-critic.md`, which
+the skill reads at review time. Any mechanically checkable rule should
+graduate to a build-enforced test (below), after which the reviewer only
+checks that the diff doesn't weaken the enforcement. The skill file holds
+the full standards, checklist, and output format.
 
 ## Deterministic enforcement — below the LLM layer
 
@@ -213,8 +231,8 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   code-critic skill tells the reviewer to verify only that a diff doesn't
   *weaken* these tests, not to re-derive the rules. Start with the layer rule
   (*Your first fitness test*, below). <!-- [TODO: add fitness tests for your
-  stack and list them in the code-critic skill's Project-Specific Rules
-  section.] -->
+  stack and list them as build-enforced rules in
+  docs/agent-rules/code-critic.md.] -->
 - **The pre-push review gate** (`githooks/pre-push`, enabled once per clone
   via `git config core.hooksPath githooks`): after a code-critic pass with
   no FAIL items, the agent records the reviewed HEAD with `scripts/review-ok.sh`;
@@ -234,11 +252,12 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   `.github/workflows/ci.yml.example` — rename to `ci.yml` and replace the
   placeholders.
 - **Secret and dependency scanning** — wire a secret scanner (e.g. gitleaks)
-  and a dependency audit into `[CHECK_CMD]` and CI, so committed credentials
-  and known-vulnerable dependencies fail the build instead of relying on
-  reviewer attention. These are the cheapest security gates in the pipeline.
-  The CI skeleton includes gitleaks. <!-- [TODO: add a dependency audit for
-  your stack and mirror both scanners into [CHECK_CMD] for local runs.] -->
+  and a dependency audit into the all-checks command and CI, so committed
+  credentials and known-vulnerable dependencies fail the build instead of
+  relying on reviewer attention. These are the cheapest security gates in the
+  pipeline. The CI skeleton includes gitleaks. <!-- [TODO: add a dependency
+  audit for your stack and mirror both scanners into the all-checks command
+  for local runs.] -->
 
 Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
@@ -273,10 +292,11 @@ enforcement (a false green is worse than an honest gap the reviewer still sees).
 | Python              | import-linter                                    |
 | Go                  | depguard or arch-go                              |
 
-Wire it into `[CHECK_CMD]` and CI so it gates merges, then relink the
-`code-critic` skill (its *Architecture* checklist) to "verify the diff doesn't
-*weaken* the layer test" rather than re-deriving boundaries by hand. Add further
-fitness tests the same way — one per mechanically checkable rule.
+Wire it into the all-checks command and CI so it gates merges, and list it as
+a build-enforced rule in `docs/agent-rules/code-critic.md` so the reviewer
+verifies the diff doesn't *weaken* the layer test rather than re-deriving
+boundaries by hand. Add further fitness tests the same way — one per
+mechanically checkable rule.
 
 ### `.claude/skills/adversarial-qa/SKILL.md` — `/adversarial-qa`
 
@@ -537,13 +557,45 @@ workflow behavior; slash commands expose it directly. The workflow itself
 (`.claude/skills/feature/SKILL.md`) is also a skill, so `AGENTS.md` references it
 instead of duplicating the steps.
 
+## Installing and updating the template
+
+The template is installed per project with `scripts/install.sh`, run from a
+clone of the template repo against the target repository. The script encodes
+the ownership split described above:
+
+- **Template-owned** files — the project-agnostic layer: the skills, the
+  sub-agents, `githooks/pre-push`, `scripts/review-ok.sh`, and this guide —
+  are copied verbatim and **overwritten on every re-run**. Updating a project
+  is `git pull` in the template clone followed by re-running the script.
+- **Project-owned** files — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
+  `.claude/settings.json`, the CI example, and the ADR / product-context
+  scaffolding — are created only if missing and **never overwritten**.
+
+It also appends the gate's two `.gitignore` entries, records the installed
+template revision in `.claude/ai-workflow-template.rev` (meant to be
+committed, so the repo history shows template-version bumps), warns when the
+target's `settings.json` has drifted from the template's gate rules or when
+`core.hooksPath` is not enabled in the clone, and prints the manual
+adaptation steps.
+
+Because the skills are project-agnostic, the per-project copy is a
+distribution choice, not a hard requirement: the same skill and agent files
+could be installed once at user level (`~/.claude/skills/`,
+`~/.claude/agents/`) or packaged as a Claude Code plugin, with each project
+carrying only its project-owned files plus the enforcement layer — the git
+hook must live in the repo regardless, because it has to fire for humans and
+every tool, not just for Claude. The per-project copy is the default because
+it versions the workflow with the code and reaches teammates via clone.
+
 ## Evolving the System
 
 - **Start small.** Begin with the planner and code-critic; add QA and
   plan-critic once the basic workflow is stable.
-- **Track failure patterns.** Every time an agent produces bad output your rules
-  didn't catch, add a rule to the relevant skill in `.claude/skills/` (this is
-  how the code-critic skill's Project-Specific Rules section grows).
+- **Track failure patterns.** Every time an agent produces bad output your
+  rules didn't catch, add a rule to `docs/agent-rules/code-critic.md` (the
+  file is designed to accrete) or a lens to `docs/agent-rules/plan-critic.md`.
+  The skills in `.claude/skills/` stay project-agnostic and template-owned,
+  so template updates never collide with your rules.
 - **Prefer build-enforced rules over prose.** When a new review rule is
   mechanically checkable, encode it as an architecture/fitness test instead of
   (or in addition to) skill text — tests don't drift, don't consume reviewer

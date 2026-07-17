@@ -22,9 +22,11 @@ to understand what the feature does — not as a checklist to tick through.
 
 ## What to do
 
-1. Start the local dev server with `[RUN_CMD]` ([APP_URL]) and drive the
-   feature in a browser via the Playwright MCP. When you are done, stop it with
-   `[STOP_CMD]` — never `kill` by PID or hunt processes with `lsof`. If the
+1. Start the local dev server with the project's dev-server command and
+   drive the feature at the documented app URL (both in `AGENTS.md` →
+   *Commands*) in a browser via the Playwright MCP. When you are done, stop
+   it with the documented stop command —
+   never `kill` by PID or hunt processes with `lsof`. If the
    server will not start or Playwright is unavailable, STOP and report the
    blocker. Do not substitute curl, SQL, or any other workaround for browser
    exploration — those answer different questions.

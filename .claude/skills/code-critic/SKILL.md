@@ -1,10 +1,11 @@
 ---
 name: code-critic
 description: >
-  Code review checklist, coding standards, and this repo's inlined
-  project-specific rules. Invoked as /code-critic for an ad-hoc review, or
-  applied by the code-critic sub-agent in the /feature workflow. (Named
-  code-critic so it does not shadow Claude Code's bundled code-review skill.)
+  Code review checklist and coding standards, extended per project by
+  docs/agent-rules/code-critic.md. Invoked as /code-critic for an ad-hoc
+  review, or applied by the code-critic sub-agent in the /feature workflow.
+  (Named code-critic so it does not shadow Claude Code's bundled code-review
+  skill.)
 ---
 
 # /code-critic — Code Review
@@ -32,8 +33,9 @@ Output Format section).
 
 In the `/feature` workflow the implementation is committed before review, so
 a bare `git diff` (working tree) shows nothing — review the branch's
-committed changes against its base: `git diff [DEFAULT_BRANCH]...HEAD` (or
-`git log -p [DEFAULT_BRANCH]..HEAD`). Invoked ad-hoc on uncommitted work,
+committed changes against its base, the default branch named in `AGENTS.md`
+→ *Commands*: `git diff <default-branch>...HEAD` (or
+`git log -p <default-branch>..HEAD`). Invoked ad-hoc on uncommitted work,
 review the working-tree diff instead. If unsure what changed, check
 `git status` and `git log --oneline` first.
 
@@ -81,7 +83,7 @@ If no plan was provided, skip the Plan Compliance checklist section entirely.
 **Test evidence.** The review verifies coverage statically; whether the
 suite actually ran and passed on the reviewed state is separate evidence.
 In the `/feature` workflow that evidence is passed in (the summary of the
-latest `[TEST_CMD]` run). Treat that summary as a record of the run, not
+latest full test-suite run). Treat that summary as a record of the run, not
 independent proof — it is produced by the implementing agent; CI running
 the suite on the pushed state is the independent evidence. If no evidence
 was provided and you cannot (or may not) run the suite yourself, do not
@@ -234,47 +236,19 @@ protected by tests, not per-diff checklist prose.
 
 ---
 
-## Project-Specific Rules ([PROJECT_NAME])
+## Project-Specific Rules
 
-<!-- Replace with YOUR project's hard constraints. These extend the base
-     standards above; violations carry the same severity. One bullet per rule,
-     each stating the rule AND its severity (FAIL / NEEDS_DECISION). Add
-     subsections (Persistence, Security, Privacy, View Layer, …) as the list
-     grows. This section is the one that accretes over time: every time an agent
-     produces bad output the base standards didn't catch, add a rule here (or,
-     better, encode it as a build-enforced test — see below).
+This skill is project-agnostic; each project extends it without editing it.
+If `docs/agent-rules/code-critic.md` exists in the repository, read it now
+and apply every rule in it alongside the base standards above, at the
+severity each rule states. Treat those rules exactly like the base ones —
+including the don't-weaken doctrine for any rule the file marks as
+build-enforced, and the file's PRIVACY anchors, which bind the privacy
+rules above to this codebase's sensitive categories, public surfaces, and
+existing fitness tests.
 
-     Guidance for good rules:
-     - Name the exact symbol/file/pattern, so the reviewer can grep for it.
-     - State the failure mode, not just the prohibition ("otherwise X is
-       silently wrong").
-     - Scope to production code vs test code if the two differ.
-     - Say whether the rule is diff-scoped or repo-wide.
-
-     BUILD-ENFORCED RULES: when a rule is mechanically checkable, prefer
-     encoding it as an architecture/fitness test over prose here — tests don't
-     drift and the human never re-verifies them. For any rule that IS backed by
-     a test, the reviewer's job is only to check the diff does not WEAKEN the
-     enforcement (deleting/disabling the test, adding an unexplained exemption,
-     or restructuring code out of the test's scan scope). A weakened enforcement
-     is FAIL. List which rules are build-enforced so the reviewer doesn't
-     re-derive them by hand.
-
-     PRIVACY (fill per project — anchors the privacy fitness tests and the
-     log/URL residue rules above to this codebase):
-     - [SENSITIVE_CATEGORIES]: which data categories are sensitive here
-       (e.g. GDPR Art. 9: political views, religious views, orientation)
-       and the doc that defines them ([COMPLIANCE_DOC path]).
-     - [PUBLIC_SURFACES]: which views/endpoints are public/unauthenticated
-       (name the controller/view the whitelist test covers).
-     - [IDENTIFIER_EXEMPTIONS]: identifiers that are public by design and
-       exempt from the log/URL rules (e.g. public usernames).
-     - [PRIVACY_TESTS]: which of the three privacy fitness tests exist, and
-       where — so the reviewer knows which invariants are build-enforced
-       and which still need the by-hand check. -->
-
-- [TODO: your rule 1 — the constraint, the symbol/file it applies to, and its severity]
-- [TODO: your rule 2]
+If the file does not exist, proceed with the base standards alone and say
+so in the review output (one line) — the gap should be visible, not silent.
 
 ---
 
@@ -361,12 +335,9 @@ weakened enforcement is `FAIL`._
 - [ ] Tests follow the Given-When-Then pattern
 - [ ] No tests that only verify implementation details
 
-### Project-Specific ([PROJECT_NAME])
-<!-- One checklist item per rule in the "Project-Specific Rules" section above.
-     Keep the two in sync. Tag items "(if applicable)" when they only apply to
-     certain diffs. Delete these placeholders once you add your own. -->
-- [ ] [TODO: checklist item mirroring project rule 1]
-- [ ] [TODO: checklist item mirroring project rule 2]
+### Project-Specific
+- [ ] Every checklist item in `docs/agent-rules/code-critic.md` evaluated —
+  or the file is absent, stated as one line in the output
 
 ### Privacy and Data Protection
 - [ ] Privacy fitness tests not weakened — no deleted/disabled test, no
