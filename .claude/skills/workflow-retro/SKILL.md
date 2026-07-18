@@ -36,7 +36,10 @@ pending — nothing here depends on it.
 - **One file per feature branch.** If a file for the current branch already
   exists (a previous retro, or the feature spans multiple sessions), update
   it — fill gaps, correct facts, append the new session ID — instead of
-  creating a duplicate.
+  creating a duplicate. Exception: if the existing file evidently records a
+  *different* feature that reused the branch name (its PR is already merged,
+  or its dates are far from this session's), ask the user whether to replace
+  it or pick another filename — do not merge two features into one record.
 - Writing the log file (and creating its directory) is the **only** mutation
   this skill performs.
 - The skill assumes a `/feature` session. In a session that ran only part of
@@ -52,18 +55,34 @@ file already exists, this run updates it (see ground rules).
 
 ## Step 2 — Capture the session pointers
 
-Transcripts live under `~/.claude/projects/<sanitized-path>/`, where
-`<sanitized-path>` is the project's absolute path with each non-alphanumeric
-character replaced by `-`. List that directory by modification time: the most
-recently modified `.jsonl` file is the current session; its filename stem is
-the session ID. Record it.
+`/workflow-inspect` runs in a later, different session that has no way to
+know which transcript was the feature session — recording the pointer now,
+while only this session knows it, is the point of this step. Transcripts are
+pruned after a retention window (Claude Code's `cleanupPeriodDays`, ~30 days
+by default), so the join must happen within it.
 
-If the feature spanned earlier sessions, record their IDs too — ask the user
-if they can identify them (e.g. by date); otherwise record
-`earlier sessions: unknown`. These pointers are what lets
-`/workflow-inspect` find the raw data later, and transcripts are pruned
-after a retention window (Claude Code's `cleanupPeriodDays`, ~30 days by
-default) — so the join must happen within it.
+Get the current session ID, in this order:
+
+1. The `CLAUDE_CODE_SESSION_ID` environment variable (check with a single
+   `printenv CLAUDE_CODE_SESSION_ID`). Its value is the session ID, and the
+   transcript is `~/.claude/projects/<sanitized-path>/<session-id>.jsonl`,
+   where `<sanitized-path>` is the project's absolute path with each
+   non-alphanumeric character replaced by `-`.
+2. If the variable is unset, fall back to a heuristic: list that directory by
+   modification time — the most recently modified `.jsonl` is *probably* the
+   current session. But if more than one transcript was modified in the last
+   few minutes (concurrent sessions on this project), ask the user which one
+   is this session rather than picking silently.
+3. If neither works — the variable is unset and the directory is missing or
+   ambiguous — record `Sessions: unknown` rather than guessing. Both the
+   variable and the on-disk layout are current, undocumented Claude Code
+   behavior, not a stable interface; a wrong-but-plausible session ID
+   silently corrupts the later cost-join, while an honest `unknown` merely
+   skips it.
+
+If the feature spanned earlier sessions, record their session IDs too — ask
+the user if they can identify them (e.g. by date); otherwise record
+`earlier sessions: unknown`.
 
 ## Step 3 — Fill the record
 
@@ -77,7 +96,7 @@ aggregates across files, so keep the headings and field labels verbatim):
 - Branch: <branch>
 - PR: <url | not opened | abandoned>
 - Template revision: <contents of .claude/ai-workflow-template.rev | unknown>
-- Sessions: <transcript filename(s), oldest first | unknown>
+- Sessions: <session ID(s), oldest first | unknown>
 
 ## Steps
 
