@@ -358,6 +358,8 @@ half of the feature's workflow evaluation — which steps ran or were skipped,
 cycle counts, what each critic caught and what was adopted, plus a short
 judgment section — as one fixed-schema file per feature branch in
 `.workflow-log/` (gitignored: local evaluation data, never committed). The
+directory lives under the repo's **main** worktree, so records survive the
+deletion of per-feature worktrees. The
 file also records the session's transcript ID(s) so a companion
 `/workflow-inspect` skill can later join the *cost* half (tokens per step,
 wall-clock, file-read overlap) from the raw transcripts — which are pruned

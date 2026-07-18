@@ -48,10 +48,20 @@ pending — nothing here depends on it.
 
 ## Step 1 — Locate the log target
 
-The log lives at `.workflow-log/<branch>.md` in the repository root, with
-`/` in the branch name replaced by `-` (e.g. branch `feat/login-form` →
-`.workflow-log/feat-login-form.md`). Create the directory if missing. If the
-file already exists, this run updates it (see ground rules).
+The log lives at `.workflow-log/<branch>.md` under the repository's **main
+worktree** — which is not necessarily the current directory: feature work
+often runs in a per-feature `git worktree` that is deleted once the PR
+merges, and the log must outlive it. Resolve the location with a single
+`git rev-parse --path-format=absolute --git-common-dir`: that prints the
+shared `.git` directory, whose **parent** is the main worktree root, and the
+log directory is `.workflow-log/` there (covered by the `.gitignore` entry
+the installer added). In a plain single-checkout clone this resolves to the
+repository root itself.
+
+`<branch>` is the branch name with `/` replaced by `-` (e.g. branch
+`feat/login-form` → `.workflow-log/feat-login-form.md`). Create the
+directory if missing. If the file already exists, this run updates it (see
+ground rules).
 
 ## Step 2 — Capture the session pointers
 
@@ -84,6 +94,12 @@ If the feature spanned earlier sessions, record their session IDs too — ask
 the user if they can identify them (e.g. by date); otherwise record
 `earlier sessions: unknown`.
 
+Also record the **current worktree's absolute path** (the schema's
+`Project path` field): `<sanitized-path>` is derived from it, and if the
+worktree is deleted before `/workflow-inspect` runs, the transcript
+directory cannot be re-derived — the recorded path is what keeps the
+sessions findable.
+
 ## Step 3 — Fill the record
 
 Draft the file with exactly this structure (fixed schema — later tooling
@@ -97,6 +113,7 @@ aggregates across files, so keep the headings and field labels verbatim):
 - PR: <url | not opened | abandoned>
 - Template revision: <contents of .claude/ai-workflow-template.rev | unknown>
 - Sessions: <session ID(s), oldest first | unknown>
+- Project path: <absolute path of the worktree the session(s) ran in>
 
 ## Steps
 
