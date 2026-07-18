@@ -126,7 +126,8 @@ confirmation, report what you cannot fix:
 2. `git config core.hooksPath` is `githooks` — if not, offer to run
    `git config core.hooksPath githooks` (per clone; each teammate needs it).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
-4. `.gitignore` covers `.review-passed` and `.qa-evidence/`.
+4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
+   `.workflow-log/`.
 5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh`
    and the `deny` rules for the push-bypass flags.
 6. CI: `.github/workflows/ci.yml` exists — or only the `.example` does,

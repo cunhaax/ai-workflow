@@ -34,7 +34,9 @@ CLAUDE.md                    # Thin: imports AGENTS.md via @AGENTS.md
     ├── plan-critic/SKILL.md
     ├── code-critic/SKILL.md # Base review standards (named code-critic to avoid
     │                        #   shadowing Claude Code's bundled code-review skill)
-    └── adversarial-qa/SKILL.md
+    ├── adversarial-qa/SKILL.md
+    └── workflow-retro/SKILL.md # Optional end-of-session workflow-evaluation
+                             #   record (writes to gitignored .workflow-log/)
 .github/workflows/
 └── ci.yml.example           # CI skeleton — rename to ci.yml and fill in
 docs/
@@ -48,7 +50,7 @@ githooks/pre-push            # Review gate: blocks pushing unreviewed commits
 scripts/
 ├── install.sh               # Installs/updates the template in a target repo
 └── review-ok.sh             # Records a passing review for the current HEAD
-.gitignore                   # Ignores .review-passed and .qa-evidence/
+.gitignore                   # Ignores .review-passed, .qa-evidence/, .workflow-log/
 ```
 
 **Orchestration vs. knowledge, one source of truth.** Each skill in
@@ -86,7 +88,8 @@ Files come in two ownership classes:
   `.claude/settings.json`, the CI example, and the ADR / product-context
   scaffolding. Created only if missing, **never overwritten**.
 
-The script also appends the two `.gitignore` entries the gate needs, records
+The script also appends the three `.gitignore` entries the workflow writes
+locally (`.review-passed`, `.qa-evidence/`, `.workflow-log/`), records
 the installed template revision in `.claude/ai-workflow-template.rev` (commit
 it — the repo history then shows every template update), and prints the
 remaining steps.
