@@ -14,6 +14,7 @@ error. Numbers are therefore lower bounds whenever warnings are present.
 """
 import json
 import sys
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -126,6 +127,8 @@ def main():
                                 f"({e}) — its cost is missing")
 
     if not records:
+        for w in warnings:
+            print(f"warning: {w}", file=sys.stderr)
         print("No transcript data found for any given session ID.", file=sys.stderr)
         sys.exit(1)
 
@@ -134,7 +137,7 @@ def main():
     spawns = []           # dicts: tool_use_id, type, desc, ts
     main_reads = []       # (ts, file_path)
     exit_plan_ts = None
-    bad_records = 0       # records with unexpected shapes, skipped fail-soft
+    bad_records = Counter()   # exception class -> count, for skipped records
     for rec in records.values():
         if rec.get("isSidechain"):
             continue
@@ -157,8 +160,8 @@ def main():
                     main_reads.append((ts, inp["file_path"]))
                 elif name == "ExitPlanMode" and exit_plan_ts is None:
                     exit_plan_ts = ts
-        except Exception:
-            bad_records += 1
+        except Exception as e:
+            bad_records[type(e).__name__] += 1
 
     # -- resolve each spawn's sub-agent transcript by toolUseId, globally ----
     meta_index = {}       # toolUseId -> (meta dict, jsonl path, owning session id)
@@ -195,9 +198,13 @@ def main():
                             for block in tool_uses(rec):
                                 if block.get("name") == "Read" and (block.get("input") or {}).get("file_path"):
                                     row["reads"].add(block["input"]["file_path"])
-                        except Exception:
-                            bad_records += 1
+                        except Exception as e:
+                            bad_records[type(e).__name__] += 1
                 except OSError as e:
+                    # discard any partial tally so a failed row contributes
+                    # nothing to the aggregates either
+                    row["tally"] = Tally()
+                    row["reads"] = set()
                     row["note"] = "transcript unreadable"
                     warnings.append(f"{spawn['type']}: could not read "
                                     f"{jsonl_path.name} ({e}) — its cost is missing")
@@ -284,8 +291,10 @@ def main():
         warnings.append(f"{total_unparsed} unparseable line(s) across "
                         f"{len(unparsed)} file(s) — numbers are lower bounds")
     if bad_records:
-        warnings.append(f"{bad_records} record(s) with unexpected shapes were "
-                        f"skipped — numbers are lower bounds")
+        detail = ", ".join(f"{name} ×{n}"
+                           for name, n in sorted(bad_records.items()))
+        warnings.append(f"{sum(bad_records.values())} record(s) with unexpected "
+                        f"shapes were skipped ({detail}) — numbers are lower bounds")
     if warnings:
         out.append("- Warnings:")
         for w in warnings:
