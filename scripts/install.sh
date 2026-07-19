@@ -116,6 +116,7 @@ done
 
 ensure_ignored ".review-passed"
 ensure_ignored ".qa-evidence/"
+ensure_ignored ".workflow-log/"
 
 # --- version stamp ----------------------------------------------------------
 

@@ -50,7 +50,8 @@ project-root/
 │       ├── plan-draft/SKILL.md
 │       ├── plan-critic/SKILL.md
 │       ├── code-critic/SKILL.md           # Base review standards (project rules live in docs/agent-rules/)
-│       └── adversarial-qa/SKILL.md
+│       ├── adversarial-qa/SKILL.md
+│       └── workflow-retro/SKILL.md        # Optional end-of-session evaluation record (→ .workflow-log/)
 ├── .github/workflows/
 │   └── ci.yml.example                     # CI skeleton — rename to ci.yml and fill in
 ├── githooks/
@@ -73,8 +74,9 @@ project-root/
 > Note: there is no `feature` sub-agent. `feature` is a workflow skill
 > (`.claude/skills/feature/SKILL.md`) the **main** agent runs; it orchestrates
 > the planner, plan-critic, code-critic, and adversarial-qa sub-agents.
-> `init-workflow` is likewise a main-agent skill with no sub-agent wrapper —
-> setup is an interactive conversation, not delegated work.
+> `init-workflow` and `workflow-retro` are likewise main-agent skills with no
+> sub-agent wrapper — setup and the end-of-session retro are interactive
+> conversations, not delegated work.
 
 ### Why This Structure
 
@@ -348,6 +350,24 @@ TODOs. It never edits template-owned files — those update via
 `scripts/install.sh`. (Named `init-workflow` to avoid Claude Code's built-in
 `/init`.) The skill file holds the step list and the doctor checklist.
 
+### `.claude/skills/workflow-retro/SKILL.md` — `/workflow-retro`
+
+An optional end-of-session pass, run manually by the **main** agent after a
+`/feature` session (typically once the PR is open). It records the *outcome*
+half of the feature's workflow evaluation — which steps ran or were skipped,
+cycle counts, what each critic caught and what was adopted, plus a short
+judgment section — as one fixed-schema file per feature branch in
+`.workflow-log/` (gitignored: local evaluation data, never committed). The
+directory lives under the repo's **main** worktree, so records survive the
+deletion of per-feature worktrees. The
+file also records the session's transcript ID(s) so a companion
+`/workflow-inspect` skill can later join the *cost* half (tokens per step,
+wall-clock, file-read overlap) from the raw transcripts — which are pruned
+after Claude Code's retention window, so that join is time-boxed; the
+distilled record in `.workflow-log/` is what persists. Over several features,
+these records are the evidence base for tuning the workflow — see *Evolving
+the System*.
+
 ## Sub-agents — orchestration over the skills
 
 Each `.claude/agents/<name>.md` file is a Claude Code sub-agent definition: YAML
@@ -536,11 +556,12 @@ preloads. For example, `/code-critic` and the `code-critic` sub-agent both use
 a `description` the tool matches invocations against, and a body that is the
 knowledge itself.
 
-The six wired-up commands are `/feature`, `/init-workflow`, `/plan-draft`,
-`/plan-critic`, `/code-critic`, and `/adversarial-qa`. `/feature` is the primary
-entry point — it triggers the full orchestrated workflow; `/init-workflow` is
-the one-time setup (and recurring doctor) pass; the others invoke individual
-steps ad-hoc.
+The seven wired-up commands are `/feature`, `/init-workflow`, `/plan-draft`,
+`/plan-critic`, `/code-critic`, `/adversarial-qa`, and `/workflow-retro`.
+`/feature` is the primary entry point — it triggers the full orchestrated
+workflow; `/init-workflow` is the one-time setup (and recurring doctor) pass;
+`/workflow-retro` is the optional end-of-session evaluation record; the
+others invoke individual steps ad-hoc.
 
 **Naming note (Claude Code).** Claude Code **bundles** a skill named
 `code-review`, and project skills shadow bundled skills completely and by
@@ -592,7 +613,9 @@ the ownership split described above:
   `.claude/settings.json`, the CI example, and the ADR / product-context
   scaffolding — are created only if missing and **never overwritten**.
 
-It also appends the gate's two `.gitignore` entries, records the installed
+It also appends the three `.gitignore` entries the workflow writes locally
+(the gate's review marker, QA evidence, and the retro's
+`.workflow-log/`), records the installed
 template revision in `.claude/ai-workflow-template.rev` (meant to be
 committed, so the repo history shows template-version bumps), warns when the
 target's `settings.json` has drifted from the template's gate rules or when
@@ -621,6 +644,12 @@ it versions the workflow with the code and reaches teammates via clone.
   file is designed to accrete) or a lens to `docs/agent-rules/plan-critic.md`.
   The skills in `.claude/skills/` stay project-agnostic and template-owned,
   so template updates never collide with your rules.
+- **Tune the workflow itself with evidence, not intuition.** Run
+  `/workflow-retro` at the end of feature sessions; the per-feature records in
+  `.workflow-log/` show what each step cost and caught over time. A step
+  that keeps producing nothing is a candidate for a skip rule or removal — a
+  step that keeps catching real problems has earned its place. Change the
+  workflow's steps on that record, not on how a single session felt.
 - **Prefer build-enforced rules over prose.** When a new review rule is
   mechanically checkable, encode it as an architecture/fitness test instead of
   (or in addition to) skill text — tests don't drift, don't consume reviewer

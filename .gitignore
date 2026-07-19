@@ -3,3 +3,6 @@
 
 # QA evidence (screenshots) captured by the /adversarial-qa skill
 .qa-evidence/
+
+# Local workflow-evaluation records written by /workflow-retro
+.workflow-log/
