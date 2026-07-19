@@ -13,7 +13,6 @@ silently dropped, and a missing file becomes a warning line instead of an
 error. Numbers are therefore lower bounds whenever warnings are present.
 """
 import json
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,8 +48,13 @@ def iter_records(path, unparsed):
             if not line:
                 continue
             try:
-                yield json.loads(line)
+                rec = json.loads(line)
             except json.JSONDecodeError:
+                unparsed[str(path)] = unparsed.get(str(path), 0) + 1
+                continue
+            if isinstance(rec, dict):
+                yield rec
+            else:
                 unparsed[str(path)] = unparsed.get(str(path), 0) + 1
 
 
@@ -113,9 +117,13 @@ def main():
             continue
         found_sessions.append(sid)
         for path in matches:
-            for i, rec in enumerate(iter_records(path, unparsed)):
-                key = rec.get("uuid") or f"{path}:{i}"
-                records.setdefault(key, rec)
+            try:
+                for i, rec in enumerate(iter_records(path, unparsed)):
+                    key = rec.get("uuid") or f"{path}:{i}"
+                    records.setdefault(key, rec)
+            except OSError as e:
+                warnings.append(f"session {sid}: could not read {path.name} "
+                                f"({e}) — its cost is missing")
 
     if not records:
         print("No transcript data found for any given session ID.", file=sys.stderr)
@@ -126,27 +134,31 @@ def main():
     spawns = []           # dicts: tool_use_id, type, desc, ts
     main_reads = []       # (ts, file_path)
     exit_plan_ts = None
+    bad_records = 0       # records with unexpected shapes, skipped fail-soft
     for rec in records.values():
         if rec.get("isSidechain"):
             continue
-        if rec.get("version"):
-            versions.add(rec["version"])
-        main_tally.add(rec)
-        ts = parse_ts(rec.get("timestamp"))
-        for block in tool_uses(rec):
-            name = block.get("name")
-            inp = block.get("input") or {}
-            if name in ("Agent", "Task"):
-                spawns.append({
-                    "tool_use_id": block.get("id"),
-                    "type": inp.get("subagent_type", "?"),
-                    "desc": (inp.get("description") or "")[:60],
-                    "ts": ts,
-                })
-            elif name == "Read" and inp.get("file_path"):
-                main_reads.append((ts, inp["file_path"]))
-            elif name == "ExitPlanMode" and exit_plan_ts is None:
-                exit_plan_ts = ts
+        try:
+            if rec.get("version"):
+                versions.add(rec["version"])
+            main_tally.add(rec)
+            ts = parse_ts(rec.get("timestamp"))
+            for block in tool_uses(rec):
+                name = block.get("name")
+                inp = block.get("input") or {}
+                if name in ("Agent", "Task"):
+                    spawns.append({
+                        "tool_use_id": block.get("id"),
+                        "type": inp.get("subagent_type", "?"),
+                        "desc": (inp.get("description") or "")[:60],
+                        "ts": ts,
+                    })
+                elif name == "Read" and inp.get("file_path"):
+                    main_reads.append((ts, inp["file_path"]))
+                elif name == "ExitPlanMode" and exit_plan_ts is None:
+                    exit_plan_ts = ts
+        except Exception:
+            bad_records += 1
 
     # -- resolve each spawn's sub-agent transcript by toolUseId, globally ----
     meta_index = {}       # toolUseId -> (meta dict, jsonl path, owning session id)
@@ -176,11 +188,19 @@ def main():
             if owner_sid not in session_ids:
                 related_sessions.add(owner_sid)
             if jsonl_path.exists():
-                for rec in iter_records(jsonl_path, unparsed):
-                    row["tally"].add(rec)
-                    for block in tool_uses(rec):
-                        if block.get("name") == "Read" and (block.get("input") or {}).get("file_path"):
-                            row["reads"].add(block["input"]["file_path"])
+                try:
+                    for rec in iter_records(jsonl_path, unparsed):
+                        try:
+                            row["tally"].add(rec)
+                            for block in tool_uses(rec):
+                                if block.get("name") == "Read" and (block.get("input") or {}).get("file_path"):
+                                    row["reads"].add(block["input"]["file_path"])
+                        except Exception:
+                            bad_records += 1
+                except OSError as e:
+                    row["note"] = "transcript unreadable"
+                    warnings.append(f"{spawn['type']}: could not read "
+                                    f"{jsonl_path.name} ({e}) — its cost is missing")
             else:
                 row["note"] = "meta found but transcript file missing"
                 warnings.append(f"{spawn['type']}: agent meta found but "
@@ -199,12 +219,16 @@ def main():
     total_output = main_tally.output + agent_output
     share = round(100 * agent_output / total_output) if total_output else 0
 
+    # Handoff tax cutoff = the LAST planner spawn: what matters is drift after
+    # the final plan; anchoring earlier would count inter-replan reads as tax.
     planner_reads = set()
     planner_spawn_ts = None
+    planner_runs = 0
     for r in agent_rows:
         if r["label"] == "planner":
+            planner_runs += 1
             planner_reads |= r["reads"]
-            if planner_spawn_ts is None:
+            if r["ts"] and (planner_spawn_ts is None or r["ts"] > planner_spawn_ts):
                 planner_spawn_ts = r["ts"]
     reread = set()
     if planner_reads:
@@ -243,9 +267,12 @@ def main():
     out.append(f"- Sub-agent share of output tokens: {share}% "
                f"({fmt_tokens(agent_output)} of {fmt_tokens(total_output)})")
     if planner_reads:
+        runs_note = ("" if planner_runs == 1 else
+                     f" (approximate — {planner_runs} planner runs, reads "
+                     f"counted only after the last one)")
         out.append(f"- Handoff tax: planner read {len(planner_reads)} files; the main "
                    f"agent re-read {len(reread)} of them after the planner ran"
-                   + (":" if reread else ""))
+                   f"{runs_note}" + (":" if reread else ""))
         for fp in sorted(reread):
             out.append(f"  - {fp}")
     else:
@@ -256,6 +283,9 @@ def main():
     if total_unparsed:
         warnings.append(f"{total_unparsed} unparseable line(s) across "
                         f"{len(unparsed)} file(s) — numbers are lower bounds")
+    if bad_records:
+        warnings.append(f"{bad_records} record(s) with unexpected shapes were "
+                        f"skipped — numbers are lower bounds")
     if warnings:
         out.append("- Warnings:")
         for w in warnings:
