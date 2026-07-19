@@ -56,7 +56,10 @@ merges, and the log must outlive it. Resolve the location with a single
 shared `.git` directory, whose **parent** is the main worktree root, and the
 log directory is `.workflow-log/` there (covered by the `.gitignore` entry
 the installer added). In a plain single-checkout clone this resolves to the
-repository root itself.
+repository root itself. Sanity-check the result: if the resolved parent path
+still contains a `.git` segment (e.g. the project is a git *submodule*, where
+the common dir lives under the outer repo's `.git/modules/`), the layout is
+unusual — ask the user where the log should live rather than writing there.
 
 `<branch>` is the branch name with `/` replaced by `-` (e.g. branch
 `feat/login-form` → `.workflow-log/feat-login-form.md`). Create the
@@ -113,7 +116,7 @@ aggregates across files, so keep the headings and field labels verbatim):
 - PR: <url | not opened | abandoned>
 - Template revision: <contents of .claude/ai-workflow-template.rev | unknown>
 - Sessions: <session ID(s), oldest first | unknown>
-- Project path: <absolute path of the worktree the session(s) ran in>
+- Project path: <absolute path(s) of the worktree(s) the sessions ran in | unknown>
 
 ## Steps
 
