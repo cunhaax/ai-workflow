@@ -51,7 +51,8 @@ project-root/
 │       ├── plan-critic/SKILL.md
 │       ├── code-critic/SKILL.md           # Base review standards (project rules live in docs/agent-rules/)
 │       ├── adversarial-qa/SKILL.md
-│       └── workflow-retro/SKILL.md        # Optional end-of-session evaluation record (→ .workflow-log/)
+│       ├── workflow-retro/SKILL.md        # Optional end-of-session evaluation record (→ .workflow-log/)
+│       └── workflow-inspect/              # Companion: cost half from session transcripts (SKILL.md + inspect.py)
 ├── .github/workflows/
 │   └── ci.yml.example                     # CI skeleton — rename to ci.yml and fill in
 ├── githooks/
@@ -74,9 +75,9 @@ project-root/
 > Note: there is no `feature` sub-agent. `feature` is a workflow skill
 > (`.claude/skills/feature/SKILL.md`) the **main** agent runs; it orchestrates
 > the planner, plan-critic, code-critic, and adversarial-qa sub-agents.
-> `init-workflow` and `workflow-retro` are likewise main-agent skills with no
-> sub-agent wrapper — setup and the end-of-session retro are interactive
-> conversations, not delegated work.
+> `init-workflow`, `workflow-retro`, and `workflow-inspect` are likewise
+> main-agent skills with no sub-agent wrapper — setup and the evaluation
+> passes are interactive conversations, not delegated work.
 
 ### Why This Structure
 
@@ -360,13 +361,28 @@ judgment section — as one fixed-schema file per feature branch in
 `.workflow-log/` (gitignored: local evaluation data, never committed). The
 directory lives under the repo's **main** worktree, so records survive the
 deletion of per-feature worktrees. The
-file also records the session's transcript ID(s) so a companion
-`/workflow-inspect` skill can later join the *cost* half (tokens per step,
-wall-clock, file-read overlap) from the raw transcripts — which are pruned
-after Claude Code's retention window, so that join is time-boxed; the
-distilled record in `.workflow-log/` is what persists. Over several features,
-these records are the evidence base for tuning the workflow — see *Evolving
-the System*.
+file also records the session's transcript ID(s) so the companion
+`/workflow-inspect` skill can later join the *cost* half from the raw
+transcripts — which are pruned after Claude Code's retention window, so that
+join is time-boxed; the distilled record in `.workflow-log/` is what
+persists. Over several features, these records are the evidence base for
+tuning the workflow — see *Evolving the System*.
+
+### `.claude/skills/workflow-inspect/` — `/workflow-inspect`
+
+The retro's companion, run manually by the **main** agent any time after a
+retro, while the session transcripts still exist. It fills the record's
+pending `## Cost` section with numbers computed by a bundled read-only
+script (`inspect.py`, requires `python3`): tokens and wall-clock per
+sub-agent, the sub-agents' share of total output, and the handoff tax —
+files the planner read that the main agent re-read. The script locates
+transcripts by a global search of `~/.claude/projects/` for the recorded
+session IDs (transcripts are filed under the session's *launch* directory,
+so path derivation is unreliable), resolves each sub-agent's transcript via
+its spawn `toolUseId`, and deduplicates records shared by resumed sessions;
+it fails soft, folding anything unparseable or missing into warning lines.
+The transcript format is Claude Code internal and undocumented — the script
+observes it, it is not a contract.
 
 ## Sub-agents — orchestration over the skills
 
@@ -556,12 +572,13 @@ preloads. For example, `/code-critic` and the `code-critic` sub-agent both use
 a `description` the tool matches invocations against, and a body that is the
 knowledge itself.
 
-The seven wired-up commands are `/feature`, `/init-workflow`, `/plan-draft`,
-`/plan-critic`, `/code-critic`, `/adversarial-qa`, and `/workflow-retro`.
-`/feature` is the primary entry point — it triggers the full orchestrated
-workflow; `/init-workflow` is the one-time setup (and recurring doctor) pass;
-`/workflow-retro` is the optional end-of-session evaluation record; the
-others invoke individual steps ad-hoc.
+The eight wired-up commands are `/feature`, `/init-workflow`, `/plan-draft`,
+`/plan-critic`, `/code-critic`, `/adversarial-qa`, `/workflow-retro`, and
+`/workflow-inspect`. `/feature` is the primary entry point — it triggers the
+full orchestrated workflow; `/init-workflow` is the one-time setup (and
+recurring doctor) pass; `/workflow-retro` and `/workflow-inspect` are the
+optional evaluation pair (outcome record, then cost fill-in); the others
+invoke individual steps ad-hoc.
 
 **Naming note (Claude Code).** Claude Code **bundles** a skill named
 `code-review`, and project skills shadow bundled skills completely and by

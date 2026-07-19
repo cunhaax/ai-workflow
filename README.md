@@ -35,8 +35,10 @@ CLAUDE.md                    # Thin: imports AGENTS.md via @AGENTS.md
     ├── code-critic/SKILL.md # Base review standards (named code-critic to avoid
     │                        #   shadowing Claude Code's bundled code-review skill)
     ├── adversarial-qa/SKILL.md
-    └── workflow-retro/SKILL.md # Optional end-of-session workflow-evaluation
-                             #   record (writes to gitignored .workflow-log/)
+    ├── workflow-retro/SKILL.md # Optional end-of-session workflow-evaluation
+    │                        #   record (writes to gitignored .workflow-log/)
+    └── workflow-inspect/    # Companion: fills the record's Cost section from
+                             #   session transcripts (SKILL.md + inspect.py)
 .github/workflows/
 └── ci.yml.example           # CI skeleton — rename to ci.yml and fill in
 docs/

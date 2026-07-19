@@ -77,15 +77,16 @@ by default), so the join must happen within it.
 Get the current session ID, in this order:
 
 1. The `CLAUDE_CODE_SESSION_ID` environment variable (check with a single
-   `printenv CLAUDE_CODE_SESSION_ID`). Its value is the session ID, and the
-   transcript is `~/.claude/projects/<sanitized-path>/<session-id>.jsonl`,
-   where `<sanitized-path>` is the project's absolute path with each
-   non-alphanumeric character replaced by `-`.
-2. If the variable is unset, fall back to a heuristic: list that directory by
-   modification time — the most recently modified `.jsonl` is *probably* the
-   current session. But if more than one transcript was modified in the last
-   few minutes (concurrent sessions on this project), ask the user which one
-   is this session rather than picking silently.
+   `printenv CLAUDE_CODE_SESSION_ID`). Its value is the session ID — the
+   transcript is `<session-id>.jsonl` somewhere under `~/.claude/projects/`.
+2. If the variable is unset, fall back to a heuristic: the most recently
+   modified `.jsonl` anywhere under `~/.claude/projects/` (a single `find`)
+   is *probably* the current session — transcripts are filed under the
+   session's *launch* directory, which is not necessarily the current
+   worktree's, so search globally rather than deriving a directory from a
+   path. If more than one transcript was modified in the last few minutes
+   (concurrent sessions), ask the user which one is this session rather
+   than picking silently.
 3. If neither works — the variable is unset and the directory is missing or
    ambiguous — record `Sessions: unknown` rather than guessing. Both the
    variable and the on-disk layout are current, undocumented Claude Code
@@ -98,10 +99,10 @@ the user if they can identify them (e.g. by date); otherwise record
 `earlier sessions: unknown`.
 
 Also record the **current worktree's absolute path** (the schema's
-`Project path` field): `<sanitized-path>` is derived from it, and if the
-worktree is deleted before `/workflow-inspect` runs, the transcript
-directory cannot be re-derived — the recorded path is what keeps the
-sessions findable.
+`Project path` field) — context tying the record to the checkout the work
+ran in. The session ID is the load-bearing pointer: `/workflow-inspect`
+locates transcripts by a global search for `<session-id>.jsonl`, never by
+deriving a directory from the recorded path.
 
 ## Step 3 — Fill the record
 
