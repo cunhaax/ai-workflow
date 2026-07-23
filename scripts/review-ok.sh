@@ -14,8 +14,15 @@
 
 set -eu
 
-if [ "$(git config core.hooksPath || true)" != "githooks" ]; then
-    echo "WARNING: core.hooksPath is not 'githooks' — the pre-push review gate is NOT active in this clone." >&2
+hooks_path="$(git config core.hooksPath || true)"
+resolved="$hooks_path"
+case "$hooks_path" in
+    /*) : ;;                                            # already absolute
+    "") resolved="" ;;
+    *)  resolved="$(git rev-parse --show-toplevel)/$hooks_path" ;;
+esac
+if [ -z "$resolved" ] || [ ! -x "$resolved/pre-push" ]; then
+    echo "WARNING: no active pre-push hook at core.hooksPath — the review gate is NOT active in this clone." >&2
     echo "Enable it once per clone: git config core.hooksPath githooks" >&2
 fi
 
