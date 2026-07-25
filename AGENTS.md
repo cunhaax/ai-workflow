@@ -10,9 +10,9 @@ code — this file is the map, not the territory.
 
 ## Rules — non-negotiable
 
-These apply to **every** agent — the main agent and every sub-agent (planner,
-plan-critic, code-critic, adversarial-qa). Nothing enforces them automatically; following
-them is your responsibility.
+These apply to **every** agent — the main agent and any sub-agents it
+invokes. Nothing enforces them automatically; following them is your
+responsibility.
 
 1. **Use the project's canonical commands.** Build, run, stop, and test only
    through the documented commands (see *Commands*). If a wrapper exists
@@ -36,12 +36,13 @@ them is your responsibility.
    of which works from the default branch itself. If you start on the default
    branch, STOP and ask before planning.
 
-4. **Get reviewed before pushing.** Never `git push` or open a PR until the
-   `code-critic` sub-agent has passed with no FAIL items. After a pass, record
-   it with `scripts/review-ok.sh` — the committed pre-push hook
+4. **Get reviewed before pushing.** Never `git push` or open a PR without a
+   recorded passing review of the current commit — no unresolved critical
+   issues. Record it with `scripts/review-ok.sh` — the committed pre-push hook
    (`githooks/pre-push`) blocks any push whose commit does not match the
    recorded review. Any commit made after the review requires a re-review.
-   (Enable once per clone: `git config core.hooksPath githooks`.)
+   (Enable once per clone: `git config core.hooksPath githooks`.) See
+   `docs/AI-workflow.md` for how this project obtains that review.
 
 5. <!-- [TODO: project-specific hygiene rule, if any] e.g. "Leave the database
    clean: run [DB_DOWN_CMD] before ending a session." Delete this rule if none. -->
@@ -62,17 +63,16 @@ dependencies, infrastructure.] -->
 
 **Before building features, read the product docs** in `docs/product-context/`
 (vision, strategy, requirements). Architecture decision records are in `docs/adr/`.
-Sub-agent definitions and the coding-standard skills are in `.claude/agents/`
-and `.claude/skills/`; their project-specific extensions (review rules, risk
-lenses) live in `docs/agent-rules/`.
+This project's structured AI development workflow, if one is configured, is
+documented in `docs/AI-workflow.md`.
 
 ## Commands
 
 <!-- Replace with YOUR project's canonical commands. Keep them behind a wrapper
      (make/just/npm script/…) if one adds serialisation or environment setup.
-     The skills in .claude/skills/ reference these entries by role ("the
-     run-all-tests command") instead of hardcoding them, so this list is the
-     single place they are defined. -->
+     Keep this list as the single source of truth for these commands — anything
+     that needs them (scripts, AI tooling, docs) should reference this list by
+     role ("the run-all-tests command") instead of hardcoding a duplicate. -->
 
 - `[BUILD_CMD]` — build
 - `[TEST_CMD]` — run all tests
@@ -98,11 +98,12 @@ broken. Keep it to the map — link docs/ and docs/adr/ for depth.] -->
 
 ## Sensitive Areas — the security surface
 
-The canonical list of files/areas where mistakes are expensive. The `/feature`
-workflow consults it at three points: the plan-critic skip criteria (Step 1b),
-reviewer model escalation (Step 4), and the PR security flag (Step 9). Keep
-the list short and concrete; if the rationale for an entry needs more than a
-line, link a page under `docs/` for the depth rather than expanding here.
+The canonical list of files/areas where mistakes are expensive. Treat any
+change touching these with extra scrutiny — a more careful review, a
+stronger reviewer model if one is available, an explicit call-out in the PR
+description. Keep the list short and concrete; if the rationale for an entry
+needs more than a line, link a page under `docs/` for the depth rather than
+expanding here.
 
 <!-- [TODO: one bullet per area — e.g. security config, auth/token/session
 handling, route definitions, sensitive data fields and their rendering paths,
@@ -111,10 +112,3 @@ can match a diff against them.] -->
 
 - [TODO: sensitive area 1 — concrete file/package/pattern]
 - [TODO: sensitive area 2]
-
-## Workflow for New Features
-
-Use the `/feature` slash command for non-trivial work: plan → critique →
-implement → test → code-review → QA → PR, with explicit gates. Full definition
-in the `/feature` skill (`.claude/skills/feature/SKILL.md`); full guide in
-`docs/AI-workflow.md`.
