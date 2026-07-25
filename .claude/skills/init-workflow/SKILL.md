@@ -123,7 +123,15 @@ Check each item and collect the results — fix only with the user's
 confirmation, report what you cannot fix:
 
 1. `githooks/pre-push` and `scripts/review-ok.sh` exist and are executable.
-2. `git config core.hooksPath` is `githooks` — if not, offer to run
+2. The pre-push review gate is active: resolve `git config core.hooksPath`
+   (absolute as-is, relative against repo toplevel) and check for an
+   executable `pre-push` there — don't compare the raw config value to the
+   literal string `githooks` (a worktree can inherit an absolute
+   `core.hooksPath` from the main checkout's shared config that resolves
+   correctly but never equals that literal; see `scripts/review-ok.sh` for
+   the resolution logic to mirror — replicate it, don't run that script for
+   this check, since executing it has the side effect of recording a review
+   pass). If no executable `pre-push` resolves, offer to run
    `git config core.hooksPath githooks` (per clone; each teammate needs it).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
