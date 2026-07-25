@@ -142,7 +142,14 @@ if [ -f "$TARGET/.claude/settings.json" ] \
     echo "      diff $TEMPLATE_DIR/.claude/settings.json $TARGET/.claude/settings.json" >&2
 fi
 
-if [ "$(git -C "$TARGET" config core.hooksPath || true)" != "githooks" ]; then
+hooks_path="$(git -C "$TARGET" config core.hooksPath || true)"
+resolved="$hooks_path"
+case "$hooks_path" in
+    /*) : ;;                                            # already absolute
+    "") resolved="" ;;
+    *)  resolved="$(git -C "$TARGET" rev-parse --show-toplevel)/$hooks_path" ;;
+esac
+if [ -z "$resolved" ] || [ ! -x "$resolved/pre-push" ]; then
     echo "NOTE: the pre-push review gate is not active in the target clone. Enable it" >&2
     echo "      once per clone:  git -C $TARGET config core.hooksPath githooks" >&2
 fi
