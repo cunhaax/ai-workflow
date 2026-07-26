@@ -239,16 +239,25 @@ protected by tests, not per-diff checklist prose.
 ## Project-Specific Rules
 
 This skill is project-agnostic; each project extends it without editing it.
-If `docs/agent-rules/code-critic.md` exists in the repository, read it now
-and apply every rule in it alongside the base standards above, at the
-severity each rule states. Treat those rules exactly like the base ones —
-including the don't-weaken doctrine for any rule the file marks as
-build-enforced, and the file's PRIVACY anchors, which bind the privacy
-rules above to this codebase's sensitive categories, public surfaces, and
-existing fitness tests.
+Check `AGENTS.md` for a **Review & Planning Guidance** section naming a code
+review guidance file. If present, read whatever file it names. If
+`AGENTS.md` has no such section, fall back to checking
+`docs/agent-rules/code-critic.md` directly.
 
-If the file does not exist, proceed with the base standards alone and say
-so in the review output (one line) — the gap should be visible, not silent.
+If the named (or default) file exists and uses this skill's Rules /
+Checklist / severity format, apply every rule in it alongside the base
+standards above, exactly like the base ones — including the don't-weaken
+doctrine for any rule it marks as build-enforced, and its PRIVACY anchors,
+which bind the privacy rules above to this codebase's sensitive categories,
+public surfaces, and existing fitness tests. If it's a pre-existing project
+doc without that structure (a style guide, `CONTRIBUTING.md`, an
+engineering handbook), it won't have severities to apply — weigh it as
+additional context instead, and judge severity yourself using this skill's
+normal `PASS`/`FAIL`/`NEEDS_DECISION` framework.
+
+If no file is found either way, proceed with the base standards alone and
+say so in the review output (one line) — the gap should be visible, not
+silent.
 
 ---
 
@@ -337,8 +346,10 @@ is `FAIL`._
 - [ ] No tests that only verify implementation details
 
 ### Project-Specific
-- [ ] Every checklist item in `docs/agent-rules/code-critic.md` evaluated —
-  or the file is absent, stated as one line in the output
+- [ ] Every applicable item from the project's review guidance (via
+  `AGENTS.md`'s Review & Planning Guidance section, or
+  `docs/agent-rules/code-critic.md` if unspecified) evaluated — or its
+  absence stated as one line in the output
 
 ### Privacy and Data Protection
 - [ ] Privacy fitness tests not weakened — no deleted/disabled test, no

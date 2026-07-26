@@ -3,10 +3,11 @@ name: init-workflow
 description: >
   Bootstraps and validates the AI workflow in a project that has this
   plugin installed: scaffolds project-owned files on first run, detects the
-  project's commands, fills AGENTS.md, seeds docs/agent-rules/, and verifies
-  the review gate. Re-run any time as a doctor — it reports what is missing
-  or drifted. (Named init-workflow so it does not collide with Claude Code's
-  built-in /init command, which generates a CLAUDE.md.)
+  project's commands, fills AGENTS.md, points it at review/planning
+  guidance (seeding docs/agent-rules/ or reusing an existing doc), and
+  verifies the review gate. Re-run any time as a doctor — it reports what
+  is missing or drifted. (Named init-workflow so it does not collide with
+  Claude Code's built-in /init command, which generates a CLAUDE.md.)
 ---
 
 # /init-workflow — Bootstrap and Validate the Workflow
@@ -55,9 +56,10 @@ locally and Step 5 checks for. Present the full file list in one block —
 the same confirm-then-write pattern as every other step here — before
 writing anything. Once written, continue below as first-run mode.
 
-Read `AGENTS.md`, `docs/agent-rules/code-critic.md`, and
-`docs/agent-rules/plan-critic.md`. Classify each placeholder / `[TODO: …]`
-as filled or open.
+Read `AGENTS.md`. If it has a **Review & Planning Guidance** section, read
+the files it names; otherwise check `docs/agent-rules/code-critic.md` and
+`docs/agent-rules/plan-critic.md` directly. Classify each placeholder /
+`[TODO: …]` as filled or open.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
@@ -108,28 +110,39 @@ For each still-open section, draft from evidence and confirm before writing:
 - **Rule 5** (project hygiene rule): ask whether one applies (e.g. reset a
   dev database at session end); fill it or delete the placeholder.
 
-## Step 4 — Seed docs/agent-rules/
+## Step 4 — Seed review and planning guidance
 
-Interview briefly — a few questions, not a form:
+First ask: does this project already have docs for code review standards
+and/or planning risk areas — a style guide, `CONTRIBUTING.md`, an
+engineering handbook, anything like that? Handle each of the two
+(code review guidance, planning guidance) independently based on the
+answer:
 
-- Does the app hold personal data? Which categories are sensitive, and is
-  there a compliance doc? Which surfaces are public/unauthenticated? Any
-  identifiers public by design? Do any of the three privacy fitness tests
-  already exist?
-  → draft the *Privacy anchors* section of `docs/agent-rules/code-critic.md`.
-- Any hard constraints the team already knows agents get wrong (framework
-  conventions, forbidden APIs, required registrations)?
-  → draft them as rules with severities, mirrored in the *Checklist* section.
-- What are this product's highest-risk areas — the places where a generic
-  plan would miss something that matters here?
-  → draft 4–7 lenses for `docs/agent-rules/plan-critic.md`.
+- **Already has one** → point the `Review & Planning Guidance` section in
+  `AGENTS.md` at that existing file instead of drafting a new one. The
+  interview questions below still apply, but reframed as "anything not
+  already covered by your existing doc" rather than a full draft.
+- **Doesn't have one** → interview briefly, draft a new file at the default
+  path, and point `AGENTS.md` at it:
+  - Does the app hold personal data? Which categories are sensitive, and is
+    there a compliance doc? Which surfaces are public/unauthenticated? Any
+    identifiers public by design? Do any of the three privacy fitness tests
+    already exist?
+    → draft the *Privacy anchors* section of `docs/agent-rules/code-critic.md`.
+  - Any hard constraints the team already knows agents get wrong (framework
+    conventions, forbidden APIs, required registrations)?
+    → draft them as rules with severities, mirrored in the *Checklist* section.
+  - What are this product's highest-risk areas — the places where a generic
+    plan would miss something that matters here?
+    → draft 4–7 lenses for `docs/agent-rules/plan-critic.md`.
 
-Then present the drafted content of both files in one block for
-confirmation before writing them — the same confirm-then-write pattern as
-Steps 2 and 3; an answered question is input to the draft, not approval of
-it. It is fine for these files to start thin — they are designed to accrete
-(see *Evolving the System* in the AI Workflow plugin's own documentation).
-Record only what the user confirms; keep the guidance comments in the files
+Then present the drafted content (whichever combination of new files and
+`AGENTS.md` pointer updates applies) in one block for confirmation before
+writing — the same confirm-then-write pattern as Steps 2 and 3; an answered
+question is input to the draft, not approval of it. It is fine for newly
+drafted files to start thin — they are designed to accrete (see *Evolving
+the System* in the AI Workflow plugin's own documentation). Record only
+what the user confirms; keep the guidance comments in newly drafted files
 for future additions.
 
 ## Step 5 — Validate the setup (doctor checklist)

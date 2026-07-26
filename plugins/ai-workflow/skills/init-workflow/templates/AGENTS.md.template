@@ -113,3 +113,8 @@ can match a diff against them.] -->
 
 - [TODO: sensitive area 1 — concrete file/package/pattern]
 - [TODO: sensitive area 2]
+
+## Review & Planning Guidance
+
+- Code review guidance: `docs/agent-rules/code-critic.md`
+- Planning guidance: `docs/agent-rules/plan-critic.md`

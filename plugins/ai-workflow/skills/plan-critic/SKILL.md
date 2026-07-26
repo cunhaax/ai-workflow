@@ -87,13 +87,19 @@ applying the four methods above — they are not a separate checklist.
 ## Project-Specific Lenses
 
 This skill is project-agnostic; each project extends it without editing it.
-If `docs/agent-rules/plan-critic.md` exists in the repository, read it now —
-it lists this product's high-risk areas, the places where generic plans
-regularly miss issues that matter here. Like the base lenses above, they
-direct extra attention while applying the four methods; they are not a
-separate checklist.
+Check `AGENTS.md` for a **Review & Planning Guidance** section naming a
+planning guidance file. If present, read whatever file it names. If
+`AGENTS.md` has no such section, fall back to checking
+`docs/agent-rules/plan-critic.md` directly.
 
-If the file does not exist, apply the base lenses alone.
+Whatever is found — this skill's own lens format or a pre-existing project
+doc (a style guide, an engineering handbook, product docs) — apply it the
+same way: it lists this product's high-risk areas, the places where
+generic plans regularly miss issues that matter here. Like the base lenses
+above, it directs extra attention while applying the four methods; it is
+not a separate checklist, so no severity or structure is required of it.
+
+If no file is found either way, apply the base lenses alone.
 
 ---
 

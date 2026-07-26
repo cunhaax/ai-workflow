@@ -162,3 +162,8 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
 - `.claude-plugin/marketplace.json` /
   `plugins/ai-workflow/.claude-plugin/plugin.json` — a broken manifest
   breaks installation for everyone.
+
+## Review & Planning Guidance
+
+- Code review guidance: `docs/agent-rules/code-critic.md`
+- Planning guidance: `docs/agent-rules/plan-critic.md`
