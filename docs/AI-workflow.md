@@ -481,6 +481,25 @@ other setup drift, with one exception: gate-file identity is checked by
 content marker, not by being byte-current with the latest template, so a
 stale copy from before the update can still read as genuine.
 
+### Bundled MCP servers
+
+`plugins/ai-workflow/.mcp.json` declares two MCP servers, both run via
+pinned-version `npx` so nothing needs installing by hand:
+
+- **`playwright`** (`@playwright/mcp`, `--browser chrome`) — the browser
+  `adversarial-qa` drives (see *Sub-agents* above).
+- **`context7`** (`@upstash/context7-mcp`) — up-to-date library docs, for
+  any agent whose `tools:` frontmatter lists its `mcp__context7__*` tools.
+
+Per Claude Code's plugin model, MCP servers bundled with a plugin start
+whenever the plugin is *enabled* — not lazily, only when an agent that
+uses them actually runs. Enabling this plugin in a project therefore
+always spawns both server processes (and, on first run, downloads the npm
+packages and a Chromium build for Playwright), even in a session that
+never touches `/adversarial-qa`. Versions are pinned deliberately (not
+`@latest`) so an upstream release can't change QA behaviour underneath a
+project without a reviewed bump to this file.
+
 ## Evolving the System
 
 - **Start small.** Begin with the planner and code-critic; add QA and

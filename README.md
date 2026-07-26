@@ -21,6 +21,7 @@ executes step by step.
 .claude-plugin/marketplace.json     # Lists this repo's one plugin
 plugins/ai-workflow/
 ├── .claude-plugin/plugin.json      # Plugin metadata
+├── .mcp.json                       # Bundled MCP servers (playwright, context7) — starts on plugin enable
 ├── agents/                         # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
 └── skills/                         # The reusable knowledge — one directory per skill
     └── init-workflow/templates/    # Single source of truth for what a new project receives
