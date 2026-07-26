@@ -119,6 +119,7 @@ kept small and reviewed by hand.
 └── marketplace.json                  # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
 plugins/ai-workflow/
 ├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository, license)
+├── .mcp.json                         # Bundled MCP servers (playwright, context7) — starts on plugin enable
 ├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
 └── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
     │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
@@ -170,6 +171,16 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
 - `.claude-plugin/marketplace.json` /
   `plugins/ai-workflow/.claude-plugin/plugin.json` — a broken manifest
   breaks installation for everyone.
+- `plugins/ai-workflow/.mcp.json` — bundled MCP servers start automatically
+  for every project that enables the plugin; keep versions pinned
+  (never `@latest`) so an upstream release can't silently change what
+  runs, and bump deliberately, reviewed like any other dependency change.
+  Its tools are only reachable under the plugin-scoped name
+  `mcp__plugin_ai-workflow_<server>__<tool>` (see *Bundled MCP servers* in
+  `docs/AI-workflow.md`) — renaming this plugin requires updating
+  `adversarial-qa.md`'s `tools:` allowlist and `feature/SKILL.md`'s
+  `context7` references in the same change, or they silently stop
+  matching real tools.
 
 ## Review & Planning Guidance
 

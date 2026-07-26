@@ -481,6 +481,51 @@ other setup drift, with one exception: gate-file identity is checked by
 content marker, not by being byte-current with the latest template, so a
 stale copy from before the update can still read as genuine.
 
+### Bundled MCP servers
+
+`plugins/ai-workflow/.mcp.json` declares two MCP servers, both run via
+pinned-version `npx` so nothing needs installing by hand:
+
+- **`playwright`** (`@playwright/mcp`, `--browser chrome`) — the browser
+  `adversarial-qa` drives (see *Sub-agents* above).
+- **`context7`** (`@upstash/context7-mcp`) — up-to-date library/API docs.
+  Not gated behind any sub-agent's `tools:` frontmatter — that restriction
+  only applies to plugin sub-agents, not the main agent, which already has
+  every session tool once the plugin is enabled. The `feature` skill's
+  Step 2 (*Implement*) instructs the main agent to use it for
+  version-sensitive library/API details instead of relying on
+  training-time memory.
+
+**Tool names are plugin-scoped, not bare.** Per the MCP reference
+documentation, a tool from a plugin-bundled server is callable as
+`mcp__plugin_<plugin-name>_<server-name>__<tool-name>` — e.g.
+`mcp__plugin_ai-workflow_playwright__browser_click` — not the bare
+`mcp__playwright__browser_click` form a project- or user-configured
+server would use. `adversarial-qa.md`'s `tools:` allowlist and the
+`context7` references in `feature/SKILL.md` both use the scoped form
+already. If this plugin's `name` in `plugin.json` (currently
+`ai-workflow`) ever changes, both must be updated in lockstep, or the
+sub-agent's allowlist silently stops matching the real registered tools
+and it loses every browser tool with no obvious error at review time.
+
+Per Claude Code's plugin reference documentation, MCP servers bundled with
+a plugin start whenever the plugin is *enabled* — not lazily, only when an
+agent that uses them actually runs (this is documented product behavior,
+distinct from the install-flow steps flagged as unverified above, which
+this repo has not yet exercised end to end). Enabling this plugin in a
+project therefore always spawns both server processes, and on first run
+`npx` downloads each package itself. `--browser chrome` does **not**
+additionally trigger a browser download on launch: Playwright looks for an
+already-installed Google Chrome (or a channel previously provisioned via
+`npx playwright install chrome`) and, if neither is present, throws an
+actionable error rather than silently fetching one — the same
+STOP-and-report posture as this project's other rules (see Rule 2 in
+`AGENTS.md`), not a "just works everywhere" guarantee. A machine that
+will run `/adversarial-qa` needs Chrome present one way or the other.
+Versions are pinned deliberately (not `@latest`) so an upstream release
+can't change QA behaviour underneath a project without a reviewed bump to
+this file.
+
 ## Evolving the System
 
 - **Start small.** Begin with the planner and code-critic; add QA and
