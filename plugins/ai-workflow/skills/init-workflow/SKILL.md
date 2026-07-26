@@ -51,11 +51,15 @@ directory by rule) — **except**
 which Step 4 creates (or doesn't, if the project already has equivalent
 docs) once it knows the answer; writing them here too would leave an
 orphaned stub if Step 4 points elsewhere instead. For everything else:
-strip the `.template` suffix from `AGENTS.md.template`, `CLAUDE.md.template`,
-and `settings.json.template` on the destination copy only — never on the
-source inside `templates/` (see `AGENTS.md` Rule 5 for why) — preserve the
-executable bit on `githooks/pre-push` and `scripts/review-ok.sh`, and copy
-every other file (the rest of the `docs/` tree,
+strip the `.template` suffix from `AGENTS.md.template` and
+`CLAUDE.md.template` (landing at `AGENTS.md`/`CLAUDE.md`) and from
+`settings.json.template` (landing at `.claude/settings.json`, **not**
+project root) — on the destination copy only; never strip it on the
+source inside `templates/` itself, since an un-suffixed `AGENTS.md`/
+`CLAUDE.md` left there would be auto-loaded by Claude Code as this
+project's live guidance instead of a template. Preserve the executable
+bit on `githooks/pre-push` and `scripts/review-ok.sh`, and copy every
+other file (the rest of the `docs/` tree,
 `.github/workflows/ci.yml.example`) to the same relative path it has under
 `templates/`. Also append `.review-passed`, `.qa-evidence/`, and
 `.workflow-log/` to `.gitignore` if not already present (create the file if
@@ -65,13 +69,15 @@ confirm-then-write pattern as every other step here — before writing
 anything. Once written, continue below as first-run mode.
 
 Read `AGENTS.md`. If it has a **Review & Planning Guidance** section, read
-the files it names — on a project you just scaffolded, its two entries
-point at `docs/agent-rules/code-critic.md`/`plan-critic.md`, which don't
-exist yet (Step 4 hasn't run); that absence is expected here, not a failed
-read to report under Rule 2. Otherwise (no section — i.e. a pre-existing
-project that hasn't scaffolded via this flow) check
-`docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
-directly. Classify each placeholder / `[TODO: …]` as filled or open.
+the files it names. A named file that doesn't exist yet is expected input
+to Step 4, not a Rule 2 failure to report — this applies whether `AGENTS.md`
+was just scaffolded (its two entries default to
+`docs/agent-rules/code-critic.md`/`plan-critic.md`, which Step 4 hasn't
+created yet) or pre-existing (a project adopting this flow for the first
+time, whose named or default files may not exist either). Otherwise (no
+section at all) check `docs/agent-rules/code-critic.md` and
+`docs/agent-rules/plan-critic.md` directly. Classify each placeholder /
+`[TODO: …]` as filled or open.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
