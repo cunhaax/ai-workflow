@@ -19,7 +19,7 @@ tokens and wall-clock per sub-agent, the sub-agents' share of the total,
 and the handoff tax (files the planner read that the main agent re-read).
 Together the two halves say what each workflow step cost *and* caught —
 the evidence base for tuning the workflow (see *Evolving the System* in
-`docs/AI-workflow.md`).
+the AI Workflow plugin's own documentation).
 
 **Ground rules:**
 

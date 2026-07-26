@@ -17,7 +17,7 @@ quick-start for *installing and adapting* the plugin in a new project.
 
 ```
 .claude/
-├── settings.json                # This repo's own permission rules (see below)
+├── settings.json                # Symlink → init-workflow/templates/settings.json.template
 ├── agents/                      # Sub-agent definitions (frontmatter + inline prompt)
 │   ├── planner.md                # Orchestration + skills: [plan-draft]
 │   ├── plan-critic.md            # Orchestration + skills: [plan-critic]
@@ -28,7 +28,7 @@ quick-start for *installing and adapting* the plugin in a new project.
     ├── init-workflow/
     │   ├── SKILL.md               # Bootstrap + doctor: scaffolds a new project,
     │   │                          #   fills AGENTS.md, seeds agent-rules, validates the gate
-    │   └── templates/             # THE scaffold source — see below
+    │   └── templates/             # THE scaffold source — single source of truth, below
     ├── plan-draft/SKILL.md       # (named plan-draft to avoid Claude Code's built-in /plan)
     ├── plan-critic/SKILL.md
     ├── code-critic/SKILL.md      # Base review standards (named code-critic to avoid
@@ -41,20 +41,25 @@ quick-start for *installing and adapting* the plugin in a new project.
 docs/
 ├── agent-rules/                 # This repo's own real review rules + risk lenses
 └── AI-workflow.md               # The full guide to this system
-githooks/pre-push                # Symlink → .claude/skills/init-workflow/templates/githooks/pre-push
-scripts/review-ok.sh             # Symlink → .claude/skills/init-workflow/templates/scripts/review-ok.sh
-AGENTS.md, CLAUDE.md             # This repo's own real project guide (not a template — see below)
+githooks/pre-push                # Symlink → init-workflow/templates/githooks/pre-push
+scripts/review-ok.sh             # Symlink → init-workflow/templates/scripts/review-ok.sh
+AGENTS.md, CLAUDE.md             # This repo's own real project guide
 ```
 
 **`init-workflow/templates/` is the single source of truth for what a new
-project receives**: `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, a CI
-skeleton, `docs/agent-rules/*`, `docs/adr/*`, `docs/product-context/*`, and
-the two enforcement files (`githooks/pre-push`, `scripts/review-ok.sh`). This
-repo's own root `AGENTS.md`/`CLAUDE.md`/`settings.json`/`docs/agent-rules/*`
-are **not** copies of that template — they're this repo's own real,
-hand-written project files, since this is a docs/tooling repo, not a generic
-app. The two enforcement files *are* meant to be identical everywhere, so at
-root they're symlinks into `templates/` rather than a second copy.
+project receives**: `AGENTS.md.template`, `CLAUDE.md.template`,
+`settings.json.template`, a CI skeleton, `docs/agent-rules/*`, `docs/adr/*`,
+`docs/product-context/*`, and the two enforcement scripts
+(`githooks/pre-push`, `scripts/review-ok.sh`) — `/init-workflow` writes the
+first three to `AGENTS.md`, `CLAUDE.md`, and `.claude/settings.json`
+respectively (the `.template` suffix exists so Claude Code doesn't treat
+the bundled copies as this repo's own live `AGENTS.md`/`CLAUDE.md` when
+someone edits `templates/`). This repo's own root `AGENTS.md`/`CLAUDE.md`/
+`docs/agent-rules/*` are **not** copies of that template — they're this
+repo's own real, hand-written project files, since this is a docs/tooling
+repo, not a generic app. `.claude/settings.json`, `githooks/pre-push`, and
+`scripts/review-ok.sh` *are* meant to be identical everywhere, so at root
+all three are symlinks into `templates/` rather than a second copy.
 
 **Orchestration vs. knowledge, one source of truth.** Each skill in
 `.claude/skills/` holds reusable knowledge (standards, checklists, rules) with no
@@ -72,6 +77,11 @@ own review rules and risk lenses from `docs/agent-rules/` at runtime (a missing
 file means base rules only).
 
 ## Installing into a project
+
+*This plugin is not yet published to a marketplace — there is no
+`plugin.json`/`marketplace.json` in this repo yet, so the steps below
+describe the intended flow once it is. Packaging is tracked as separate,
+not-yet-scoped follow-up work.*
 
 Install the plugin (`/plugin marketplace add`, then `/plugin install` —
 choose the `project` scope if you want the install recorded and shared via

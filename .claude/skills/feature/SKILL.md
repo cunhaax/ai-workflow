@@ -137,7 +137,8 @@ the test suite itself — it verifies coverage statically and needs a record
 that the committed tests ran and passed on the reviewed state. That summary
 comes from you, the implementer, so it is a record, not independent proof —
 CI running the all-checks command on the pushed branch is the independent
-evidence (see *Deterministic enforcement* in `docs/AI-workflow.md`).
+evidence (see *Deterministic enforcement* in the AI Workflow plugin's own
+documentation).
 
 **Escalate the model on the security surface.** The `code-critic` runs on
 Sonnet by default (see its wrapper). If the diff touches the security surface

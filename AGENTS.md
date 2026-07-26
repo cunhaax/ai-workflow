@@ -84,21 +84,23 @@ kept small and reviewed by hand.
 
 ```
 .claude/
+├── settings.json                 # Symlink into .claude/skills/init-workflow/templates/settings.json.template
 ├── agents/                       # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
 └── skills/                       # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
     │                              #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
     └── init-workflow/templates/  # THE scaffold source a fresh project's /init-workflow reads
 docs/
-├── agent-rules/                  # This repo's own real review rules + risk lenses (below)
+├── agent-rules/                  # This repo's own real review rules + risk lenses
 └── AI-workflow.md                # Full design rationale and file-by-file guide
 githooks/pre-push                 # Symlink into .claude/skills/init-workflow/templates/githooks/pre-push
 scripts/review-ok.sh              # Symlink into .claude/skills/init-workflow/templates/scripts/review-ok.sh
 README.md                         # Quick-start for installing the plugin into another project
 ```
 
-`githooks/pre-push` and `scripts/review-ok.sh` are symlinks, not copies —
-they must never differ from what a scaffolded project receives, so there is
-exactly one copy of their content, inside `templates/`.
+`.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh` are
+symlinks, not copies — they must never differ from what a scaffolded
+project receives, so there is exactly one copy of their content, inside
+`templates/`.
 
 ## Testing
 

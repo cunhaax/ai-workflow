@@ -25,11 +25,12 @@ skill bodies out of `.claude/skills/` into tool-neutral markdown and have both
 the skills and that tool reference them — the split this template intentionally
 collapsed.)
 
-> This is a **template**. Project-specific rules, commands, and product context
-> are left as placeholders, all in project-owned files — `AGENTS.md`,
-> `docs/agent-rules/`, `docs/product-context/` (search those for `[` and
-> `TODO`); the skills and sub-agents under `.claude/` are project-agnostic and
-> need no editing. See the top-level `README.md` for installing and adapting.
+> A project that scaffolds from this plugin starts with project-specific
+> rules, commands, and product context left as placeholders, all in
+> project-owned files — `AGENTS.md`, `docs/agent-rules/`,
+> `docs/product-context/` (search those for `[` and `TODO`); the skills and
+> sub-agents supplied by the plugin are project-agnostic and need no
+> editing. See the top-level `README.md` for installing and adapting.
 
 ## Repository Structure
 
@@ -49,24 +50,34 @@ project-root/
 ├── scripts/
 │   └── review-ok.sh                       # Records a passing review for the current HEAD
 ├── docs/
-│   ├── adr/                               # Architecture Decision Records
+│   ├── adr/
+│   │   ├── README.md                      # ADR format guide
+│   │   └── 0001-record-architecture-decisions.md
 │   ├── agent-rules/                       # Project-owned skill extensions (read at runtime)
 │   │   ├── code-critic.md                 #   project review rules + privacy anchors
 │   │   └── plan-critic.md                 #   product risk lenses
-│   └── product-context/                   # Product vision, strategy, requirements
+│   └── product-context/
+│       └── README.md                      # Product-context guide
+├── .gitignore                             # Covers .review-passed, .qa-evidence/, .workflow-log/
 └── src/
     └── <module>/
         └── AGENTS.md                      # Optional: module-specific constraints for critical areas
 ```
 
+This tree is the canonical enumeration of what `/init-workflow` scaffolds —
+it mirrors `.claude/skills/init-workflow/templates/` exactly (that
+directory's `AGENTS.md.template`/`CLAUDE.md.template`/
+`settings.json.template` land at `AGENTS.md`/`CLAUDE.md`/
+`.claude/settings.json`, dropping the `.template` suffix; everything else
+keeps its relative path). AGENTS.md Rule 5 in this repo requires the two to
+stay in sync.
+
 The plugin itself (`.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`)
 is not vendored into the project — it's supplied by the plugin install and
-lives wherever Claude Code resolves an installed plugin's files. `AGENTS.md`,
-`.claude/settings.json`, `docs/agent-rules/*`, `docs/adr/*`,
-`docs/product-context/*`, `githooks/pre-push`, and `scripts/review-ok.sh` are
-scaffolded into the project by `/init-workflow` from the plugin's bundled
-templates on first run (see *Installing and updating the plugin* below); the
-project owns them from that point on.
+lives wherever Claude Code resolves an installed plugin's files. Everything
+in the tree above is scaffolded into the project by `/init-workflow` from
+the plugin's bundled templates on first run (see *Installing and updating
+the plugin* below); the project owns it from that point on.
 
 This repo (the plugin's own source) is the one exception: it carries its
 own real `.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`, *and*
@@ -659,8 +670,8 @@ setup drift.
 - **Track failure patterns.** Every time an agent produces bad output your
   rules didn't catch, add a rule to `docs/agent-rules/code-critic.md` (the
   file is designed to accrete) or a lens to `docs/agent-rules/plan-critic.md`.
-  The skills in `.claude/skills/` stay project-agnostic and template-owned,
-  so template updates never collide with your rules.
+  The skills in `.claude/skills/` stay project-agnostic and plugin-owned,
+  so plugin updates never collide with your rules.
 - **Tune the workflow itself with evidence, not intuition.** Run
   `/workflow-retro` at the end of feature sessions; the per-feature records in
   `.workflow-log/` show what each step cost and caught over time. A step

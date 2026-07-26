@@ -20,8 +20,8 @@ reporting what is missing rather than redoing what is already filled.
 
 **Division of labor:** this skill scaffolds, adapts, and validates
 project-owned files. It never edits the plugin's own mechanism — the
-skills, sub-agents, and `docs/AI-workflow.md` are off limits; updates to
-those come from updating the plugin itself, not from this skill.
+skills, sub-agents, and the plugin's own documentation are off limits;
+updates to those come from updating the plugin itself, not from this skill.
 
 **Ground rules:**
 
@@ -40,19 +40,20 @@ those come from updating the plugin itself, not from this skill.
 ## Step 1 — Scaffold if needed, then assess the current state
 
 If `AGENTS.md` does not exist, this is a brand-new project: propose
-scaffolding the full project-owned file set from
-`${CLAUDE_SKILL_DIR}/templates/` — `AGENTS.md`, `CLAUDE.md`,
-`.claude/settings.json`, `.github/workflows/ci.yml.example`,
-`docs/agent-rules/code-critic.md`, `docs/agent-rules/plan-critic.md`,
-`docs/adr/README.md`, `docs/adr/0001-record-architecture-decisions.md`,
-`docs/product-context/README.md`, `githooks/pre-push`, and
-`scripts/review-ok.sh` (preserve the executable bit on the last two). Also
-append `.review-passed`, `.qa-evidence/`, and `.workflow-log/` to
-`.gitignore` if not already present (create the file if it doesn't exist) —
-these are what the workflow writes locally and Step 5 checks for. Present
-the full file list in one block — the same confirm-then-write pattern as
-every other step here — before writing anything. Once written, continue
-below as first-run mode.
+scaffolding every file under `${CLAUDE_SKILL_DIR}/templates/` to its
+project-relative destination (this is the plugin's canonical enumeration —
+see the file tree in the plugin's own documentation, kept in sync with this
+directory by rule) — stripping the `.template` suffix from
+`AGENTS.md.template`, `CLAUDE.md.template`, and `settings.json.template`
+(the last one lands at `.claude/settings.json`), preserving the executable
+bit on `githooks/pre-push` and `scripts/review-ok.sh`, and copying every
+other file (the `docs/` tree, `.github/workflows/ci.yml.example`) to the
+same relative path it has under `templates/`. Also append `.review-passed`,
+`.qa-evidence/`, and `.workflow-log/` to `.gitignore` if not already present
+(create the file if it doesn't exist) — these are what the workflow writes
+locally and Step 5 checks for. Present the full file list in one block —
+the same confirm-then-write pattern as every other step here — before
+writing anything. Once written, continue below as first-run mode.
 
 Read `AGENTS.md`, `docs/agent-rules/code-critic.md`, and
 `docs/agent-rules/plan-critic.md`. Classify each placeholder / `[TODO: …]`
@@ -127,7 +128,8 @@ Then present the drafted content of both files in one block for
 confirmation before writing them — the same confirm-then-write pattern as
 Steps 2 and 3; an answered question is input to the draft, not approval of
 it. It is fine for these files to start thin — they are designed to accrete
-(see *Evolving the System* in `docs/AI-workflow.md`). Record only what the
+(see *Evolving the System* in the AI Workflow plugin's own documentation).
+Record only what the
 user confirms; keep the guidance comments in the files for future additions.
 
 ## Step 5 — Validate the setup (doctor checklist)

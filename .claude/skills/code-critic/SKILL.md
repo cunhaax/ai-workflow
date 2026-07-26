@@ -278,7 +278,7 @@ Review every change against this checklist. For each item, state one of:
 ### Architecture
 
 _If a layer/architecture fitness test enforces boundaries (see the layer rule in
-`docs/AI-workflow.md`), do NOT re-derive them by hand — verify only that the diff
+the AI Workflow plugin's own documentation), do NOT re-derive them by hand — verify only that the diff
 does not **weaken** it: deleting or disabling the test, widening a package glob,
 adding an unexplained exemption, or moving code out of the scanned layer. A
 weakened enforcement is `FAIL`._

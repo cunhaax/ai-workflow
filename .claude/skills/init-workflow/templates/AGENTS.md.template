@@ -41,8 +41,9 @@ responsibility.
    issues. Record it with `scripts/review-ok.sh` — the committed pre-push hook
    (`githooks/pre-push`) blocks any push whose commit does not match the
    recorded review. Any commit made after the review requires a re-review.
-   (Enable once per clone: `git config core.hooksPath githooks`.) See
-   `docs/AI-workflow.md` for how this project obtains that review.
+   (Enable once per clone: `git config core.hooksPath githooks`.) See the AI
+   Workflow plugin's own documentation for how this project obtains that
+   review.
 
 5. <!-- [TODO: project-specific hygiene rule, if any] e.g. "Leave the database
    clean: run [DB_DOWN_CMD] before ending a session." Delete this rule if none. -->
@@ -64,7 +65,7 @@ dependencies, infrastructure.] -->
 **Before building features, read the product docs** in `docs/product-context/`
 (vision, strategy, requirements). Architecture decision records are in `docs/adr/`.
 This project's structured AI development workflow, if one is configured, is
-documented in `docs/AI-workflow.md`.
+documented by that workflow's own tooling (e.g. its installed plugin).
 
 ## Commands
 
