@@ -1,28 +1,30 @@
 ---
 name: init-workflow
 description: >
-  Adapts and validates the AI workflow after scripts/install.sh has copied it
-  into a project: detects the project's commands, fills AGENTS.md, seeds
-  docs/agent-rules/, and verifies the review gate. Re-run any time as a
-  doctor — it reports what is missing or drifted. (Named init-workflow so it
-  does not collide with Claude Code's built-in /init command, which generates
-  a CLAUDE.md.)
+  Adapts and validates the AI workflow once it's available in a project —
+  whether installed by scripts/install.sh or as a plugin: detects the
+  project's commands, fills AGENTS.md, seeds docs/agent-rules/, and verifies
+  the review gate. Re-run any time as a doctor — it reports what is missing
+  or drifted. (Named init-workflow so it does not collide with Claude Code's
+  built-in /init command, which generates a CLAUDE.md.)
 ---
 
 # /init-workflow — Adapt and Validate the Workflow
 
-Run this skill inside a project after `scripts/install.sh` has copied the
-workflow template into it. It does the part a copy script cannot: fill the
+Run this skill inside a project once its AI workflow tooling is available —
+whether that arrived via `scripts/install.sh` copying the template in, or an
+installed plugin. It does the part installing the tooling cannot: fill the
 project-owned files with *this* project's facts, interactively, and verify
-the setup end to end. It is idempotent — re-run it after template updates or
+the setup end to end. It is idempotent — re-run it after a tooling update or
 whenever setup drift is suspected, and it acts as a doctor, reporting what
 is missing rather than redoing what is already filled.
 
-**Division of labor:** `scripts/install.sh` installs files (deterministic,
-run from the template clone). This skill adapts and validates them. It never
-installs, and it never edits template-owned files — `.claude/skills/`,
-`.claude/agents/`, `githooks/`, `scripts/review-ok.sh`, `docs/AI-workflow.md`
-are off limits; updates to those come from re-running the installer.
+**Division of labor:** this skill adapts and validates project-owned files.
+It never edits the workflow tooling's own mechanism — the skills, sub-agents,
+and this guide (`docs/AI-workflow.md`) are off limits regardless of how they
+got here; updates to those come from updating the tooling itself (re-running
+`scripts/install.sh` against a newer template, or updating the plugin), not
+from this skill.
 
 **Ground rules:**
 
@@ -34,8 +36,12 @@ are off limits; updates to those come from re-running the installer.
 - **Keep `AGENTS.md` lean.** You are filling a map, not writing the
   territory — one line per command, one line per module, one bullet per
   sensitive area. Depth belongs in `docs/`.
-- If `AGENTS.md` does not exist, STOP: the template has not been installed —
-  tell the user to run `scripts/install.sh` from a template clone first.
+- If `AGENTS.md` does not exist, STOP: this skill adapts project-owned files,
+  it does not create them from nothing. Tell the user to get them in place
+  first — for the copy-based template, run `scripts/install.sh` from a
+  template clone. If the tooling arrived as a plugin with no scaffold step
+  for project-owned files, say so plainly as a current gap rather than
+  guessing at project facts or fabricating the files yourself.
 
 ---
 
