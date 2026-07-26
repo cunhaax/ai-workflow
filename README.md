@@ -43,9 +43,16 @@ project receives: `AGENTS.md.template`, `CLAUDE.md.template`,
 This repo's own root `AGENTS.md`/`CLAUDE.md`/`docs/agent-rules/*` are real,
 hand-written files, not copies of the template; `.claude/settings.json` and
 the three enforcement scripts are symlinks into `templates/` instead — see
-`docs/AI-workflow.md` for why.
+this repo's own `AGENTS.md` (*Architecture* section) for why, which is
+specific to this repo's own root layout rather than the general plugin
+design `docs/AI-workflow.md` covers.
 
 ## Installing into a project
+
+*This hasn't been exercised end-to-end yet — the manifests exist and
+validate, but the actual `/plugin marketplace add`/`/plugin install` flow
+requires an interactive scope-selection step only a human can drive.
+First real install is the test.*
 
 ```
 /plugin marketplace add cunhaax/ai-workflow-template
@@ -57,8 +64,8 @@ your project's own git history. Then, inside the project, run
 **`/init-workflow`** — it scaffolds whichever project-owned files are
 missing, adapts them to your codebase, and validates the whole setup. Every
 write is proposed and confirmed before anything happens; whatever you defer
-stays an explicit TODO. See *Installing and Updating the Plugin* in
-`docs/AI-workflow.md` for exactly what gets scaffolded and how it decides.
+stays an explicit TODO. See *Repository Structure* in `docs/AI-workflow.md`
+for exactly what gets scaffolded and how it decides.
 
 **Developing the plugin itself?** The GitHub form above sources from the
 published repo's default branch, not your working tree. Point the
