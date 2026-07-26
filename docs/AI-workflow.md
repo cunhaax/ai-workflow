@@ -488,17 +488,27 @@ pinned-version `npx` so nothing needs installing by hand:
 
 - **`playwright`** (`@playwright/mcp`, `--browser chrome`) — the browser
   `adversarial-qa` drives (see *Sub-agents* above).
-- **`context7`** (`@upstash/context7-mcp`) — up-to-date library docs, for
-  any agent whose `tools:` frontmatter lists its `mcp__context7__*` tools.
+- **`context7`** (`@upstash/context7-mcp`) — up-to-date library docs.
+  Provisioned ahead of a consumer: no agent's `tools:` frontmatter lists
+  its `mcp__context7__*` tools yet, so as of this writing enabling the
+  plugin runs this server for no current benefit — the process cost below
+  applies to it with nothing yet exercising it.
 
 Per Claude Code's plugin model, MCP servers bundled with a plugin start
 whenever the plugin is *enabled* — not lazily, only when an agent that
 uses them actually runs. Enabling this plugin in a project therefore
-always spawns both server processes (and, on first run, downloads the npm
-packages and a Chromium build for Playwright), even in a session that
-never touches `/adversarial-qa`. Versions are pinned deliberately (not
-`@latest`) so an upstream release can't change QA behaviour underneath a
-project without a reviewed bump to this file.
+always spawns both server processes, and on first run `npx` downloads
+each package itself. `--browser chrome` does **not** additionally trigger
+a browser download on launch: Playwright looks for an already-installed
+Google Chrome (or a channel previously provisioned via
+`npx playwright install chrome`) and, if neither is present, throws an
+actionable error rather than silently fetching one — the same
+STOP-and-report posture as this project's other rules (see Rule 2 in
+`AGENTS.md`), not a "just works everywhere" guarantee. A machine that
+will run `/adversarial-qa` needs Chrome present one way or the other.
+Versions are pinned deliberately (not `@latest`) so an upstream release
+can't change QA behaviour underneath a project without a reviewed bump to
+this file.
 
 ## Evolving the System
 
