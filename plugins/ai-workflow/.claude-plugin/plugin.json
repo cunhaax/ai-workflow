@@ -1,0 +1,8 @@
+{
+  "name": "ai-workflow",
+  "description": "Structured AI-assisted development workflow: plan, critique, implement, review, QA — with deterministic pre-push enforcement below the LLM layer.",
+  "version": "0.1.0",
+  "author": {
+    "name": "André Cunha"
+  }
+}

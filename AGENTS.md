@@ -45,9 +45,9 @@ responsibility.
    `docs/AI-workflow.md` for how this project obtains that review.
 
 5. **Keep `templates/` in sync with what describes it.**
-   `.claude/skills/init-workflow/templates/` is the canonical enumeration of
-   what a scaffolded project receives — `/init-workflow` reads it directly.
-   The file tree and `.template` → destination mapping in
+   `plugins/ai-workflow/skills/init-workflow/templates/` is the canonical
+   enumeration of what a scaffolded project receives — `/init-workflow`
+   reads it directly. The file tree and `.template` → destination mapping in
    `docs/AI-workflow.md`, and the `init-workflow/templates/` enumeration
    paragraph in `README.md`, are human-readable mirrors of it, not a second
    source; adding, removing, or renaming a file under `templates/` must be
@@ -63,16 +63,29 @@ responsibility.
 
 ## Project Overview
 
-This repo **is** the AI-Assisted Development Workflow template — a Claude
-Code plugin providing the skills and sub-agents (planner, plan-critic,
+This repo **is** the AI-Assisted Development Workflow plugin's source — a
+Claude Code plugin providing the skills and sub-agents (planner, plan-critic,
 code-critic, adversarial-qa) that structure AI-assisted development as
 plan → critique → implement → test → review → QA → PR, with a deterministic
 pre-push review gate below the LLM layer. `docs/AI-workflow.md` is the full
 design rationale; `README.md` is the quick-start for installing it into
 another project. There is no separate product-context/ADR set for this repo
 itself — `docs/AI-workflow.md` fills that role, and the placeholder versions
-of those directories live only in `.claude/skills/init-workflow/templates/`
-(what a scaffolded project receives), not at this repo's own root.
+of those directories live only in
+`plugins/ai-workflow/skills/init-workflow/templates/` (what a scaffolded
+project receives), not at this repo's own root.
+
+This repo has no project-local skills or sub-agents of its own —
+`.claude/skills/`/`.claude/agents/` don't exist here. `plugins/ai-workflow/`
+is the one real source; if you want `/feature` etc. available while working
+on this repo, install the plugin the same way any consumer would (see
+*Installing into a project* in `README.md`), rather than relying on
+special-cased project-local copies. That's deliberate, not an oversight: project-local symlinks back into
+`plugins/ai-workflow/` were considered and rejected, because with the
+plugin also installed globally, Claude Code would show both bare
+`/feature` (project-local) and `/ai-workflow:feature` (the installed
+plugin) at once — two command surfaces for the same thing, with no way to
+know if they'd drifted.
 
 ## Commands
 
@@ -88,17 +101,21 @@ kept small and reviewed by hand.
 
 ```
 .claude/
-├── settings.json                 # Symlink into .claude/skills/init-workflow/templates/settings.json.template
-├── agents/                       # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
-└── skills/                       # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
-    │                              #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
-    └── init-workflow/templates/  # THE scaffold source a fresh project's /init-workflow reads
+└── settings.json                     # Symlink into plugins/ai-workflow/skills/init-workflow/templates/settings.json.template
+.claude-plugin/
+└── marketplace.json                  # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
+plugins/ai-workflow/
+├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author)
+├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
+└── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
+    │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
+    └── init-workflow/templates/      # THE scaffold source a fresh project's /init-workflow reads
 docs/
-├── agent-rules/                  # This repo's own real review rules + risk lenses
-└── AI-workflow.md                # Full design rationale and file-by-file guide
-githooks/pre-push                 # Symlink into .claude/skills/init-workflow/templates/githooks/pre-push
-scripts/review-ok.sh              # Symlink into .claude/skills/init-workflow/templates/scripts/review-ok.sh
-README.md                         # Quick-start for installing the plugin into another project
+├── agent-rules/                      # This repo's own real review rules + risk lenses
+└── AI-workflow.md                    # Full design rationale and file-by-file guide
+githooks/pre-push                     # Symlink into plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
+scripts/review-ok.sh                  # Symlink into plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
+README.md                             # Quick-start for installing the plugin into another project
 ```
 
 `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh` are
@@ -116,19 +133,24 @@ run.
 
 ## Testing
 
-No automated tests. Verification is manual: dogfooding this repo's own
+No automated tests. Verification is manual: install the plugin (see
+*Installing into a project* in `README.md`) and dogfood this repo's own
 workflow on changes to itself (`/feature`, `/code-critic`, `/plan-critic`),
-and — for changes to `.claude/skills/init-workflow/templates/` specifically —
-a manual walkthrough confirming a freshly scaffolded project ends up correct
-(see `docs/AI-workflow.md`, *Evolving the System*).
+and — for changes to `plugins/ai-workflow/skills/init-workflow/templates/`
+specifically — a manual walkthrough confirming a freshly scaffolded project
+ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
 
 ## Sensitive Areas — the security surface
 
-- `.claude/skills/init-workflow/templates/` — this is what every scaffolded
-  project's enforcement mechanism and starting rules are built from; an
-  error here propagates silently to every downstream project.
+- `plugins/ai-workflow/skills/init-workflow/templates/` — this is what
+  every scaffolded project's enforcement mechanism and starting rules are
+  built from; an error here propagates silently to every downstream
+  project.
 - `githooks/pre-push` / `scripts/review-ok.sh` (via their symlink target in
   `templates/`) — the actual review-gate enforcement; a bug here is a
   silent bypass everywhere the template is used.
-- `.claude/skills/init-workflow/SKILL.md` — the scaffold logic itself; it
-  writes files into a project on the user's behalf.
+- `plugins/ai-workflow/skills/init-workflow/SKILL.md` — the scaffold logic
+  itself; it writes files into a project on the user's behalf.
+- `.claude-plugin/marketplace.json` /
+  `plugins/ai-workflow/.claude-plugin/plugin.json` — a broken manifest
+  breaks installation for everyone.

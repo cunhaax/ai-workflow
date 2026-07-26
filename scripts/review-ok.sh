@@ -1,1 +1,1 @@
-../.claude/skills/init-workflow/templates/scripts/review-ok.sh
+../plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh

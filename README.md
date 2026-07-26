@@ -17,7 +17,11 @@ quick-start for *installing and adapting* the plugin in a new project.
 
 ```
 .claude/
-├── settings.json                # Symlink → init-workflow/templates/settings.json.template
+└── settings.json                # This repo's own permission rules — symlink → plugins/ai-workflow/skills/init-workflow/templates/settings.json.template
+.claude-plugin/
+└── marketplace.json             # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
+plugins/ai-workflow/
+├── .claude-plugin/plugin.json   # Plugin metadata: name, description, version, author
 ├── agents/                      # Sub-agent definitions (frontmatter + inline prompt)
 │   ├── planner.md                # Orchestration + skills: [plan-draft]
 │   ├── plan-critic.md            # Orchestration + skills: [plan-critic]
@@ -41,10 +45,22 @@ quick-start for *installing and adapting* the plugin in a new project.
 docs/
 ├── agent-rules/                 # This repo's own real review rules + risk lenses
 └── AI-workflow.md               # The full guide to this system
-githooks/pre-push                # Symlink → init-workflow/templates/githooks/pre-push
-scripts/review-ok.sh             # Symlink → init-workflow/templates/scripts/review-ok.sh
+githooks/pre-push                # Symlink → plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
+scripts/review-ok.sh             # Symlink → plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
 AGENTS.md, CLAUDE.md             # This repo's own real project guide
 ```
+
+This repo has **no project-local skills or sub-agents** —
+`.claude/skills/`/`.claude/agents/` don't exist. `plugins/ai-workflow/` is
+the plugin's real source, structured per Claude Code's plugin convention
+(bare `skills/`/`agents/`, no path overrides needed). If you want `/feature`
+etc. while working on this repo, install the plugin the same way any
+consumer would — see *Installing into a project* below. An earlier draft of
+this repo symlinked `.claude/skills`/`.claude/agents` into `plugins/`
+instead, but that creates a real problem once the plugin is also installed
+globally: Claude Code would show both bare `/feature` (project-local) and
+`/ai-workflow:feature` (the installed plugin) at once, two command surfaces
+for the same thing with no way to know if they'd drifted.
 
 **`init-workflow/templates/` is the single source of truth for what a new
 project receives**: `AGENTS.md.template`, `CLAUDE.md.template`,
@@ -62,12 +78,13 @@ repo, not a generic app. `.claude/settings.json`, `githooks/pre-push`, and
 all three are symlinks into `templates/` rather than a second copy.
 
 **Orchestration vs. knowledge, one source of truth.** Each skill in
-`.claude/skills/` holds reusable knowledge (standards, checklists, rules) with no
-orchestration. Each sub-agent in `.claude/agents/` wraps a skill with
-orchestration — what context to read, what to output, what not to touch — and
-preloads it via the `skills:` frontmatter field (Claude injects the full skill
-body into the sub-agent at startup). The *same* skill also backs its `/slash`
-command for ad-hoc use, so the knowledge lives in exactly one place — no
+`plugins/ai-workflow/skills/` holds reusable knowledge (standards,
+checklists, rules) with no orchestration. Each sub-agent in
+`plugins/ai-workflow/agents/` wraps a skill with orchestration — what
+context to read, what to output, what not to touch — and preloads it via
+the `skills:` frontmatter field (Claude injects the full skill body into
+the sub-agent at startup). The *same* skill also backs its `/slash` command
+for ad-hoc use, so the knowledge lives in exactly one place — no
 duplication, nothing to drift.
 
 **Project-agnostic knowledge, project-owned extensions.** The skills and
@@ -78,14 +95,18 @@ file means base rules only).
 
 ## Installing into a project
 
-*This plugin is not yet published to a marketplace — there is no
-`plugin.json`/`marketplace.json` in this repo yet, so the steps below
-describe the intended flow once it is. Packaging is tracked as separate,
-not-yet-scoped follow-up work.*
+*This hasn't been exercised end-to-end yet — the manifests exist and
+validate, but the actual `/plugin marketplace add`/`/plugin install` flow
+requires an interactive scope-selection step only a human can drive.
+First real install is the test.*
 
-Install the plugin (`/plugin marketplace add`, then `/plugin install` —
-choose the `project` scope if you want the install recorded and shared via
-your project's own git history). Then, inside the project, run
+```
+/plugin marketplace add cunhaax/ai-workflow-template
+/plugin install ai-workflow@ai-workflow
+```
+
+Choose the `project` scope if you want the install recorded and shared via
+your project's own git history. Then, inside the project, run
 **`/init-workflow`**.
 
 On a brand-new project, `/init-workflow` scaffolds the project-owned files
