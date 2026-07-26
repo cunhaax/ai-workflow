@@ -110,6 +110,15 @@ green. Run the test suite once a coherent unit of work is complete (e.g.,
 after finishing a module or a meaningful set of related changes) — not after
 every individual step.
 
+**Look up current library/API docs instead of relying on training-time
+memory for version-sensitive details.** Before writing code against an
+external library or framework — especially anything that could have
+changed since training (recent APIs, config shape, breaking changes) — use
+the bundled `context7` MCP server (`mcp__context7__resolve-library-id`,
+then `mcp__context7__get-library-docs`) to pull current docs rather than
+guessing. Skip it for stdlib/language-core usage you're already confident
+about.
+
 If you discover something during implementation that changes what needs to be built,
 stop and assess the impact:
 

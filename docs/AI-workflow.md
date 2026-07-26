@@ -488,19 +488,23 @@ pinned-version `npx` so nothing needs installing by hand:
 
 - **`playwright`** (`@playwright/mcp`, `--browser chrome`) — the browser
   `adversarial-qa` drives (see *Sub-agents* above).
-- **`context7`** (`@upstash/context7-mcp`) — up-to-date library docs.
-  Provisioned ahead of a consumer: no agent's `tools:` frontmatter lists
-  its `mcp__context7__*` tools yet, so as of this writing enabling the
-  plugin runs this server for no current benefit — the process cost below
-  applies to it with nothing yet exercising it.
+- **`context7`** (`@upstash/context7-mcp`) — up-to-date library/API docs.
+  Not gated behind any sub-agent's `tools:` frontmatter — that restriction
+  only applies to plugin sub-agents, not the main agent, which already has
+  every session tool once the plugin is enabled. The `feature` skill's
+  Step 2 (*Implement*) instructs the main agent to use it for
+  version-sensitive library/API details instead of relying on
+  training-time memory.
 
-Per Claude Code's plugin model, MCP servers bundled with a plugin start
-whenever the plugin is *enabled* — not lazily, only when an agent that
-uses them actually runs. Enabling this plugin in a project therefore
-always spawns both server processes, and on first run `npx` downloads
-each package itself. `--browser chrome` does **not** additionally trigger
-a browser download on launch: Playwright looks for an already-installed
-Google Chrome (or a channel previously provisioned via
+Per Claude Code's plugin reference documentation, MCP servers bundled with
+a plugin start whenever the plugin is *enabled* — not lazily, only when an
+agent that uses them actually runs (this is documented product behavior,
+distinct from the install-flow steps flagged as unverified above, which
+this repo has not yet exercised end to end). Enabling this plugin in a
+project therefore always spawns both server processes, and on first run
+`npx` downloads each package itself. `--browser chrome` does **not**
+additionally trigger a browser download on launch: Playwright looks for an
+already-installed Google Chrome (or a channel previously provisioned via
 `npx playwright install chrome`) and, if neither is present, throws an
 actionable error rather than silently fetching one — the same
 STOP-and-report posture as this project's other rules (see Rule 2 in
