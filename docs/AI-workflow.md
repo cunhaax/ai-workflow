@@ -44,8 +44,6 @@ project-root/
 ├── CLAUDE.md                              # Thin: imports AGENTS.md via `@AGENTS.md`
 ├── .claude/
 │   └── settings.json                      # Permission rules guarding the review gate
-├── .github/workflows/
-│   └── ci.yml.example                     # CI skeleton — rename to ci.yml and fill in
 ├── githooks/
 │   └── pre-push                           # Review gate: blocks pushes of unreviewed commits
 ├── scripts/
@@ -316,24 +314,21 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   `review-ok.sh` records whatever it is told. The verdict is covered by the
   `ask` rule in `.claude/settings.json` (recording a pass always surfaces a
   human approval prompt in Claude Code, and the bypass flags are denied to
-  agents, best-effort) and by CI as independent test evidence. `review-ok.sh`
-  also warns whenever `scripts/check-hook-status.sh` reports the gate isn't
-  actually active — not just an unset `core.hooksPath`, but a foreign hook
-  occupying the spot too — so a clone that skipped the one-time setup, or
-  whose hooks were reconfigured by something else, finds out instead of
-  running gateless.
-- **CI** — independent evidence for the human reviewer that tests pass on the
-  pushed state, replacing trust in a session transcript (or in a test summary
-  pasted by the implementing agent). A ready-to-adapt skeleton ships as
-  `.github/workflows/ci.yml.example` — rename to `ci.yml` and replace the
-  placeholders.
+  agents, best-effort). `review-ok.sh` also warns whenever
+  `scripts/check-hook-status.sh` reports the gate isn't actually active —
+  not just an unset `core.hooksPath`, but a foreign hook occupying the
+  spot too — so a clone that skipped the one-time setup, or whose hooks
+  were reconfigured by something else, finds out instead of running
+  gateless. (CI, if your project runs it, is further independent evidence
+  that tests pass on the pushed state — but wiring that up is your
+  project's own responsibility, not something this plugin scaffolds or
+  assumes; this workflow's job ends at producing a well-vetted PR.)
 - **Secret and dependency scanning** — wire a secret scanner (e.g. gitleaks)
-  and a dependency audit into the all-checks command and CI, so committed
+  and a dependency audit into the all-checks command, so committed
   credentials and known-vulnerable dependencies fail the build instead of
-  relying on reviewer attention. These are the cheapest security gates in the
-  pipeline. The CI skeleton includes gitleaks. <!-- [TODO: add a dependency
-  audit for your stack and mirror both scanners into the all-checks command
-  for local runs.] -->
+  relying on reviewer attention. These are the cheapest security gates in
+  the pipeline. <!-- [TODO: add a secret scanner and a dependency audit for
+  your stack to the all-checks command.] -->
 
 Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
@@ -368,7 +363,7 @@ enforcement (a false green is worse than an honest gap the reviewer still sees).
 | Python              | import-linter                                    |
 | Go                  | depguard or arch-go                              |
 
-Wire it into the all-checks command and CI so it gates merges, and list it as
+Wire it into the all-checks command so it gates merges, and list it as
 a build-enforced rule in your code review guidance file
 (`docs/agent-rules/code-critic.md` by default) so the reviewer verifies the
 diff doesn't *weaken* the layer test rather than re-deriving boundaries by
@@ -427,7 +422,7 @@ and executable bit, whether the pre-push gate is actually wired up — via
 `scripts/check-hook-status.sh`, which resolves where git itself will
 execute a pre-push hook from and is shared by `/init-workflow` and
 `scripts/review-ok.sh` alike, so there's exactly one place that logic
-lives — `CLAUDE.md` import, `.gitignore`, settings, CI, the `Commands`
+lives — `CLAUDE.md` import, `.gitignore`, settings, the `Commands`
 section existing with no unfilled placeholder, the guidance section itself
 resolving to real files). Everything is proposed and user-confirmed before
 writing; deferred items stay explicit TODOs. It never
@@ -742,7 +737,7 @@ different homes instead of one repo:
   of that installed payload (see *Repository Structure* above) — it's
   linked from `plugin.json`'s `homepage` field, in this repo's own source.
 - **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`,
-  the CI example, the ADR/product-context scaffolding, and the three
+  the ADR/product-context scaffolding, and the three
   enforcement files (`githooks/pre-push`, `scripts/review-ok.sh`,
   `scripts/check-hook-status.sh` — these must physically live in the
   project's own repo, since a git hook has to fire for humans and every

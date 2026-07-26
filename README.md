@@ -59,7 +59,7 @@ into a project* below); see `docs/AI-workflow.md` for why.
 
 `init-workflow/templates/` is the single source of truth for what a new
 project receives: `AGENTS.md.template`, `CLAUDE.md.template`,
-`settings.json.template`, a CI skeleton, `docs/agent-rules/*`, `docs/adr/*`,
+`settings.json.template`, `docs/agent-rules/*`, `docs/adr/*`,
 `docs/product-context/*`, and the three enforcement scripts (`githooks/pre-push`,
 `scripts/review-ok.sh`, `scripts/check-hook-status.sh` — the last reports
 whether the gate is actually wired up, and the other two depend on it).
@@ -120,7 +120,7 @@ default branch, drafts the `AGENTS.md` sections from the real codebase,
 asks whether you already have docs for code review/planning guidance
 (pointing `AGENTS.md` at them if so, or seeding `docs/agent-rules/` if
 not), and validates the whole setup (hook, `core.hooksPath`, settings,
-`.gitignore`, CI, the guidance section itself
+`.gitignore`, the guidance section itself
 resolving to real files). Everything is proposed and confirmed before it is
 written; whatever you defer stays an explicit TODO. The section below is
 the manual map of the same work.
@@ -197,17 +197,18 @@ recorded review. Human bypass: `git push --no-verify`.
 enforces *freshness*: the pushed commit must be exactly the SHA recorded at
 review time, so any commit made after a review forces a re-review. It does
 **not** verify the review's verdict — `review-ok.sh` records whatever it is
-told, on the agent's honesty. Three mitigations ship with the scaffold:
+told, on the agent's honesty. Two mitigations ship with the scaffold:
 `.claude/settings.json` makes any run of `review-ok.sh` require human
 approval in Claude Code (the human is the final sign-off on the gate) and
-denies the agent the bypass flags (best-effort prefix matching); CI is the
-independent evidence that tests pass on the pushed state
-(`.github/workflows/ci.yml.example` — rename and fill in); and
+denies the agent the bypass flags (best-effort prefix matching); and
 `review-ok.sh` warns whenever `scripts/check-hook-status.sh` reports the
 gate isn't actually active — not just an unset `core.hooksPath`, but a
 foreign hook occupying the spot too — so a clone that forgot the one-time
 setup, or whose hooks were reconfigured by something else, finds out
-instead of running gateless.
+instead of running gateless. (If your project also runs CI, that's
+further independent evidence that tests pass on the pushed state — but
+setting that up is your project's own responsibility; this workflow's job
+ends at producing a well-vetted PR, not at what happens to it afterward.)
 
 ## Day-to-day use
 

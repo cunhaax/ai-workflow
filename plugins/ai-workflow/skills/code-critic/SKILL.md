@@ -85,11 +85,12 @@ If no plan was provided, skip the Plan Compliance checklist section entirely.
 suite actually ran and passed on the reviewed state is separate evidence.
 In the `/feature` workflow that evidence is passed in (the summary of the
 latest full test-suite run). Treat that summary as a record of the run, not
-independent proof — it is produced by the implementing agent; CI running
-the suite on the pushed state is the independent evidence. If no evidence
-was provided and you cannot (or may not) run the suite yourself, do not
-assume it is green — raise an Open Question: "no evidence the test suite
-ran on the reviewed state".
+independent proof — it is produced by the implementing agent, and this
+review has no independent way to confirm it (whether the project's own CI
+provides that is outside this skill's scope). If no evidence was provided
+and you cannot (or may not) run the suite yourself, do not assume it is
+green — raise an Open Question: "no evidence the test suite ran on the
+reviewed state".
 
 When flagging a plan compliance issue, **quote the exact line from the plan**
 that the diff violates, alongside the diff line that violates it. Paraphrasing

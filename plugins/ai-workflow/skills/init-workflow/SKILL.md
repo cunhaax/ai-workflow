@@ -64,15 +64,12 @@ gate, or vice versa:
   only; never strip it on the source inside `templates/` itself, since an
   un-suffixed `AGENTS.md`/`CLAUDE.md` left there would be auto-loaded by
   Claude Code as this project's live guidance instead of a template. Copy
-  every other file (the rest of the `docs/` tree,
-  `.github/workflows/ci.yml.example`) to the same relative path it has
-  under `templates/` — except `ci.yml.example`, whose destination counts
-  as present if **either** it or a renamed `.github/workflows/ci.yml`
-  already exists (see the next bullet).
+  every other file (the rest of the `docs/` tree) to the same relative
+  path it has under `templates/`.
 - **Destination exists as plain content** (`AGENTS.md`, `docs/adr/*`,
-  `docs/product-context/*`, `.github/workflows/ci.yml`/`.example`) → leave
-  it untouched and list it as "already present" in Step 6's report — never
-  overwrite a file the project already owns.
+  `docs/product-context/*`) → leave it untouched and list it as "already
+  present" in Step 6's report — never overwrite a file the project
+  already owns.
 - **Destination exists but needs special handling** (`CLAUDE.md`,
   `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`,
   `scripts/check-hook-status.sh`) — see immediately below.
@@ -200,7 +197,7 @@ expected input to Step 4, whether `AGENTS.md` was just scaffolded (its two
 entries default to `docs/agent-rules/code-critic.md`/`plan-critic.md`,
 which Step 4 hasn't created yet) or pre-existing (a project adopting this
 flow for the first time, whose named or default files may not exist
-either); Step 5 item 8 decides separately, in whichever mode you end up in,
+either); Step 5 item 7 decides separately, in whichever mode you end up in,
 whether a still-missing file gets reported. Otherwise (no section at all)
 check `docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
 directly. Classify each placeholder / `[TODO: …]` as filled or open.
@@ -344,17 +341,14 @@ confirmation, report what you cannot fix:
    `.workflow-log/`.
 5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh`
    and the `deny` rules for the push-bypass flags.
-6. CI: `.github/workflows/ci.yml` exists — or only the `.example` does,
-   in which case remind that renaming and filling it is still open (CI is
-   the workflow's independent test evidence).
-7. `AGENTS.md` → *Commands* exists as a section and has no unfilled
+6. `AGENTS.md` → *Commands* exists as a section and has no unfilled
    placeholder remaining in it — a project whose hand-written `AGENTS.md`
    never had a *Commands* section at all has nothing to flag as
    "unfilled," but `/feature`, `code-critic`, and `adversarial-qa` all read
    it by role and will fail at runtime without it; treat a missing section
    the same as an unfilled placeholder (other sections may legitimately
    keep TODOs the user deferred).
-8. `AGENTS.md` has a `Review & Planning Guidance` section with entries
+7. `AGENTS.md` has a `Review & Planning Guidance` section with entries
    labeled exactly `Code review guidance` and `Planning guidance` — a
    renamed or paraphrased label is invisible to both skills, which key on
    the literal text, and silently falls back to the default
