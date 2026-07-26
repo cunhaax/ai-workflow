@@ -496,6 +496,18 @@ pinned-version `npx` so nothing needs installing by hand:
   version-sensitive library/API details instead of relying on
   training-time memory.
 
+**Tool names are plugin-scoped, not bare.** Per the MCP reference
+documentation, a tool from a plugin-bundled server is callable as
+`mcp__plugin_<plugin-name>_<server-name>__<tool-name>` — e.g.
+`mcp__plugin_ai-workflow_playwright__browser_click` — not the bare
+`mcp__playwright__browser_click` form a project- or user-configured
+server would use. `adversarial-qa.md`'s `tools:` allowlist and the
+`context7` references in `feature/SKILL.md` both use the scoped form
+already. If this plugin's `name` in `plugin.json` (currently
+`ai-workflow`) ever changes, both must be updated in lockstep, or the
+sub-agent's allowlist silently stops matching the real registered tools
+and it loses every browser tool with no obvious error at review time.
+
 Per Claude Code's plugin reference documentation, MCP servers bundled with
 a plugin start whenever the plugin is *enabled* — not lazily, only when an
 agent that uses them actually runs (this is documented product behavior,

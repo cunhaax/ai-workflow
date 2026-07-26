@@ -175,6 +175,12 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
   for every project that enables the plugin; keep versions pinned
   (never `@latest`) so an upstream release can't silently change what
   runs, and bump deliberately, reviewed like any other dependency change.
+  Its tools are only reachable under the plugin-scoped name
+  `mcp__plugin_ai-workflow_<server>__<tool>` (see *Bundled MCP servers* in
+  `docs/AI-workflow.md`) — renaming this plugin requires updating
+  `adversarial-qa.md`'s `tools:` allowlist and `feature/SKILL.md`'s
+  `context7` references in the same change, or they silently stop
+  matching real tools.
 
 ## Review & Planning Guidance
 
