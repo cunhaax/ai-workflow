@@ -51,48 +51,27 @@ LICENSE                          # MIT
 AGENTS.md, CLAUDE.md             # This repo's own real project guide
 ```
 
-This repo has **no project-local skills or sub-agents** —
-`.claude/skills/`/`.claude/agents/` don't exist. `plugins/ai-workflow/` is
-the plugin's real source, structured per Claude Code's plugin convention
-(bare `skills/`/`agents/`, no path overrides needed). If you want `/feature`
-etc. while working on this repo, install the plugin the same way any
-consumer would — see *Installing into a project* below. An earlier draft of
-this repo symlinked `.claude/skills`/`.claude/agents` into `plugins/`
-instead, but that creates a real problem once the plugin is also installed
-globally: Claude Code would show both bare `/feature` (project-local) and
-`/ai-workflow:feature` (the installed plugin) at once, two command surfaces
-for the same thing with no way to know if they'd drifted.
+This repo has no project-local skills or sub-agents — `plugins/ai-workflow/`
+is the plugin's real source. To use `/feature` etc. while working on this
+repo, install the plugin the same way any consumer would (see *Installing
+into a project* below); see `docs/AI-workflow.md` for why.
 
-**`init-workflow/templates/` is the single source of truth for what a new
-project receives**: `AGENTS.md.template`, `CLAUDE.md.template`,
+`init-workflow/templates/` is the single source of truth for what a new
+project receives: `AGENTS.md.template`, `CLAUDE.md.template`,
 `settings.json.template`, a CI skeleton, `docs/agent-rules/*`, `docs/adr/*`,
-`docs/product-context/*`, and the two enforcement scripts
-(`githooks/pre-push`, `scripts/review-ok.sh`) — `/init-workflow` writes the
-first three to `AGENTS.md`, `CLAUDE.md`, and `.claude/settings.json`
-respectively (the `.template` suffix exists so Claude Code doesn't treat
-the bundled copies as this repo's own live `AGENTS.md`/`CLAUDE.md` when
-someone edits `templates/`). This repo's own root `AGENTS.md`/`CLAUDE.md`/
-`docs/agent-rules/*` are **not** copies of that template — they're this
-repo's own real, hand-written project files, since this is a docs/tooling
-repo, not a generic app. `.claude/settings.json`, `githooks/pre-push`, and
-`scripts/review-ok.sh` *are* meant to be identical everywhere, so at root
-all three are symlinks into `templates/` rather than a second copy.
+`docs/product-context/*`, and the two enforcement scripts. This repo's own
+root `AGENTS.md`/`CLAUDE.md`/`docs/agent-rules/*` are real, hand-written
+files, not copies of the template; `.claude/settings.json`,
+`githooks/pre-push`, and `scripts/review-ok.sh` are symlinks into
+`templates/` instead — see `docs/AI-workflow.md` for the rationale.
 
-**Orchestration vs. knowledge, one source of truth.** Each skill in
-`plugins/ai-workflow/skills/` holds reusable knowledge (standards,
-checklists, rules) with no orchestration. Each sub-agent in
-`plugins/ai-workflow/agents/` wraps a skill with orchestration — what
-context to read, what to output, what not to touch — and preloads it via
-the `skills:` frontmatter field (Claude injects the full skill body into
-the sub-agent at startup). The *same* skill also backs its `/slash` command
-for ad-hoc use, so the knowledge lives in exactly one place — no
-duplication, nothing to drift.
-
-**Project-agnostic knowledge, project-owned extensions.** The skills and
-sub-agents contain no project-specific text. They name your commands, app URL,
-and default branch *by role* from `AGENTS.md` → *Commands*, and they read your
-own review rules and risk lenses from `docs/agent-rules/` at runtime (a missing
-file means base rules only).
+Each skill in `plugins/ai-workflow/skills/` holds reusable, project-agnostic
+knowledge (standards, checklists, rules) with no orchestration; each
+sub-agent in `plugins/ai-workflow/agents/` wraps a skill with orchestration
+(context, output format, tools) and preloads it. Skills also back their
+`/slash` command directly for ad-hoc use — one copy of the knowledge,
+nothing to drift. Your project's own commands, app URL, and review rules
+come from `AGENTS.md` and `docs/agent-rules/` at runtime.
 
 ## Installing into a project
 
