@@ -1,28 +1,24 @@
 # Project lenses — plan-critic
 
 Project-specific extension of the `plan-critic` skill
-(`.claude/skills/plan-critic/SKILL.md`). The skill reads this file on every
-critique and gives the areas below explicit attention while applying its four
-methods (pre-mortem, inversion, load-bearing assumptions, consistency). The
-skill itself is project-agnostic and template-owned; **this file is owned by
-the project** (the installer never overwrites it).
-
-These are NOT a checklist; they direct extra attention. Write 4–7 concrete
-lenses — the places where generic plans regularly miss issues that matter for
-*this* product. Good lenses name a concrete failure surface and why it is
-easy to get wrong, e.g.:
-
-- "[Sensitive-data category] must never leak into [context]; any plan
-  touching [visibility / export / analytics] needs explicit consent
-  consideration."
-- "[State machine X] visibility/permission rules across [viewer types];
-  the state space is non-obvious."
-- "[Abuse vector] on [flow]: spam, enumeration, scraping, harassment."
+(`plugins/ai-workflow/skills/plan-critic/SKILL.md`), for changes to this
+repo itself — the AI workflow template.
 
 ## Lenses
 
 When applying the four methods, give explicit attention to:
 
-- [TODO: high-risk area 1 — what to watch and why it's easy to miss]
-- [TODO: high-risk area 2]
-- [TODO: high-risk area 3]
+- **Blast radius of `templates/` changes.** Anything under
+  `plugins/ai-workflow/skills/init-workflow/templates/` ripples into every
+  downstream project that scaffolds from it — a plan touching this
+  directory needs to consider what breaks for a project that already
+  scaffolded, not just a fresh one.
+- **Unverified packaging assumptions.** `plugin.json`/`marketplace.json`
+  exist now, but the actual `/plugin marketplace add`/`/plugin install`
+  flow has never been exercised end-to-end (it requires an interactive
+  step only a human can drive). A plan should not assume that flow works
+  as designed without flagging it as unverified until someone actually
+  runs it.
+- **Breaking changes to slash commands.** Renaming or removing a skill or
+  sub-agent changes its slash-command name and breaks any project already
+  using it. Flag compatibility impact explicitly.

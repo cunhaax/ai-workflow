@@ -7,6 +7,7 @@ description: >
   the record's Cost section. Companion of /workflow-retro; run it while
   the transcripts still exist (they are pruned after Claude Code's
   retention window, ~30 days by default). Requires python3.
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/inspect.py *)
 ---
 
 # /workflow-inspect — Compute the Feature's Workflow Cost
@@ -18,7 +19,7 @@ tokens and wall-clock per sub-agent, the sub-agents' share of the total,
 and the handoff tax (files the planner read that the main agent re-read).
 Together the two halves say what each workflow step cost *and* caught —
 the evidence base for tuning the workflow (see *Evolving the System* in
-`docs/AI-workflow.md`).
+the AI Workflow plugin's own documentation).
 
 **Ground rules:**
 
@@ -54,7 +55,7 @@ pruned — with the user's confirmation, close the section honestly with
 One command, from the repository root:
 
 ```sh
-python3 .claude/skills/workflow-inspect/inspect.py <session-id> [<session-id> …]
+python3 ${CLAUDE_SKILL_DIR}/inspect.py <session-id> [<session-id> …]
 ```
 
 It locates each session's transcript by a **global search** of

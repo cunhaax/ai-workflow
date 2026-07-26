@@ -1,18 +1,18 @@
-# [PROJECT_NAME]
+# AI Workflow Template
 
 Guidance for AI coding agents working in this repository. This file
 (`AGENTS.md`) is the canonical copy; `CLAUDE.md` imports it via `@AGENTS.md` so
 Claude Code (and its sub-agents) load it, while other tools that read
 `AGENTS.md` directly still see one source of truth. Keep it lean — as the
 instruction count grows, instruction-following quality degrades across *all*
-instructions. Deep detail belongs in `docs/` (including `docs/adr/`) and the
-code — this file is the map, not the territory.
+instructions. Deep detail belongs in `docs/` and the code — this file is the
+map, not the territory.
 
 ## Rules — non-negotiable
 
-These apply to **every** agent — the main agent and every sub-agent (planner,
-plan-critic, code-critic, adversarial-qa). Nothing enforces them automatically; following
-them is your responsibility.
+These apply to **every** agent — the main agent and any sub-agents it
+invokes. Nothing enforces them automatically; following them is your
+responsibility.
 
 1. **Use the project's canonical commands.** Build, run, stop, and test only
    through the documented commands (see *Commands*). If a wrapper exists
@@ -36,15 +36,28 @@ them is your responsibility.
    of which works from the default branch itself. If you start on the default
    branch, STOP and ask before planning.
 
-4. **Get reviewed before pushing.** Never `git push` or open a PR until the
-   `code-critic` sub-agent has passed with no FAIL items. After a pass, record
-   it with `scripts/review-ok.sh` — the committed pre-push hook
+4. **Get reviewed before pushing.** Never `git push` or open a PR without a
+   recorded passing review of the current commit — no unresolved critical
+   issues. Record it with `scripts/review-ok.sh` — the committed pre-push hook
    (`githooks/pre-push`) blocks any push whose commit does not match the
    recorded review. Any commit made after the review requires a re-review.
-   (Enable once per clone: `git config core.hooksPath githooks`.)
+   (Enable once per clone: `git config core.hooksPath githooks`.) See
+   `docs/AI-workflow.md` for how this project obtains that review.
 
-5. <!-- [TODO: project-specific hygiene rule, if any] e.g. "Leave the database
-   clean: run [DB_DOWN_CMD] before ending a session." Delete this rule if none. -->
+5. **Keep `templates/` in sync with what describes it — and never strip a
+   `.template` suffix on the source copy itself.**
+   `plugins/ai-workflow/skills/init-workflow/templates/` is the canonical
+   enumeration of what a scaffolded project receives — `/init-workflow`
+   reads it directly. The file tree and `.template` → destination mapping in
+   `docs/AI-workflow.md`, and the `init-workflow/templates/` enumeration
+   paragraph in `README.md`, are human-readable mirrors of it, not a second
+   source; adding, removing, or renaming a file under `templates/` must be
+   reflected in all three. The suffix on `AGENTS.md.template`/
+   `CLAUDE.md.template` is what stops Claude Code from auto-loading them as
+   *this repo's own* live guidance — renaming either to drop the suffix
+   inside `templates/` (as opposed to on a scaffolded project's destination
+   copy, where dropping it is correct) would have that placeholder-riddled
+   file silently take over the next time anyone works in `templates/`.
 
 6. **One clean command per step — use the right tool.** Use the `Read` tool for
    file contents (never `cat`/`head`/`tail`/`sed`); search with a single plain
@@ -56,65 +69,109 @@ them is your responsibility.
 
 ## Project Overview
 
-<!-- [TODO: one paragraph — what this project is, its purpose, and how it fits
-the broader system. Name the stack: language/framework versions, key
-dependencies, infrastructure.] -->
+This repo **is** the AI-Assisted Development Workflow plugin's source — a
+Claude Code plugin providing the skills and sub-agents (planner, plan-critic,
+code-critic, adversarial-qa) that structure AI-assisted development as
+plan → critique → implement → test → review → QA → PR, with a deterministic
+pre-push review gate below the LLM layer. `docs/AI-workflow.md` is the full
+design rationale; `README.md` is the quick-start for installing it into
+another project. There is no separate product-context/ADR set for this repo
+itself — `docs/AI-workflow.md` fills that role, and the placeholder versions
+of those directories live only in
+`plugins/ai-workflow/skills/init-workflow/templates/` (what a scaffolded
+project receives), not at this repo's own root.
 
-**Before building features, read the product docs** in `docs/product-context/`
-(vision, strategy, requirements). Architecture decision records are in `docs/adr/`.
-Sub-agent definitions and the coding-standard skills are in `.claude/agents/`
-and `.claude/skills/`; their project-specific extensions (review rules, risk
-lenses) live in `docs/agent-rules/`.
+This repo has no project-local skills or sub-agents of its own —
+`.claude/skills/`/`.claude/agents/` don't exist here. `plugins/ai-workflow/`
+is the one real source; if you want `/feature` etc. available while working
+on this repo, install the plugin the same way any consumer would (see
+*Installing into a project* in `README.md`), rather than relying on
+special-cased project-local copies. That's deliberate, not an oversight:
+project-local symlinks back into `plugins/ai-workflow/` were considered and
+rejected, because with the plugin also installed globally, Claude Code
+would show both bare `/feature` (project-local) and `/ai-workflow:feature`
+(the installed plugin) at once — two command surfaces for the same thing,
+with no way to know if they'd drifted.
+
+A GitHub-form install (`/plugin marketplace add cunhaax/ai-workflow-template`)
+sources from the published repo's default branch, not this working tree or
+whatever feature branch you're on — so it doesn't dogfood in-progress
+changes. To actually review working-tree edits to the plugin itself, use
+the local-path form instead (see *Installing into a project* in
+`README.md`).
 
 ## Commands
 
-<!-- Replace with YOUR project's canonical commands. Keep them behind a wrapper
-     (make/just/npm script/…) if one adds serialisation or environment setup.
-     The skills in .claude/skills/ reference these entries by role ("the
-     run-all-tests command") instead of hardcoding them, so this list is the
-     single place they are defined. -->
+No build step — this is a documentation/skills/scripts repo, nothing to
+compile and no app to run or stop. There is no automated test suite either:
+skill and sub-agent bodies are agent-interpreted prose, not executable code.
+The shell scripts under `githooks/` and `scripts/` are plain POSIX `sh`,
+kept small and reviewed by hand.
 
-- `[BUILD_CMD]` — build
-- `[TEST_CMD]` — run all tests
-- `[CHECK_CMD]` — all checks incl. tests
-- `[RUN_CMD]` — dev server (serves at `[APP_URL]`)
-- `[STOP_CMD]` — stop the dev server
-- single test: `[SINGLE_TEST_EXAMPLE]`
-- default branch: `[DEFAULT_BRANCH]` — reviews diff against it; PRs target it
+- default branch: `master` — reviews diff against it; PRs target it
 
 ## Architecture
 
-<!-- [TODO: package/module layout and the load-bearing design constraints. A
-reader should learn where each kind of code lives and the rules that must not be
-broken. Keep it to the map — link docs/ and docs/adr/ for depth.] -->
+```
+.claude/
+└── settings.json                     # Symlink into plugins/ai-workflow/skills/init-workflow/templates/settings.json.template
+.claude-plugin/
+└── marketplace.json                  # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
+plugins/ai-workflow/
+├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository, license)
+├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
+└── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
+    │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
+    └── init-workflow/templates/      # THE scaffold source a fresh project's /init-workflow reads
+docs/
+├── agent-rules/                      # This repo's own real review rules + risk lenses
+└── AI-workflow.md                    # Full design rationale and file-by-file guide
+githooks/pre-push                     # Symlink into plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
+scripts/review-ok.sh                  # Symlink into plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
+scripts/check-hook-status.sh          # Symlink into plugins/ai-workflow/skills/init-workflow/templates/scripts/check-hook-status.sh
+LICENSE                               # MIT
+README.md                             # Quick-start for installing the plugin into another project
+```
 
-```
-[TODO: directory tree with a one-line purpose per top-level module]
-```
+`.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`, and
+`scripts/check-hook-status.sh` are symlinks, not copies — they must never
+differ from what a scaffolded project receives, so there is exactly one
+copy of their content, inside `templates/`. This assumes a clone where git
+materializes them as real symlinks; exact failure behavior on a checkout
+where it doesn't is platform-dependent and not verified here.
+`/init-workflow`'s doctor checklist is the safety net regardless of
+platform: item 1 checks that all three scripts exist and are executable,
+and item 5 checks that `.claude/settings.json` actually contains its
+`ask`/`deny` rules rather than merely existing — so a degraded
+materialization of any of the four surfaces on the next `/init-workflow`
+run.
 
 ## Testing
 
-<!-- [TODO: test framework, conventions, where tests live, how to run one.] -->
+No automated tests. Verification is manual: install the plugin (see
+*Installing into a project* in `README.md`) and dogfood this repo's own
+workflow on changes to itself (`/feature`, `/code-critic`, `/plan-critic`),
+and — for changes to `plugins/ai-workflow/skills/init-workflow/templates/`
+specifically — a manual walkthrough confirming a freshly scaffolded project
+ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
 
 ## Sensitive Areas — the security surface
 
-The canonical list of files/areas where mistakes are expensive. The `/feature`
-workflow consults it at three points: the plan-critic skip criteria (Step 1b),
-reviewer model escalation (Step 4), and the PR security flag (Step 9). Keep
-the list short and concrete; if the rationale for an entry needs more than a
-line, link a page under `docs/` for the depth rather than expanding here.
+- `plugins/ai-workflow/skills/init-workflow/templates/` — this is what
+  every scaffolded project's enforcement mechanism and starting rules are
+  built from; an error here propagates silently to every downstream
+  project.
+- `githooks/pre-push` / `scripts/review-ok.sh` / `scripts/check-hook-status.sh`
+  (via their symlink target in `templates/`) — the actual review-gate
+  enforcement; a bug here is a silent bypass everywhere the template is
+  used.
+- `plugins/ai-workflow/skills/init-workflow/SKILL.md` — the scaffold logic
+  itself; it writes files into a project on the user's behalf.
+- `.claude-plugin/marketplace.json` /
+  `plugins/ai-workflow/.claude-plugin/plugin.json` — a broken manifest
+  breaks installation for everyone.
 
-<!-- [TODO: one bullet per area — e.g. security config, auth/token/session
-handling, route definitions, sensitive data fields and their rendering paths,
-payment flows, schema migrations. Name concrete files/packages so an agent
-can match a diff against them.] -->
+## Review & Planning Guidance
 
-- [TODO: sensitive area 1 — concrete file/package/pattern]
-- [TODO: sensitive area 2]
-
-## Workflow for New Features
-
-Use the `/feature` slash command for non-trivial work: plan → critique →
-implement → test → code-review → QA → PR, with explicit gates. Full definition
-in the `/feature` skill (`.claude/skills/feature/SKILL.md`); full guide in
-`docs/AI-workflow.md`.
+- Code review guidance: `docs/agent-rules/code-critic.md`
+- Planning guidance: `docs/agent-rules/plan-critic.md`

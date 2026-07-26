@@ -1,0 +1,1 @@
+../plugins/ai-workflow/skills/init-workflow/templates/scripts/check-hook-status.sh
