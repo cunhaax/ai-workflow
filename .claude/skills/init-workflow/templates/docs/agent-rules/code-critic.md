@@ -1,7 +1,7 @@
 # Project rules — code-critic
 
-Project-specific extension of the `code-critic` skill
-(`.claude/skills/code-critic/SKILL.md`). The skill reads this file on every
+Project-specific extension of the AI Workflow plugin's `code-critic` skill.
+The skill reads this file on every
 review — ad-hoc and in the `/feature` workflow — and applies each rule at the
 severity it states, alongside its base standards. The skill itself is
 project-agnostic and template-owned; **this file is owned by the project**

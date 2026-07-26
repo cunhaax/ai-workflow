@@ -3,8 +3,8 @@
 # CI is the independent evidence that the tests pass on the pushed state.
 # The code-critic receives a test summary from the implementing agent, which
 # is a record of the run, not independent proof — CI is what replaces trust
-# in a session transcript (see docs/AI-workflow.md, "Deterministic
-# enforcement").
+# in a session transcript (see the AI Workflow plugin's own documentation,
+# "Deterministic enforcement").
 #
 # GitHub Actions ignores this file until it is renamed to ci.yml.
 

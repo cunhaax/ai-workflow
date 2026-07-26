@@ -129,8 +129,8 @@ confirmation before writing them — the same confirm-then-write pattern as
 Steps 2 and 3; an answered question is input to the draft, not approval of
 it. It is fine for these files to start thin — they are designed to accrete
 (see *Evolving the System* in the AI Workflow plugin's own documentation).
-Record only what the
-user confirms; keep the guidance comments in the files for future additions.
+Record only what the user confirms; keep the guidance comments in the files
+for future additions.
 
 ## Step 5 — Validate the setup (doctor checklist)
 

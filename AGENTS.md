@@ -44,10 +44,12 @@ responsibility.
    (Enable once per clone: `git config core.hooksPath githooks`.) See
    `docs/AI-workflow.md` for how this project obtains that review.
 
-5. **Keep `templates/` and `docs/AI-workflow.md`'s file tree in sync.** Adding,
-   removing, or renaming a file under `.claude/skills/init-workflow/templates/`
-   must be reflected in the file tree in `docs/AI-workflow.md` — it's the only
-   enumeration of what a scaffolded project receives.
+5. **Keep `templates/` and `docs/AI-workflow.md`'s file tree in sync.**
+   `.claude/skills/init-workflow/templates/` is the canonical enumeration of
+   what a scaffolded project receives — `/init-workflow` reads it directly.
+   The file tree in `docs/AI-workflow.md` is a human-readable mirror of it,
+   not a second source; adding, removing, or renaming a file under
+   `templates/` must be reflected there too.
 
 6. **One clean command per step — use the right tool.** Use the `Read` tool for
    file contents (never `cat`/`head`/`tail`/`sed`); search with a single plain
@@ -100,7 +102,13 @@ README.md                         # Quick-start for installing the plugin into a
 `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh` are
 symlinks, not copies — they must never differ from what a scaffolded
 project receives, so there is exactly one copy of their content, inside
-`templates/`.
+`templates/`. This assumes a POSIX clone (`core.symlinks` enabled): on a
+checkout where git materializes symlinks as plain text files, `pre-push`
+and `review-ok.sh` fail loudly (not executable, won't run) but a degraded
+`.claude/settings.json` fails silently — it stops being valid JSON, so its
+`deny` rules on the push-bypass flags quietly disappear rather than erroring.
+`/init-workflow`'s doctor checklist (item 5) catches this on a re-run by
+checking the file actually contains those rules, not just that it exists.
 
 ## Testing
 

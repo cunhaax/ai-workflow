@@ -58,19 +58,22 @@ project-root/
 │   │   └── plan-critic.md                 #   product risk lenses
 │   └── product-context/
 │       └── README.md                      # Product-context guide
-├── .gitignore                             # Covers .review-passed, .qa-evidence/, .workflow-log/
+├── .gitignore                             # NOT a template file — /init-workflow appends its
+│                                           #   three entries to whatever .gitignore already exists
 └── src/
     └── <module>/
-        └── AGENTS.md                      # Optional: module-specific constraints for critical areas
+        └── AGENTS.md                      # Optional, NOT scaffolded — you add this yourself
 ```
 
-This tree is the canonical enumeration of what `/init-workflow` scaffolds —
-it mirrors `.claude/skills/init-workflow/templates/` exactly (that
-directory's `AGENTS.md.template`/`CLAUDE.md.template`/
-`settings.json.template` land at `AGENTS.md`/`CLAUDE.md`/
-`.claude/settings.json`, dropping the `.template` suffix; everything else
-keeps its relative path). AGENTS.md Rule 5 in this repo requires the two to
-stay in sync.
+The **canonical enumeration** of what `/init-workflow` scaffolds is
+`.claude/skills/init-workflow/templates/` itself, not this tree — the two
+entries marked above aren't template files. This tree exists for human
+orientation and must stay in sync with `templates/` (AGENTS.md Rule 5 in
+this repo requires it), but Step 1 of `/init-workflow` reads `templates/`
+directly rather than this diagram. `templates/`'s `AGENTS.md.template`/
+`CLAUDE.md.template`/`settings.json.template` land at `AGENTS.md`/
+`CLAUDE.md`/`.claude/settings.json` (dropping the `.template` suffix);
+everything else keeps its relative path.
 
 The plugin itself (`.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`)
 is not vendored into the project — it's supplied by the plugin install and
@@ -634,6 +637,9 @@ workflow behavior; slash commands expose it directly. The workflow itself
 instead of duplicating the steps.
 
 ## Installing and updating the plugin
+
+*This describes the intended flow once the plugin is published — there is
+no `plugin.json`/`marketplace.json` in this repo yet (see `README.md`).*
 
 The workflow is distributed as a single Claude Code plugin — install it with
 `/plugin marketplace add` and `/plugin install`, choosing a scope

@@ -1,7 +1,7 @@
 # Project lenses — plan-critic
 
-Project-specific extension of the `plan-critic` skill
-(`.claude/skills/plan-critic/SKILL.md`). The skill reads this file on every
+Project-specific extension of the AI Workflow plugin's `plan-critic` skill.
+The skill reads this file on every
 critique and gives the areas below explicit attention while applying its four
 methods (pre-mortem, inversion, load-bearing assumptions, consistency). The
 skill itself is project-agnostic and template-owned; **this file is owned by
