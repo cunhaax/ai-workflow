@@ -49,7 +49,8 @@ project-root/
 ├── githooks/
 │   └── pre-push                           # Review gate: blocks pushes of unreviewed commits
 ├── scripts/
-│   └── review-ok.sh                       # Records a passing review for the current HEAD
+│   ├── review-ok.sh                       # Records a passing review for the current HEAD
+│   └── check-hook-status.sh               # Reports whether the pre-push gate is actually wired up
 ├── docs/
 │   ├── adr/
 │   │   ├── README.md                      # ADR format guide
@@ -315,8 +316,11 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   `ask` rule in `.claude/settings.json` (recording a pass always surfaces a
   human approval prompt in Claude Code, and the bypass flags are denied to
   agents, best-effort) and by CI as independent test evidence. `review-ok.sh`
-  also warns when `core.hooksPath` is unset, so a clone that skipped the
-  one-time setup finds out instead of running gateless.
+  also warns whenever `scripts/check-hook-status.sh` reports the gate isn't
+  actually active — not just an unset `core.hooksPath`, but a foreign hook
+  occupying the spot too — so a clone that skipped the one-time setup, or
+  whose hooks were reconfigured by something else, finds out instead of
+  running gateless.
 - **CI** — independent evidence for the human reviewer that tests pass on the
   pushed state, replacing trust in a session transcript (or in a test summary
   pasted by the implementing agent). A ready-to-adapt skeleton ships as
@@ -418,13 +422,13 @@ asks whether the project already has docs for code review/planning
 guidance — pointing `AGENTS.md`'s *Review & Planning Guidance* section at
 them if so, or interviewing the user to seed new files under
 `docs/agent-rules/` if not — and validates the whole setup (hook content
-and executable bit, where git itself will actually execute a pre-push hook
-from — resolved via `git rev-parse --git-path hooks/pre-push` rather than
-hand-rolled from `core.hooksPath`, since that single command already
-accounts for worktrees, submodules, and separate git dirs — `CLAUDE.md`
-import, `.gitignore`, settings, CI, the `Commands` section existing with no
-unfilled placeholder, the guidance section itself resolving to real
-files). Everything is proposed and user-confirmed before
+and executable bit, whether the pre-push gate is actually wired up — via
+`scripts/check-hook-status.sh`, which resolves where git itself will
+execute a pre-push hook from and is shared by `/init-workflow` and
+`scripts/review-ok.sh` alike, so there's exactly one place that logic
+lives — `CLAUDE.md` import, `.gitignore`, settings, CI, the `Commands`
+section existing with no unfilled placeholder, the guidance section itself
+resolving to real files). Everything is proposed and user-confirmed before
 writing; deferred items stay explicit TODOs. It never
 edits the plugin's own mechanism — skills, sub-agents, and this guide update
 via the plugin itself. (Named `init-workflow` to avoid Claude Code's
@@ -737,34 +741,37 @@ different homes instead of one repo:
   of that installed payload (see *Repository Structure* above) — it's
   linked from `plugin.json`'s `homepage` field, in this repo's own source.
 - **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`,
-  the CI example, the ADR/product-context scaffolding, and the two
-  enforcement files (`githooks/pre-push`, `scripts/review-ok.sh` — these
-  must physically live in the project's own repo, since a git hook has to
-  fire for humans and every tool, not just Claude). These get scaffolded
-  into the project by `/init-workflow` whenever each one's own destination
-  is missing — no file's presence gates another's, so adopting the gate
-  doesn't require rewriting a project's existing guidance doc, and a
-  pre-existing `AGENTS.md` still gets the gate. `.claude/settings.json` is
-  merged rather than overwritten if it already exists (a project-scope
-  install, per the paragraph above, can create it first); both
-  `githooks/pre-push` and `scripts/review-ok.sh` are left alone only if
-  their content already identifies them as this gate's files, and flagged
-  as a conflict otherwise. Sourced from
+  the CI example, the ADR/product-context scaffolding, and the three
+  enforcement files (`githooks/pre-push`, `scripts/review-ok.sh`,
+  `scripts/check-hook-status.sh` — these must physically live in the
+  project's own repo, since a git hook has to fire for humans and every
+  tool, not just Claude). These get scaffolded into the project by
+  `/init-workflow` whenever each one's own destination is missing — no
+  file's presence gates another's, so adopting the gate doesn't require
+  rewriting a project's existing guidance doc, and a pre-existing
+  `AGENTS.md` still gets the gate. `.claude/settings.json` is merged
+  rather than overwritten if it already exists (a project-scope install,
+  per the paragraph above, can create it first); the three gate files are
+  scaffolded or left alone as one group, gated on what
+  `scripts/check-hook-status.sh` reports about whether a hook is already
+  wired up and whose it is — see that skill's Step 1 for the full
+  decision table. Sourced from
   `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
   bundled source of truth) — see its skill summary above. `.claude/settings.json`
-  and the two gate scripts are re-inspected (merged or conflict-checked) on
-  every later run; everything else in this list, once written, is not
+  and the three gate files are re-inspected (merged or conflict-checked)
+  on every later run; everything else in this list, once written, is not
   touched by the plugin again — the project owns it from that point.
   `docs/agent-rules/*` is the one exception: Step 4 only copies these two
   from `templates/` if the project doesn't already have equivalent docs —
   see that step for the full logic.
 
 Re-run `/init-workflow` after every plugin update — in doctor mode it
-reports anything the update newly expects, the same as it reports any other
-setup drift, with one exception: `githooks/pre-push`/`scripts/review-ok.sh`
-are checked for the presence of their `.review-passed` marker, not for
-being byte-current with the latest template, so a stale copy from before
-the update can still pass (see that skill's Step 1).
+reports anything the update newly expects, the same as it reports any
+other setup drift, with one exception: `scripts/check-hook-status.sh`
+checks the two gate files for the presence of their `.review-passed`
+marker, not for being byte-current with the latest template, so a stale
+copy from before the update can still read as active (see that skill's
+Step 1).
 
 ## Evolving the System
 

@@ -47,6 +47,7 @@ docs/
 └── AI-workflow.md               # The full guide to this system
 githooks/pre-push                # Symlink → plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
 scripts/review-ok.sh             # Symlink → plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
+scripts/check-hook-status.sh     # Symlink → plugins/ai-workflow/skills/init-workflow/templates/scripts/check-hook-status.sh
 LICENSE                          # MIT
 AGENTS.md, CLAUDE.md             # This repo's own real project guide
 ```
@@ -59,13 +60,15 @@ into a project* below); see `docs/AI-workflow.md` for why.
 `init-workflow/templates/` is the single source of truth for what a new
 project receives: `AGENTS.md.template`, `CLAUDE.md.template`,
 `settings.json.template`, a CI skeleton, `docs/agent-rules/*`, `docs/adr/*`,
-`docs/product-context/*`, and the two enforcement scripts. This repo's own
-root `AGENTS.md`/`CLAUDE.md`/`docs/agent-rules/*` are real, hand-written
-files, not copies of the template; `.claude/settings.json`,
-`githooks/pre-push`, and `scripts/review-ok.sh` are symlinks into
-`templates/` instead — see this repo's own `AGENTS.md` (*Architecture*
-section) for the rationale, which is specific to this repo's own root
-layout rather than the general plugin design `docs/AI-workflow.md` covers.
+`docs/product-context/*`, and the three enforcement scripts (`githooks/pre-push`,
+`scripts/review-ok.sh`, `scripts/check-hook-status.sh` — the last reports
+whether the gate is actually wired up, and the other two depend on it).
+This repo's own root `AGENTS.md`/`CLAUDE.md`/`docs/agent-rules/*` are real,
+hand-written files, not copies of the template; `.claude/settings.json` and
+all three enforcement scripts are symlinks into `templates/` instead — see
+this repo's own `AGENTS.md` (*Architecture* section) for the rationale,
+which is specific to this repo's own root layout rather than the general
+plugin design `docs/AI-workflow.md` covers.
 
 Each skill in `plugins/ai-workflow/skills/` holds reusable, project-agnostic
 knowledge (standards, checklists, rules) with no orchestration; each
@@ -106,14 +109,15 @@ anything) — every file's own destination gates its own scaffolding, so
 adopting this on a project with its own pre-existing `AGENTS.md` still gets
 the review gate, and vice versa. (`.claude/settings.json` is merged rather
 than overwritten if it already exists — a project-scope install can create
-it first — and a foreign pre-existing `githooks/pre-push` or
-`scripts/review-ok.sh` is flagged as a conflict rather than silently
-trusted.) It then continues into adaptation: detects your build/test
-commands and default branch, drafts the `AGENTS.md` sections from the real
-codebase, asks whether you already have docs for code review/planning
-guidance (pointing `AGENTS.md` at them if so, or seeding
-`docs/agent-rules/` if not), and validates the whole setup (hook,
-`core.hooksPath`, settings, `.gitignore`, CI, the guidance section itself
+it first — and whether a hook is already installed and whose it is comes
+from `scripts/check-hook-status.sh`, not a hand-rolled guess, so a foreign
+hook is flagged as a conflict rather than silently trusted or replaced.)
+It then continues into adaptation: detects your build/test commands and
+default branch, drafts the `AGENTS.md` sections from the real codebase,
+asks whether you already have docs for code review/planning guidance
+(pointing `AGENTS.md` at them if so, or seeding `docs/agent-rules/` if
+not), and validates the whole setup (hook, `core.hooksPath`, settings,
+`.gitignore`, CI, the guidance section itself
 resolving to real files). Everything is proposed and confirmed before it is
 written; whatever you defer stays an explicit TODO. The section below is
 the manual map of the same work.
@@ -121,9 +125,9 @@ the manual map of the same work.
 **Updating later**: update the plugin (`/plugin marketplace update` /
 `/plugin update`, per whatever scope you installed at), then re-run
 `/init-workflow` — in doctor mode it reports anything the update newly
-expects. (One exception: the two gate scripts themselves are checked for
-presence of their `.review-passed` marker, not for being byte-current with
-the latest template — see that skill's Step 1.)
+expects. (One exception: `scripts/check-hook-status.sh` checks the two
+gate files for presence of their `.review-passed` marker, not for being
+byte-current with the latest template — see that skill's Step 1.)
 
 ## Adapting it to your project — where your content goes
 
@@ -196,8 +200,11 @@ approval in Claude Code (the human is the final sign-off on the gate) and
 denies the agent the bypass flags (best-effort prefix matching); CI is the
 independent evidence that tests pass on the pushed state
 (`.github/workflows/ci.yml.example` — rename and fill in); and
-`review-ok.sh` warns when `core.hooksPath` is unset, so a clone that forgot
-the one-time setup finds out instead of running gateless.
+`review-ok.sh` warns whenever `scripts/check-hook-status.sh` reports the
+gate isn't actually active — not just an unset `core.hooksPath`, but a
+foreign hook occupying the spot too — so a clone that forgot the one-time
+setup, or whose hooks were reconfigured by something else, finds out
+instead of running gateless.
 
 ## Day-to-day use
 

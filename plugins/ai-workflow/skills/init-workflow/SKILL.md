@@ -63,20 +63,19 @@ gate, or vice versa:
   `.claude/settings.json`, **not** project root) — on the destination copy
   only; never strip it on the source inside `templates/` itself, since an
   un-suffixed `AGENTS.md`/`CLAUDE.md` left there would be auto-loaded by
-  Claude Code as this project's live guidance instead of a template.
-  Preserve the executable bit on `githooks/pre-push` and
-  `scripts/review-ok.sh`. Copy every other file (the rest of the `docs/`
-  tree, `.github/workflows/ci.yml.example`) to the same relative path it
-  has under `templates/` — except `ci.yml.example`, whose destination
-  counts as present if **either** it or a renamed `.github/workflows/ci.yml`
+  Claude Code as this project's live guidance instead of a template. Copy
+  every other file (the rest of the `docs/` tree,
+  `.github/workflows/ci.yml.example`) to the same relative path it has
+  under `templates/` — except `ci.yml.example`, whose destination counts
+  as present if **either** it or a renamed `.github/workflows/ci.yml`
   already exists (see the next bullet).
 - **Destination exists as plain content** (`AGENTS.md`, `docs/adr/*`,
   `docs/product-context/*`, `.github/workflows/ci.yml`/`.example`) → leave
   it untouched and list it as "already present" in Step 6's report — never
   overwrite a file the project already owns.
 - **Destination exists but needs special handling** (`CLAUDE.md`,
-  `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`) —
-  see immediately below.
+  `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`,
+  `scripts/check-hook-status.sh`) — see immediately below.
 
 **`CLAUDE.md`.** If it exists (e.g. from Claude Code's own `/init`) and
 doesn't already contain `@AGENTS.md`, offer to append the import line —
@@ -98,29 +97,51 @@ existing file doesn't parse as JSON, its root value isn't an object, or
 `permissions`/`permissions.ask`/`permissions.deny` are present but not the
 expected shape (an object, and two arrays), do not attempt a merge and do
 not guess a fix — flag it as an unresolved item in this step's proposal
-(the same way a hook conflict is
-flagged) and continue with the rest of Step 1; a malformed pre-existing
-file on this security-relevant path needs the user's own eyes, not an
-agent's improvised repair.
+(the same way a hook conflict is flagged) and continue with the rest of
+Step 1; a malformed pre-existing file on this security-relevant path needs
+the user's own eyes, not an agent's improvised repair.
 
-**`githooks/pre-push` / `scripts/review-ok.sh`.** If either destination
-exists, check whether its content already references `.review-passed` (the
-marker this gate reads and writes — see the template versions for the
-mechanism). If it does, treat it as already this gate's file (a prior
-`/init-workflow` run, or a shared clone) and leave it alone — this is a
-presence check, not a version check, so a stale copy from before a later
-plugin update still passes it; that gap is accepted for now, not solved
-here. If the marker is **absent** — a foreign hook doing something
-unrelated (lint, commit-message checks) — this is a real conflict, not a
-benign "already present": silently leaving it means the review gate
-enforces nothing while doctor mode reports green. Surface it explicitly and
-ask the user how to proceed: replace it with the template's version, or
-explicitly decline. Do **not** offer to chain the template's check into
-the existing script — a pre-push hook reads its ref list from stdin
-exactly once, and a naively chained script can silently consume it before
-the gate's own `while read` loop runs, producing a hook that exits 0 on
-every push with no error. A declined foreign hook is an open gap Step 6
-must call out by name, not fold into the general "already present" list.
+**`githooks/pre-push`, `scripts/review-ok.sh`, `scripts/check-hook-status.sh`.**
+These three are scaffolded (or left alone) as one group —
+`scripts/review-ok.sh` depends on `scripts/check-hook-status.sh` being
+present, and both depend on `githooks/pre-push`. Don't hand-roll whether a
+hook is already wired up: run
+`${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh` from the
+project root — the plugin's own copy is read-only and safe to run before
+anything is scaffolded — and act on its one-line verdict:
+
+- **`UNCONFIGURED`** — none of the three exist yet: scaffold all three
+  from the template (preserve the executable bit on all three), then
+  offer `git config core.hooksPath githooks`.
+- **`READY_TO_CONFIGURE`** — `githooks/pre-push` is already there and
+  correct (a prior run, or a shared clone), but `core.hooksPath` isn't
+  set. Scaffold `scripts/review-ok.sh`/`scripts/check-hook-status.sh` too
+  if either is still missing, then offer `git config core.hooksPath githooks`.
+- **`ACTIVE`** or **`NEEDS_CHMOD`** — already wired up (the second just
+  needs `chmod +x`, safe since the marker already identifies it as this
+  gate's file). Still scaffold `scripts/review-ok.sh`/
+  `scripts/check-hook-status.sh` if either is missing; nothing else to do.
+- **`DEST_FOREIGN`** or **`DEST_NEEDS_CHMOD`** — a foreign or broken file
+  already sits at `githooks/pre-push`. Surface it explicitly and ask the
+  user how to proceed: replace it with the template's version (or
+  `chmod +x` it, for the latter), or explicitly decline. Do **not** offer
+  to chain the template's check into an existing script there — a
+  pre-push hook reads its ref list from stdin exactly once, and a naively
+  chained script can silently consume it before the gate's own `while
+  read` loop runs, producing a hook that exits 0 on every push with no
+  error. A declined conflict is an open gap Step 6 must call out by name.
+- **`FOREIGN`** — something else already claims the active hook slot
+  (another hook manager, or `core.hooksPath` pointing elsewhere). Do
+  **not** offer to change `core.hooksPath` or replace anything; report
+  exactly what the script printed and leave reconciling it to the human —
+  including, if they want the two to coexist, that their existing hook
+  would need to invoke `githooks/pre-push` itself with correct stdin
+  handling, not something to draft on their behalf here.
+
+Known limitation: `check-hook-status.sh`'s marker check is a presence
+check, not a version check, so a stale copy from before a later plugin
+update still reads as `ACTIVE`; that gap is accepted for now, not solved
+here.
 
 Also append `.review-passed`, `.qa-evidence/`, and `.workflow-log/` to
 `.gitignore` if not already present (create the file if it doesn't exist)
@@ -135,9 +156,9 @@ can't distinguish "never created" from "deliberately removed." Confirming
 Present the full proposal — files to scaffold, the `.claude/settings.json`
 merge diff if any, the `CLAUDE.md` append if applicable, any hook or
 settings conflict, and what's already present and left alone — in one
-block for confirmation
-before writing anything, the same confirm-then-write pattern as every other
-step here. Once confirmed and written, continue below.
+block for confirmation before writing anything, the same confirm-then-write
+pattern as every other step here. Once confirmed and written, continue
+below.
 
 Read `AGENTS.md` (whether just scaffolded or pre-existing). If it has a
 **Review & Planning Guidance** section, read the files it names. A named
@@ -261,60 +282,25 @@ future additions.
 Check each item and collect the results — fix only with the user's
 confirmation, report what you cannot fix:
 
-1. `githooks/pre-push` and `scripts/review-ok.sh` exist, are executable,
-   and their content references `.review-passed` — existence alone isn't
-   enough; a foreign hook at either path (see Step 1) would pass an
-   existence check while enforcing nothing.
-2. The pre-push review gate is active. From the repo toplevel, resolve
-   where git will actually execute a pre-push hook with
-   `git rev-parse --git-path hooks/pre-push` (treat the output as relative
-   to the toplevel) — this single command already accounts for
-   `core.hooksPath` (set, unset, absolute, or relative), linked worktrees,
-   submodules, and `--separate-git-dir` clones, so don't hand-roll the
-   resolution or compare against a literal path like `.git/hooks/pre-push`
-   (in a linked worktree `.git` is a file, not a directory, so that
-   literal never exists regardless of what's actually installed). Don't
-   run `scripts/review-ok.sh` for this check — running it records a
-   review pass. Check whether the file this resolves to exists, is
-   executable, and its content references `.review-passed`:
-   - **Yes to all three** → pass, regardless of which path it resolved
-     from (a worktree inheriting the main checkout's absolute
-     `core.hooksPath` resolves here correctly and must pass).
-   - **The file has the marker but isn't executable** → this can't be a
-     foreign hook (the marker identifies it as this gate's own file), so
-     it's safe to offer `chmod +x` directly.
-   - **No file exists there, `core.hooksPath` is unset, and item 1 above
-     passed** (`githooks/pre-push` itself exists, is executable, and has
-     the marker) — the gate's own file is ready and nothing else claims
-     that config value: offer `git config core.hooksPath githooks` (per
-     clone; each teammate needs it).
-   - **No file exists there, but item 1 did *not* pass** — don't offer the
-     config change; it would point `core.hooksPath` at a file that isn't
-     ready. The actual gap is item 1's finding (missing, not executable,
-     or a foreign file at `githooks/pre-push` — see Step 1), not this
-     item's; report it as such. Fixing item 1 is the real remedy, and a
-     later doctor run will then offer the config change.
-   - **Anything else** — a file exists at the resolved location without
-     the marker (a foreign hook, whether from another manager or a
-     leftover file), or nothing exists there but `core.hooksPath` is set
-     to something (a manager like husky/lefthook that owns that config
-     value, whether or not it has installed a `pre-push` hook) — do
-     **not** offer to change `core.hooksPath` and do **not** offer to
-     replace whatever is there; either action can silently disable
-     another hook manager. Report exactly what's currently
-     configured/present and leave reconciling it to the human — including,
-     if they want the two to coexist, that their existing hook would need
-     to invoke `githooks/pre-push` itself with correct stdin handling (see
-     Step 1's stdin note), not something to draft on their behalf here.
-
-   Known divergence: `scripts/review-ok.sh` itself still resolves
-   `core.hooksPath` directly rather than through `git rev-parse --git-path
-   hooks/pre-push`, so it can warn "no active pre-push hook" in a
-   configuration this item would correctly pass (`core.hooksPath` unset
-   with a working default-location hook). That script is real, shipped,
-   security-relevant behavior — not something to change as a side effect
-   of a doctor-prose fix — so this is recorded here rather than silently
-   left inconsistent.
+1. `githooks/pre-push`, `scripts/review-ok.sh`, and
+   `scripts/check-hook-status.sh` all exist and are executable.
+2. The pre-push review gate is active. Run `scripts/check-hook-status.sh`
+   (the project's own copy, scaffolded by item 1) and map its one-line
+   verdict directly — this is the same script Step 1 and
+   `scripts/review-ok.sh` itself use, so there is nothing left to
+   hand-roll or re-derive here:
+   - `ACTIVE` → pass.
+   - `NEEDS_CHMOD` → offer `chmod +x` on the path the script printed (safe;
+     the marker already identifies it as this gate's file).
+   - `READY_TO_CONFIGURE` → offer `git config core.hooksPath githooks`.
+   - `UNCONFIGURED`, `DEST_FOREIGN`, or `DEST_NEEDS_CHMOD` → this is item
+     1's gap (`githooks/pre-push` missing, foreign, or not executable —
+     see Step 1's handling); report it as such rather than duplicating
+     Step 1's remedy here.
+   - `FOREIGN` → do **not** offer to change `core.hooksPath` or replace
+     anything; report exactly what the script printed and leave
+     reconciling it to the human (see Step 1's note on why chaining isn't
+     offered).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
    `.workflow-log/`.

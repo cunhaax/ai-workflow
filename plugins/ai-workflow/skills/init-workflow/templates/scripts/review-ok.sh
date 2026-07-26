@@ -14,17 +14,14 @@
 
 set -eu
 
-hooks_path="$(git config core.hooksPath || true)"
-resolved="$hooks_path"
-case "$hooks_path" in
-    /*) : ;;                                            # already absolute
-    "") resolved="" ;;
-    *)  resolved="$(git rev-parse --show-toplevel)/$hooks_path" ;;
+status="$("$(git rev-parse --show-toplevel)/scripts/check-hook-status.sh")"
+case "$status" in
+    ACTIVE:*) : ;;
+    *)
+        echo "WARNING: pre-push review gate is not active in this clone ($status)" >&2
+        echo "Enable it once per clone: git config core.hooksPath githooks" >&2
+        ;;
 esac
-if [ -z "$resolved" ] || [ ! -x "$resolved/pre-push" ]; then
-    echo "WARNING: no active pre-push hook at core.hooksPath — the review gate is NOT active in this clone." >&2
-    echo "Enable it once per clone: git config core.hooksPath githooks" >&2
-fi
 
 sha="$(git rev-parse HEAD)"
 echo "$sha" > "$(git rev-parse --show-toplevel)/.review-passed"

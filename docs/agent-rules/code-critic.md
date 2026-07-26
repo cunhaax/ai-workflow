@@ -14,8 +14,8 @@ repo itself — the AI workflow template.
   enumeration paragraph in `README.md` (not its collapsed file-tree
   diagram, which doesn't expand `templates/`). `FAIL` if any of the three
   goes stale.
-- `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh`
-  at repo root must remain symlinks into
+- `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`, and
+  `scripts/check-hook-status.sh` at repo root must remain symlinks into
   `plugins/ai-workflow/skills/init-workflow/templates/`. Replacing any of
   them with a regular file (even with identical content) reintroduces the
   duplication this repo deliberately avoided. `FAIL` if a diff turns any of
@@ -43,8 +43,9 @@ surface of its own.
       `docs/AI-workflow.md`'s file tree, its `.template` → destination
       mapping paragraph, and README.md's `init-workflow/templates/`
       enumeration paragraph.
-- [ ] `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh`
-      at root are still symlinks into `templates/`, not regular files.
+- [ ] `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`,
+      and `scripts/check-hook-status.sh` at root are still symlinks into
+      `templates/`, not regular files.
 - [ ] `.claude/skills/` and `.claude/agents/` are still absent at repo root.
 - [ ] No project-specific content leaked into a project-agnostic skill or
       sub-agent file outside `templates/`/`docs/agent-rules/`.

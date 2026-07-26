@@ -128,21 +128,22 @@ docs/
 └── AI-workflow.md                    # Full design rationale and file-by-file guide
 githooks/pre-push                     # Symlink into plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
 scripts/review-ok.sh                  # Symlink into plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
+scripts/check-hook-status.sh          # Symlink into plugins/ai-workflow/skills/init-workflow/templates/scripts/check-hook-status.sh
 LICENSE                               # MIT
 README.md                             # Quick-start for installing the plugin into another project
 ```
 
-`.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh` are
-symlinks, not copies — they must never differ from what a scaffolded
-project receives, so there is exactly one copy of their content, inside
-`templates/`. This assumes a clone where git materializes them as real
-symlinks; exact failure behavior on a checkout where it doesn't is
-platform-dependent and not verified here. `/init-workflow`'s doctor
-checklist is the safety net regardless of platform: items 1 and 2 check
-that `githooks/pre-push` and `scripts/review-ok.sh` exist and are
-executable, and item 5 checks that `.claude/settings.json` actually
-contains its `ask`/`deny` rules rather than merely existing — so a degraded
-materialization of any of the three surfaces on the next `/init-workflow`
+`.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`, and
+`scripts/check-hook-status.sh` are symlinks, not copies — they must never
+differ from what a scaffolded project receives, so there is exactly one
+copy of their content, inside `templates/`. This assumes a clone where git
+materializes them as real symlinks; exact failure behavior on a checkout
+where it doesn't is platform-dependent and not verified here.
+`/init-workflow`'s doctor checklist is the safety net regardless of
+platform: item 1 checks that all three scripts exist and are executable,
+and item 5 checks that `.claude/settings.json` actually contains its
+`ask`/`deny` rules rather than merely existing — so a degraded
+materialization of any of the four surfaces on the next `/init-workflow`
 run.
 
 ## Testing
@@ -160,9 +161,10 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
   every scaffolded project's enforcement mechanism and starting rules are
   built from; an error here propagates silently to every downstream
   project.
-- `githooks/pre-push` / `scripts/review-ok.sh` (via their symlink target in
-  `templates/`) — the actual review-gate enforcement; a bug here is a
-  silent bypass everywhere the template is used.
+- `githooks/pre-push` / `scripts/review-ok.sh` / `scripts/check-hook-status.sh`
+  (via their symlink target in `templates/`) — the actual review-gate
+  enforcement; a bug here is a silent bypass everywhere the template is
+  used.
 - `plugins/ai-workflow/skills/init-workflow/SKILL.md` — the scaffold logic
   itself; it writes files into a project on the user's behalf.
 - `.claude-plugin/marketplace.json` /
