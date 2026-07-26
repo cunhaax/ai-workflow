@@ -466,7 +466,7 @@ way.*
 *Also unverified end-to-end — see `README.md` for what's confirmed so far.*
 
 ```
-/plugin marketplace add cunhaax/ai-workflow-template
+/plugin marketplace add cunhaax/ai-workflow
 /plugin install ai-workflow@ai-workflow
 ```
 

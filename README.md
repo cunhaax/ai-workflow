@@ -27,7 +27,7 @@ what actually ships.
 1. **Install the plugin:**
 
    ```
-   /plugin marketplace add cunhaax/ai-workflow-template
+   /plugin marketplace add cunhaax/ai-workflow
    /plugin install ai-workflow@ai-workflow
    ```
 
