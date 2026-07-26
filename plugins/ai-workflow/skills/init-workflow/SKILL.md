@@ -102,18 +102,20 @@ Step 1; a malformed pre-existing file on this security-relevant path needs
 the user's own eyes, not an agent's improvised repair.
 
 **`githooks/pre-push`, `scripts/review-ok.sh`, `scripts/check-hook-status.sh`.**
-Two separate questions, in order — never scaffold or reconfigure anything
-before answering the first:
+Two separate questions. The first is answered and written before anything
+else in this step; the second is evaluated only *after* that write (or
+after the user declines it) — never in between, since its verdict is only
+meaningful against the settled state, not a proposal still awaiting
+confirmation:
 
 **1. Is each of the three files, if it already exists, actually this
-gate's own file?** Check each independently — this must happen before any
-scaffolding, so a foreign file is never silently overwritten by the second
-question's remedy: `githooks/pre-push` and `scripts/review-ok.sh` each
-count as ours if their content references `.review-passed`; `scripts/check-hook-status.sh`
-counts as ours if its content references `READY_TO_CONFIGURE` (a verdict
-word unique to it, since it doesn't itself reference `.review-passed` in
-its logic — only in its comments describing the mechanism, which isn't a
-reliable identity check).
+gate's own file?** Check each independently: `githooks/pre-push` and
+`scripts/review-ok.sh` each count as ours if their content references
+`.review-passed`; `scripts/check-hook-status.sh` counts as ours if its
+content references `DEST_FOREIGN` (a verdict string that appears only in
+that script — unlike `.review-passed` or `READY_TO_CONFIGURE`, both of
+which also appear in `scripts/review-ok.sh`'s own logic, so neither is
+unique enough to use here).
 
 - Any of the three is **missing** → scaffold it from the template,
   preserving the executable bit.
@@ -129,24 +131,27 @@ reliable identity check).
 - Any of the three **exists and is ours** → leave it as is (Step 5 item 1
   checks it's still executable).
 
-**2. Once all three are confirmed to be this gate's own files (existing or
-about to be scaffolded), is the gate actually wired up?** Don't hand-roll
-this: run `${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh`
-from the project root — the plugin's own copy is read-only and safe to run
-even before anything is scaffolded — and act on its one-line verdict:
+**2. Once question 1 has been written (or declined), is the gate actually
+wired up?** This runs as part of "continue below" after Step 1's
+confirm-then-write, not inside the proposal itself. Don't hand-roll it:
+run `${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh` (the
+project's own copy, now that question 1 has written it) from the project
+root and act on its one-line verdict:
 
 - **`ACTIVE`** or **`NEEDS_CHMOD`** — already wired up (the second just
   needs `chmod +x`, safe since the marker already identifies it as this
   gate's file). Nothing else to do.
 - **`READY_TO_CONFIGURE`** — `githooks/pre-push` is ready but
-  `core.hooksPath` isn't wired to it: offer
-  `git config core.hooksPath githooks`.
-- **`DEST_NEEDS_CHMOD`** — `githooks/pre-push` lost its executable bit
-  after question 1 confirmed it was ours; offer `chmod +x`.
-- **`UNCONFIGURED`** or **`DEST_FOREIGN`** — question 1 above should have
-  already resolved this (scaffolded it, or flagged it as a conflict); if
-  this verdict still appears, something in that check needs revisiting
-  rather than acted on here.
+  `core.hooksPath` isn't wired to it. On a fresh project this is the
+  ordinary, expected state right after question 1's scaffold — offer
+  `git config core.hooksPath githooks` as the natural next step, not a
+  special case.
+- **`DEST_NEEDS_CHMOD`** — `githooks/pre-push` exists and is ours but
+  isn't executable; offer `chmod +x`.
+- **`UNCONFIGURED`** or **`DEST_FOREIGN`** — question 1's proposal for
+  `githooks/pre-push` was declined. This is not a new problem to solve
+  here — it's the same gap question 1 already put in Step 6's report;
+  don't report it a second time.
 - **`FOREIGN`** — something else entirely already claims the active hook
   slot (another hook manager, or `core.hooksPath` pointing at a directory
   that isn't this project's own `githooks/`). Do **not** offer to change

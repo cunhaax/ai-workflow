@@ -82,14 +82,24 @@ fi
 # core.hooksPath already pointing at THIS project's own githooks/ dir is
 # not foreign, even if nothing has been scaffolded there yet — it's this
 # gate's own conventional value, half-configured, not another tool's.
+# Known limitation: this compares against $toplevel of the worktree the
+# script runs in, so a linked worktree that inherits a relative
+# core.hooksPath resolved against a *different* worktree's toplevel (rare —
+# most real configs use an absolute path here, which this handles
+# correctly) can still misreport FOREIGN; not solved here.
 own_hooks_dir="$toplevel/githooks"
 hooks_path_is_own=0
 if [ -z "$hooks_path_cfg" ]; then
     hooks_path_is_own=1
 else
-    case "$hooks_path_cfg" in
-        /*) cfg_dir="$hooks_path_cfg" ;;
-        *)  cfg_dir="$toplevel/$hooks_path_cfg" ;;
+    # Normalize a leading "./" and any trailing "/" before comparing —
+    # git accepts "./githooks" and "githooks/" as equivalent to
+    # "githooks", but a literal string comparison would not.
+    normalized="${hooks_path_cfg#./}"
+    normalized="${normalized%/}"
+    case "$normalized" in
+        /*) cfg_dir="$normalized" ;;
+        *)  cfg_dir="$toplevel/$normalized" ;;
     esac
     [ "$cfg_dir" = "$own_hooks_dir" ] && hooks_path_is_own=1
 fi
