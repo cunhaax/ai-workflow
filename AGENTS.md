@@ -87,11 +87,12 @@ would show both bare `/feature` (project-local) and `/ai-workflow:feature`
 (the installed plugin) at once — two command surfaces for the same thing,
 with no way to know if they'd drifted.
 
-A marketplace install pins a *published* version, not this working tree —
-so a normal install only dogfoods the last released version, not whatever
-you're currently editing. To actually review working-tree changes to the
-plugin itself, install from a local path pointing at this checkout instead
-of the GitHub form.
+A GitHub-form install (`/plugin marketplace add cunhaax/ai-workflow-template`)
+sources from the published repo's default branch, not this working tree or
+whatever feature branch you're on — so it doesn't dogfood in-progress
+changes. To actually review working-tree edits to the plugin itself, use
+the local-path form instead (see *Installing into a project* in
+`README.md`).
 
 ## Commands
 
@@ -111,7 +112,7 @@ kept small and reviewed by hand.
 .claude-plugin/
 └── marketplace.json                  # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
 plugins/ai-workflow/
-├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author)
+├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository)
 ├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
 └── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
     │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect

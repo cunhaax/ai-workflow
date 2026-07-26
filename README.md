@@ -21,7 +21,7 @@ quick-start for *installing and adapting* the plugin in a new project.
 .claude-plugin/
 └── marketplace.json             # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
 plugins/ai-workflow/
-├── .claude-plugin/plugin.json   # Plugin metadata: name, description, version, author
+├── .claude-plugin/plugin.json   # Plugin metadata: name, description, version, author, homepage, repository
 ├── agents/                      # Sub-agent definitions (frontmatter + inline prompt)
 │   ├── planner.md                # Orchestration + skills: [plan-draft]
 │   ├── plan-critic.md            # Orchestration + skills: [plan-critic]
@@ -108,6 +108,15 @@ First real install is the test.*
 Choose the `project` scope if you want the install recorded and shared via
 your project's own git history. Then, inside the project, run
 **`/init-workflow`**.
+
+**Developing the plugin itself?** The GitHub form above sources from the
+published repo's default branch, not your working tree — it won't reflect
+in-progress edits. Point the marketplace at a local checkout instead:
+
+```
+/plugin marketplace add /path/to/this/repo
+/plugin install ai-workflow@ai-workflow
+```
 
 On a brand-new project, `/init-workflow` scaffolds the project-owned files
 from the plugin's bundled templates (proposing the full list before writing

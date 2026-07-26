@@ -78,12 +78,11 @@ everything else keeps its relative path.
 
 The plugin itself (`plugins/ai-workflow/agents/`, `plugins/ai-workflow/skills/`)
 is not vendored into the project — it's supplied by the plugin install and
-lives wherever Claude Code resolves an installed plugin's files. This guide
-isn't inside that installed payload either (`plugin.json`'s `source` is
-`./plugins/ai-workflow`, and this file lives outside it, at the repo root)
-— it's linked from `plugin.json`'s `homepage` field instead, in this repo's
-own source. Everything
-in the tree above, except the two entries marked otherwise, is scaffolded
+lives wherever Claude Code resolves an installed plugin's files. This guide isn't inside that installed payload either (the marketplace
+entry's `source` is `./plugins/ai-workflow`, and this file lives outside
+it, at the repo root) — it's linked from `plugin.json`'s `homepage` field
+instead, in this repo's own source. Everything in the tree above, except
+the two entries marked otherwise, is scaffolded
 into the project by `/init-workflow` from the plugin's bundled templates on
 first run (see *Installing and updating the plugin* below); the project
 owns it from that point on.
@@ -616,7 +615,10 @@ The eight wired-up commands are `feature`, `init-workflow`, `plan-draft`,
 `workflow-inspect` — installed via this plugin, Claude Code may expose them
 namespaced as `/ai-workflow:feature` etc. rather than bare `/feature`
 (unverified — see *Installing and updating the plugin*, this hasn't been
-exercised end to end yet). `feature` is the primary entry point — it
+exercised end to end yet). The rest of this guide uses the bare forms as
+shorthand for the skill/command by name, not as a claim about the exact
+string you'd type once installed — treat every bare `/name` below as
+provisional on that same open question. `feature` is the primary entry point — it
 triggers the full orchestrated workflow; `init-workflow` is the one-time
 setup (and recurring doctor) pass; `workflow-retro` and `workflow-inspect`
 are the optional evaluation pair (outcome record, then cost fill-in); the
@@ -637,7 +639,12 @@ direction: it is named `plan-draft` rather than `plan` because Claude Code's
 built-in *plan-mode* command already answers to `/plan` (a separate mechanism
 from skills), and the rename removes the collision instead of documenting it.
 `init-workflow` follows suit: Claude Code bundles an `/init` command (it
-generates a `CLAUDE.md`), so the setup skill takes a distinct name.
+generates a `CLAUDE.md`), so the setup skill takes a distinct name. This
+rationale predates the plugin packaging and was written for project-scoped
+skills; if plugin skills turn out to be namespaced by default (the same
+open question noted above), the collision these names dodge may not even
+be reachable post-install — but the names stay regardless, since renaming
+back would be a real breaking change for no benefit either way.
 
 #### Skills vs sub-agents vs slash commands
 
