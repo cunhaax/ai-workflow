@@ -21,7 +21,7 @@ quick-start for *installing and adapting* the plugin in a new project.
 .claude-plugin/
 └── marketplace.json             # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
 plugins/ai-workflow/
-├── .claude-plugin/plugin.json   # Plugin metadata: name, description, version, author, homepage, repository
+├── .claude-plugin/plugin.json   # Plugin metadata: name, description, version, author, homepage, repository, license
 ├── agents/                      # Sub-agent definitions (frontmatter + inline prompt)
 │   ├── planner.md                # Orchestration + skills: [plan-draft]
 │   ├── plan-critic.md            # Orchestration + skills: [plan-critic]
@@ -47,6 +47,7 @@ docs/
 └── AI-workflow.md               # The full guide to this system
 githooks/pre-push                # Symlink → plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
 scripts/review-ok.sh             # Symlink → plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
+LICENSE                          # MIT
 AGENTS.md, CLAUDE.md             # This repo's own real project guide
 ```
 

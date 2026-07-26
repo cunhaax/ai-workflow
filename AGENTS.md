@@ -112,7 +112,7 @@ kept small and reviewed by hand.
 .claude-plugin/
 └── marketplace.json                  # Lists this repo's one plugin (self-referential: ai-workflow@ai-workflow)
 plugins/ai-workflow/
-├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository)
+├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository, license)
 ├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
 └── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
     │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
@@ -122,6 +122,7 @@ docs/
 └── AI-workflow.md                    # Full design rationale and file-by-file guide
 githooks/pre-push                     # Symlink into plugins/ai-workflow/skills/init-workflow/templates/githooks/pre-push
 scripts/review-ok.sh                  # Symlink into plugins/ai-workflow/skills/init-workflow/templates/scripts/review-ok.sh
+LICENSE                               # MIT
 README.md                             # Quick-start for installing the plugin into another project
 ```
 
