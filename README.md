@@ -212,3 +212,7 @@ this section deliberately doesn't restate it). The short version: start small
 (planner + code-critic first); every time an agent's bad output slips past
 the rules, add a rule to `docs/agent-rules/code-critic.md` — or better, a
 build-enforced fitness test; keep `AGENTS.md` lean.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
