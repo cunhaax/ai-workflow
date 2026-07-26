@@ -111,9 +111,10 @@ the review gate, and vice versa. (`.claude/settings.json` is merged rather
 than overwritten if it already exists — a project-scope install can create
 it first — and each of the three gate files is checked for its own
 identity before any of them is scaffolded, so a foreign file is flagged as
-a conflict rather than silently trusted or replaced; only once all three
-are confirmed genuine does `scripts/check-hook-status.sh` — not a
-hand-rolled guess — report whether the gate is actually wired up.) It then
+a conflict rather than silently trusted or replaced; once that's resolved
+(confirmed genuine, scaffolded, or explicitly declined),
+`scripts/check-hook-status.sh` — not a hand-rolled guess — reports whether
+the gate is actually wired up.) It then
 continues into adaptation: detects your build/test commands and
 default branch, drafts the `AGENTS.md` sections from the real codebase,
 asks whether you already have docs for code review/planning guidance

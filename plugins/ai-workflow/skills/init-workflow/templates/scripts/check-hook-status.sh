@@ -4,6 +4,14 @@
 # git config core.hooksPath githooks) and by review-ok.sh (deciding whether
 # to warn that the gate isn't active). Read-only — makes no changes.
 #
+# IMPORTANT: the literal string "DEST_FOREIGN" below doubles as this
+# file's own identity marker in /init-workflow's SKILL.md (Step 1 and
+# Step 5 item 1 grep for it to confirm a scripts/check-hook-status.sh
+# found on disk is genuinely this file, not something else at that path).
+# Do not rename or stop using this string without updating both call
+# sites — this is exactly the kind of edit that silently invalidated the
+# previous marker choice.
+#
 # Resolves via `git rev-parse --git-path hooks/pre-push`, which accounts for
 # core.hooksPath (set, unset, absolute, or relative), linked worktrees,
 # submodules, and --separate-git-dir clones in one call — this is the exact

@@ -102,11 +102,13 @@ Step 1; a malformed pre-existing file on this security-relevant path needs
 the user's own eyes, not an agent's improvised repair.
 
 **`githooks/pre-push`, `scripts/review-ok.sh`, `scripts/check-hook-status.sh`.**
-Two separate questions. The first is answered and written before anything
-else in this step; the second is evaluated only *after* that write (or
-after the user declines it) — never in between, since its verdict is only
-meaningful against the settled state, not a proposal still awaiting
-confirmation:
+Two separate questions. The first is decided here and, once the step's
+proposal is confirmed, written as part of that same single confirmation
+round below — never before the user confirms. The second is evaluated
+only *after* that write (or after the user declines it), as the first
+thing in "continue below" once Step 1's proposal is confirmed and
+written — never before, since its verdict is only meaningful against the
+settled state, not a proposal still awaiting confirmation.
 
 **1. Is each of the three files, if it already exists, actually this
 gate's own file?** Check each independently: `githooks/pre-push` and
@@ -115,7 +117,12 @@ gate's own file?** Check each independently: `githooks/pre-push` and
 content references `DEST_FOREIGN` (a verdict string that appears only in
 that script — unlike `.review-passed` or `READY_TO_CONFIGURE`, both of
 which also appear in `scripts/review-ok.sh`'s own logic, so neither is
-unique enough to use here).
+unique enough to use here). This pair is not perfectly symmetric —
+`check-hook-status.sh` necessarily contains the literal string
+`.review-passed` too, since checking for that marker is its job — so a
+contrived case (someone's `check-hook-status.sh` content placed at
+`githooks/pre-push`) would misidentify as ours; accepted as a known,
+low-probability gap rather than solved here.
 
 - Any of the three is **missing** → scaffold it from the template,
   preserving the executable bit.
@@ -132,11 +139,12 @@ unique enough to use here).
   checks it's still executable).
 
 **2. Once question 1 has been written (or declined), is the gate actually
-wired up?** This runs as part of "continue below" after Step 1's
-confirm-then-write, not inside the proposal itself. Don't hand-roll it:
-run `${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh` (the
-project's own copy, now that question 1 has written it) from the project
-root and act on its one-line verdict:
+wired up?** Don't hand-roll it: run
+`${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh` — the
+plugin's own read-only copy, safe to run regardless of whether question
+1's write happened, since a declined or not-yet-scaffolded
+`githooks/pre-push` shouldn't stop this check — from the project root, and
+act on its one-line verdict:
 
 - **`ACTIVE`** or **`NEEDS_CHMOD`** — already wired up (the second just
   needs `chmod +x`, safe since the marker already identifies it as this
@@ -148,10 +156,12 @@ root and act on its one-line verdict:
   special case.
 - **`DEST_NEEDS_CHMOD`** — `githooks/pre-push` exists and is ours but
   isn't executable; offer `chmod +x`.
-- **`UNCONFIGURED`** or **`DEST_FOREIGN`** — question 1's proposal for
-  `githooks/pre-push` was declined. This is not a new problem to solve
-  here — it's the same gap question 1 already put in Step 6's report;
-  don't report it a second time.
+- **`UNCONFIGURED`** or **`DEST_FOREIGN`** — if question 1's proposal for
+  `githooks/pre-push` was declined, this is that same gap, already in
+  Step 6's report — don't report it a second time. If question 1 was
+  instead confirmed and written, this verdict is unexpected: the write
+  didn't take effect as intended, and that itself is what to report (Rule
+  2), not something to act on here.
 - **`FOREIGN`** — something else entirely already claims the active hook
   slot (another hook manager, or `core.hooksPath` pointing at a directory
   that isn't this project's own `githooks/`). Do **not** offer to change
@@ -180,8 +190,8 @@ Present the full proposal — files to scaffold, the `.claude/settings.json`
 merge diff if any, the `CLAUDE.md` append if applicable, any hook or
 settings conflict, and what's already present and left alone — in one
 block for confirmation before writing anything, the same confirm-then-write
-pattern as every other step here. Once confirmed and written, continue
-below.
+pattern as every other step here. Once confirmed and written, run question
+2's gate-wiring check above and act on its verdict, then continue below.
 
 Read `AGENTS.md` (whether just scaffolded or pre-existing). If it has a
 **Review & Planning Guidance** section, read the files it names. A named
@@ -307,10 +317,11 @@ confirmation, report what you cannot fix:
 
 1. `githooks/pre-push` and `scripts/review-ok.sh` exist, are executable,
    and their content references `.review-passed`; `scripts/check-hook-status.sh`
-   exists, is executable, and its content references `READY_TO_CONFIGURE`
-   — existence alone isn't enough; a foreign file at any of the three
-   paths (see Step 1's identity check) would pass an existence check while
-   enforcing nothing or behaving unpredictably.
+   exists, is executable, and its content references `DEST_FOREIGN` (the
+   same three identity markers Step 1 uses) — existence alone isn't
+   enough; a foreign file at any of the three paths (see Step 1's identity
+   check) would pass an existence check while enforcing nothing or
+   behaving unpredictably.
 2. The pre-push review gate is active. Run `scripts/check-hook-status.sh`
    (the project's own copy, confirmed genuine by item 1) and map its
    one-line verdict directly — this is the same script Step 1 and

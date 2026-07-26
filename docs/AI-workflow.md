@@ -755,9 +755,10 @@ different homes instead of one repo:
   per the paragraph above, can create it first); each of the three gate
   files is checked for its own identity before any of them is scaffolded
   (so a foreign file at any of the three paths is flagged, never
-  overwritten), and only once all three are confirmed genuine does
-  `scripts/check-hook-status.sh` report whether the gate is actually wired
-  up — see that skill's Step 1 for the full decision table. Sourced from
+  overwritten), and once that's resolved — confirmed genuine, scaffolded,
+  or explicitly declined — `scripts/check-hook-status.sh` reports whether
+  the gate is actually wired up — see that skill's Step 1 for the full
+  decision table. Sourced from
   `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
   bundled source of truth) — see its skill summary above. `.claude/settings.json`
   and the three gate files are re-inspected (merged or conflict-checked)
