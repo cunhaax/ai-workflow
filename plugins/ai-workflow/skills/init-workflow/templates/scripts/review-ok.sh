@@ -14,12 +14,16 @@
 
 set -eu
 
-status="$("$(git rev-parse --show-toplevel)/scripts/check-hook-status.sh")"
+status="$("$(git rev-parse --show-toplevel)/scripts/check-hook-status.sh" 2>/dev/null)" || status="UNKNOWN: scripts/check-hook-status.sh is missing or not executable"
 case "$status" in
     ACTIVE:*) : ;;
-    *)
+    READY_TO_CONFIGURE:*)
         echo "WARNING: pre-push review gate is not active in this clone ($status)" >&2
         echo "Enable it once per clone: git config core.hooksPath githooks" >&2
+        ;;
+    *)
+        echo "WARNING: pre-push review gate is not active in this clone ($status)" >&2
+        echo "Run /init-workflow (doctor mode) to diagnose and fix this." >&2
         ;;
 esac
 

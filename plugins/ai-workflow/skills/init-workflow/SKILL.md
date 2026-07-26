@@ -102,41 +102,59 @@ Step 1; a malformed pre-existing file on this security-relevant path needs
 the user's own eyes, not an agent's improvised repair.
 
 **`githooks/pre-push`, `scripts/review-ok.sh`, `scripts/check-hook-status.sh`.**
-These three are scaffolded (or left alone) as one group —
-`scripts/review-ok.sh` depends on `scripts/check-hook-status.sh` being
-present, and both depend on `githooks/pre-push`. Don't hand-roll whether a
-hook is already wired up: run
-`${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh` from the
-project root — the plugin's own copy is read-only and safe to run before
-anything is scaffolded — and act on its one-line verdict:
+Two separate questions, in order — never scaffold or reconfigure anything
+before answering the first:
 
-- **`UNCONFIGURED`** — none of the three exist yet: scaffold all three
-  from the template (preserve the executable bit on all three), then
-  offer `git config core.hooksPath githooks`.
-- **`READY_TO_CONFIGURE`** — `githooks/pre-push` is already there and
-  correct (a prior run, or a shared clone), but `core.hooksPath` isn't
-  set. Scaffold `scripts/review-ok.sh`/`scripts/check-hook-status.sh` too
-  if either is still missing, then offer `git config core.hooksPath githooks`.
+**1. Is each of the three files, if it already exists, actually this
+gate's own file?** Check each independently — this must happen before any
+scaffolding, so a foreign file is never silently overwritten by the second
+question's remedy: `githooks/pre-push` and `scripts/review-ok.sh` each
+count as ours if their content references `.review-passed`; `scripts/check-hook-status.sh`
+counts as ours if its content references `READY_TO_CONFIGURE` (a verdict
+word unique to it, since it doesn't itself reference `.review-passed` in
+its logic — only in its comments describing the mechanism, which isn't a
+reliable identity check).
+
+- Any of the three is **missing** → scaffold it from the template,
+  preserving the executable bit.
+- Any of the three **exists but isn't ours** → a real conflict, not a
+  benign "already present." Surface it explicitly and ask the user how to
+  proceed: replace it with the template's version, or explicitly decline.
+  For `githooks/pre-push` specifically, do **not** offer to chain the
+  template's check into the existing script — a pre-push hook reads its
+  ref list from stdin exactly once, and a naively chained script can
+  silently consume it before the gate's own `while read` loop runs,
+  producing a hook that exits 0 on every push with no error. A declined
+  conflict is an open gap Step 6 must call out by name.
+- Any of the three **exists and is ours** → leave it as is (Step 5 item 1
+  checks it's still executable).
+
+**2. Once all three are confirmed to be this gate's own files (existing or
+about to be scaffolded), is the gate actually wired up?** Don't hand-roll
+this: run `${CLAUDE_SKILL_DIR}/templates/scripts/check-hook-status.sh`
+from the project root — the plugin's own copy is read-only and safe to run
+even before anything is scaffolded — and act on its one-line verdict:
+
 - **`ACTIVE`** or **`NEEDS_CHMOD`** — already wired up (the second just
   needs `chmod +x`, safe since the marker already identifies it as this
-  gate's file). Still scaffold `scripts/review-ok.sh`/
-  `scripts/check-hook-status.sh` if either is missing; nothing else to do.
-- **`DEST_FOREIGN`** or **`DEST_NEEDS_CHMOD`** — a foreign or broken file
-  already sits at `githooks/pre-push`. Surface it explicitly and ask the
-  user how to proceed: replace it with the template's version (or
-  `chmod +x` it, for the latter), or explicitly decline. Do **not** offer
-  to chain the template's check into an existing script there — a
-  pre-push hook reads its ref list from stdin exactly once, and a naively
-  chained script can silently consume it before the gate's own `while
-  read` loop runs, producing a hook that exits 0 on every push with no
-  error. A declined conflict is an open gap Step 6 must call out by name.
-- **`FOREIGN`** — something else already claims the active hook slot
-  (another hook manager, or `core.hooksPath` pointing elsewhere). Do
-  **not** offer to change `core.hooksPath` or replace anything; report
-  exactly what the script printed and leave reconciling it to the human —
-  including, if they want the two to coexist, that their existing hook
-  would need to invoke `githooks/pre-push` itself with correct stdin
-  handling, not something to draft on their behalf here.
+  gate's file). Nothing else to do.
+- **`READY_TO_CONFIGURE`** — `githooks/pre-push` is ready but
+  `core.hooksPath` isn't wired to it: offer
+  `git config core.hooksPath githooks`.
+- **`DEST_NEEDS_CHMOD`** — `githooks/pre-push` lost its executable bit
+  after question 1 confirmed it was ours; offer `chmod +x`.
+- **`UNCONFIGURED`** or **`DEST_FOREIGN`** — question 1 above should have
+  already resolved this (scaffolded it, or flagged it as a conflict); if
+  this verdict still appears, something in that check needs revisiting
+  rather than acted on here.
+- **`FOREIGN`** — something else entirely already claims the active hook
+  slot (another hook manager, or `core.hooksPath` pointing at a directory
+  that isn't this project's own `githooks/`). Do **not** offer to change
+  `core.hooksPath` or replace anything; report exactly what the script
+  printed and leave reconciling it to the human — including, if they want
+  the two to coexist, that their existing hook would need to invoke
+  `githooks/pre-push` itself with correct stdin handling, not something to
+  draft on their behalf here.
 
 Known limitation: `check-hook-status.sh`'s marker check is a presence
 check, not a version check, so a stale copy from before a later plugin
@@ -282,21 +300,25 @@ future additions.
 Check each item and collect the results — fix only with the user's
 confirmation, report what you cannot fix:
 
-1. `githooks/pre-push`, `scripts/review-ok.sh`, and
-   `scripts/check-hook-status.sh` all exist and are executable.
+1. `githooks/pre-push` and `scripts/review-ok.sh` exist, are executable,
+   and their content references `.review-passed`; `scripts/check-hook-status.sh`
+   exists, is executable, and its content references `READY_TO_CONFIGURE`
+   — existence alone isn't enough; a foreign file at any of the three
+   paths (see Step 1's identity check) would pass an existence check while
+   enforcing nothing or behaving unpredictably.
 2. The pre-push review gate is active. Run `scripts/check-hook-status.sh`
-   (the project's own copy, scaffolded by item 1) and map its one-line
-   verdict directly — this is the same script Step 1 and
+   (the project's own copy, confirmed genuine by item 1) and map its
+   one-line verdict directly — this is the same script Step 1 and
    `scripts/review-ok.sh` itself use, so there is nothing left to
    hand-roll or re-derive here:
    - `ACTIVE` → pass.
    - `NEEDS_CHMOD` → offer `chmod +x` on the path the script printed (safe;
      the marker already identifies it as this gate's file).
    - `READY_TO_CONFIGURE` → offer `git config core.hooksPath githooks`.
-   - `UNCONFIGURED`, `DEST_FOREIGN`, or `DEST_NEEDS_CHMOD` → this is item
-     1's gap (`githooks/pre-push` missing, foreign, or not executable —
-     see Step 1's handling); report it as such rather than duplicating
-     Step 1's remedy here.
+   - `UNCONFIGURED`, `DEST_FOREIGN`, or `DEST_NEEDS_CHMOD` → item 1 should
+     already have caught this (a missing or foreign `githooks/pre-push`);
+     if it didn't, that's the actual gap to report — don't act on this
+     verdict directly.
    - `FOREIGN` → do **not** offer to change `core.hooksPath` or replace
      anything; report exactly what the script printed and leave
      reconciling it to the human (see Step 1's note on why chaining isn't

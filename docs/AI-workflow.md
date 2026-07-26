@@ -98,11 +98,12 @@ missing — each file's presence is checked independently, so a project that
 already has its own `AGENTS.md` still gets the review gate scaffolded (and
 vice versa). `.claude/settings.json` is the one file handled as a merge
 rather than a copy, since a project-scope plugin install can create it
-before `/init-workflow` ever runs; `githooks/pre-push`/`scripts/review-ok.sh`
-are left alone only if they already are this gate's files, not any
-pre-existing script at that path (see that skill's Step 1; see *Installing
-and updating the plugin* below); the project owns each file from that
-point on.
+before `/init-workflow` ever runs; the three gate files (`githooks/pre-push`,
+`scripts/review-ok.sh`, `scripts/check-hook-status.sh`) are each checked
+for their own identity before any of them is scaffolded, and left alone
+only if they already are this gate's files, not any pre-existing script at
+that path (see that skill's Step 1; see *Installing and updating the
+plugin* below); the project owns each file from that point on.
 
 This repo (the plugin's own source) is the one exception, but not the way
 you might expect: it carries `plugins/ai-workflow/agents/`,
@@ -751,11 +752,12 @@ different homes instead of one repo:
   rewriting a project's existing guidance doc, and a pre-existing
   `AGENTS.md` still gets the gate. `.claude/settings.json` is merged
   rather than overwritten if it already exists (a project-scope install,
-  per the paragraph above, can create it first); the three gate files are
-  scaffolded or left alone as one group, gated on what
-  `scripts/check-hook-status.sh` reports about whether a hook is already
-  wired up and whose it is — see that skill's Step 1 for the full
-  decision table. Sourced from
+  per the paragraph above, can create it first); each of the three gate
+  files is checked for its own identity before any of them is scaffolded
+  (so a foreign file at any of the three paths is flagged, never
+  overwritten), and only once all three are confirmed genuine does
+  `scripts/check-hook-status.sh` report whether the gate is actually wired
+  up — see that skill's Step 1 for the full decision table. Sourced from
   `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
   bundled source of truth) — see its skill summary above. `.claude/settings.json`
   and the three gate files are re-inspected (merged or conflict-checked)
@@ -767,10 +769,12 @@ different homes instead of one repo:
 
 Re-run `/init-workflow` after every plugin update — in doctor mode it
 reports anything the update newly expects, the same as it reports any
-other setup drift, with one exception: `scripts/check-hook-status.sh`
-checks the two gate files for the presence of their `.review-passed`
-marker, not for being byte-current with the latest template, so a stale
-copy from before the update can still read as active (see that skill's
+other setup drift, with one exception: identity for all three gate files
+is checked by content marker (`.review-passed` for `githooks/pre-push`/
+`scripts/review-ok.sh`, a unique verdict word for
+`scripts/check-hook-status.sh`), not by being byte-current with the
+latest template, so a stale copy from before the update can still read as
+genuine (see that skill's
 Step 1).
 
 ## Evolving the System

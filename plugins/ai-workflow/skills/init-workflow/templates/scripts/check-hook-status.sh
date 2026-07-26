@@ -15,14 +15,23 @@
 #   NEEDS_CHMOD         the active hook is this gate's file but lost +x
 #   READY_TO_CONFIGURE  nothing is wired up, but githooks/pre-push is ready
 #                       and core.hooksPath is unset — safe to set it
-#   DEST_NEEDS_CHMOD    same, but githooks/pre-push itself lost +x
+#   DEST_NEEDS_CHMOD    same, but githooks/pre-push itself lost +x — this
+#                       can also fire with core.hooksPath already set to
+#                       this project's own githooks/ dir
 #   DEST_FOREIGN        nothing is wired up, and githooks/pre-push exists
-#                       but isn't this gate's file
+#                       but isn't this gate's file (also reachable with
+#                       core.hooksPath already = githooks)
 #   UNCONFIGURED        nothing is wired up, and githooks/pre-push is
-#                       missing entirely
+#                       missing entirely (also reachable with
+#                       core.hooksPath already = githooks)
 #   FOREIGN             something else (another hook manager, a leftover
-#                       file, or core.hooksPath pointing elsewhere) already
-#                       claims this — never overwrite or repoint here
+#                       file, or core.hooksPath pointing at a directory
+#                       that isn't this project's own githooks/) already
+#                       claims this — never overwrite or repoint here.
+#                       core.hooksPath already equal to this project's own
+#                       githooks/ dir is never reported as FOREIGN, even
+#                       when nothing is scaffolded there yet — that's our
+#                       own conventional value, not another tool's
 
 set -eu
 
@@ -70,7 +79,22 @@ if [ -e "$resolved" ]; then
     exit 0
 fi
 
-if [ -n "$hooks_path_cfg" ]; then
+# core.hooksPath already pointing at THIS project's own githooks/ dir is
+# not foreign, even if nothing has been scaffolded there yet — it's this
+# gate's own conventional value, half-configured, not another tool's.
+own_hooks_dir="$toplevel/githooks"
+hooks_path_is_own=0
+if [ -z "$hooks_path_cfg" ]; then
+    hooks_path_is_own=1
+else
+    case "$hooks_path_cfg" in
+        /*) cfg_dir="$hooks_path_cfg" ;;
+        *)  cfg_dir="$toplevel/$hooks_path_cfg" ;;
+    esac
+    [ "$cfg_dir" = "$own_hooks_dir" ] && hooks_path_is_own=1
+fi
+
+if [ "$hooks_path_is_own" = 0 ]; then
     echo "FOREIGN: core.hooksPath=$hooks_path_cfg but nothing resolves there (likely owned by another tool)"
     exit 0
 fi

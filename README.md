@@ -109,10 +109,12 @@ anything) — every file's own destination gates its own scaffolding, so
 adopting this on a project with its own pre-existing `AGENTS.md` still gets
 the review gate, and vice versa. (`.claude/settings.json` is merged rather
 than overwritten if it already exists — a project-scope install can create
-it first — and whether a hook is already installed and whose it is comes
-from `scripts/check-hook-status.sh`, not a hand-rolled guess, so a foreign
-hook is flagged as a conflict rather than silently trusted or replaced.)
-It then continues into adaptation: detects your build/test commands and
+it first — and each of the three gate files is checked for its own
+identity before any of them is scaffolded, so a foreign file is flagged as
+a conflict rather than silently trusted or replaced; only once all three
+are confirmed genuine does `scripts/check-hook-status.sh` — not a
+hand-rolled guess — report whether the gate is actually wired up.) It then
+continues into adaptation: detects your build/test commands and
 default branch, drafts the `AGENTS.md` sections from the real codebase,
 asks whether you already have docs for code review/planning guidance
 (pointing `AGENTS.md` at them if so, or seeding `docs/agent-rules/` if
@@ -125,9 +127,9 @@ the manual map of the same work.
 **Updating later**: update the plugin (`/plugin marketplace update` /
 `/plugin update`, per whatever scope you installed at), then re-run
 `/init-workflow` — in doctor mode it reports anything the update newly
-expects. (One exception: `scripts/check-hook-status.sh` checks the two
-gate files for presence of their `.review-passed` marker, not for being
-byte-current with the latest template — see that skill's Step 1.)
+expects. (One exception: the three gate files' identity is checked by
+content marker, not by being byte-current with the latest template — see
+that skill's Step 1.)
 
 ## Adapting it to your project — where your content goes
 
