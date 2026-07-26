@@ -93,10 +93,10 @@ common case, not the exception. If it exists, read it and propose adding
 whichever of `${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
 `permissions.ask`/`permissions.deny` entries aren't already present,
 preserving everything else the file already has — never a flat overwrite.
-If it doesn't exist, scaffold it directly from the template. (Known
-limitation: this covers the common shape of a project-scope install
-record; a hand-edited `.claude/settings.json` with unrelated structure
-still needs a human eye on the proposed merge before confirming it.)
+If it doesn't exist, scaffold it directly from the template. If the
+existing file doesn't parse as JSON, or `permissions` is present but isn't
+an object, do not attempt a merge — this is a Rule 2 stop: surface it and
+report the conflict rather than improvising on a security-relevant file.
 
 **`githooks/pre-push` / `scripts/review-ok.sh`.** If either destination
 exists, check whether its content already references `.review-passed` (the
@@ -262,19 +262,31 @@ confirmation, report what you cannot fix:
 2. The pre-push review gate is active: resolve `git config core.hooksPath`
    (absolute as-is, relative against repo toplevel) and check for an
    executable `pre-push` there whose content also references
-   `.review-passed` — a project using a different hook manager
-   (`core.hooksPath=.husky`, etc.) can resolve an unrelated executable
-   `pre-push` that would otherwise pass this check while the gate never
-   runs. Don't compare the raw config value to the literal string
-   `githooks` (a worktree can inherit an absolute `core.hooksPath` from the
-   main checkout's shared config that resolves correctly but never equals
-   that literal; see `scripts/review-ok.sh` for the resolution logic to
-   mirror — replicate it, don't run that script for this check, since
-   executing it has the side effect of recording a review pass). If no
-   matching `pre-push` resolves, offer to run
-   `git config core.hooksPath githooks` (per clone; each teammate needs it)
-   — or, if a foreign hook is what resolved instead, treat it the same as
-   Step 1's hook-conflict case.
+   `.review-passed`. Don't compare the raw config value to the literal
+   string `githooks` (a worktree can inherit an absolute `core.hooksPath`
+   from the main checkout's shared config that resolves correctly but
+   never equals that literal; see `scripts/review-ok.sh` for the
+   resolution logic to mirror — replicate it, don't run that script for
+   this check, since executing it has the side effect of recording a
+   review pass). Three distinct outcomes need three different responses —
+   do not collapse them:
+   - **Nothing resolves at `core.hooksPath`** (unset, or set but no
+     executable `pre-push` there) → offer to run
+     `git config core.hooksPath githooks` (per clone; each teammate needs
+     it).
+   - **An executable `pre-push` resolves at `githooks/pre-push` itself but
+     lacks the marker** → this is Step 1's hook-conflict case (a foreign
+     file was left in place there); apply the same replace-or-decline
+     handling, never chaining (see Step 1).
+   - **An executable `pre-push` resolves at a *different* path** — a
+     project using another hook manager (`core.hooksPath=.husky`, etc.) —
+     do **not** offer to overwrite it and do **not** offer to repoint
+     `core.hooksPath` to `githooks`; either one silently disables that
+     manager's own hooks. This plugin has no automated remedy for
+     coexisting with a different hook manager: report it as an open
+     conflict for the human to reconcile (e.g. by having their existing
+     hook invoke `githooks/pre-push` themselves, with correct stdin
+     handling — not something to draft on their behalf here).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
    `.workflow-log/`.

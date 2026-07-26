@@ -417,9 +417,10 @@ default branch, drafts the `AGENTS.md` sections from the actual codebase,
 asks whether the project already has docs for code review/planning
 guidance — pointing `AGENTS.md`'s *Review & Planning Guidance* section at
 them if so, or interviewing the user to seed new files under
-`docs/agent-rules/` if not — and validates the whole setup (hook
-executable, `core.hooksPath`, `CLAUDE.md` import, `.gitignore`, settings,
-CI, no unfilled Commands placeholders, the guidance section itself
+`docs/agent-rules/` if not — and validates the whole setup (hook content
+and executable bit, `core.hooksPath` resolving to it specifically,
+`CLAUDE.md` import, `.gitignore`, settings, CI, the `Commands` section
+existing with no unfilled placeholder, the guidance section itself
 resolving to real files). Everything is proposed and user-confirmed before
 writing; deferred items stay explicit TODOs. It never
 edits the plugin's own mechanism — skills, sub-agents, and this guide update
@@ -757,7 +758,10 @@ different homes instead of one repo:
 
 Re-run `/init-workflow` after every plugin update — in doctor mode it
 reports anything the update newly expects, the same as it reports any other
-setup drift.
+setup drift, with one exception: `githooks/pre-push`/`scripts/review-ok.sh`
+are checked for the presence of their `.review-passed` marker, not for
+being byte-current with the latest template, so a stale copy from before
+the update can still pass (see that skill's Step 1).
 
 ## Evolving the System
 

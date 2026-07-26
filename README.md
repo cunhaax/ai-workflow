@@ -121,7 +121,9 @@ the manual map of the same work.
 **Updating later**: update the plugin (`/plugin marketplace update` /
 `/plugin update`, per whatever scope you installed at), then re-run
 `/init-workflow` — in doctor mode it reports anything the update newly
-expects.
+expects. (One exception: the two gate scripts themselves are checked for
+presence of their `.review-passed` marker, not for being byte-current with
+the latest template — see that skill's Step 1.)
 
 ## Adapting it to your project — where your content goes
 
