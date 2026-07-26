@@ -94,9 +94,13 @@ whichever of `${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
 `permissions.ask`/`permissions.deny` entries aren't already present,
 preserving everything else the file already has — never a flat overwrite.
 If it doesn't exist, scaffold it directly from the template. If the
-existing file doesn't parse as JSON, or `permissions` is present but isn't
-an object, do not attempt a merge — this is a Rule 2 stop: surface it and
-report the conflict rather than improvising on a security-relevant file.
+existing file doesn't parse as JSON, or `permissions`/`permissions.ask`/
+`permissions.deny` are present but not the expected shape (an object, and
+two arrays), do not attempt a merge and do not guess a fix — flag it as an
+unresolved item in this step's proposal (the same way a hook conflict is
+flagged) and continue with the rest of Step 1; a malformed pre-existing
+file on this security-relevant path needs the user's own eyes, not an
+agent's improvised repair.
 
 **`githooks/pre-push` / `scripts/review-ok.sh`.** If either destination
 exists, check whether its content already references `.review-passed` (the
@@ -259,34 +263,33 @@ confirmation, report what you cannot fix:
    and their content references `.review-passed` — existence alone isn't
    enough; a foreign hook at either path (see Step 1) would pass an
    existence check while enforcing nothing.
-2. The pre-push review gate is active: resolve `git config core.hooksPath`
-   (absolute as-is, relative against repo toplevel) and check for an
-   executable `pre-push` there whose content also references
-   `.review-passed`. Don't compare the raw config value to the literal
-   string `githooks` (a worktree can inherit an absolute `core.hooksPath`
-   from the main checkout's shared config that resolves correctly but
-   never equals that literal; see `scripts/review-ok.sh` for the
-   resolution logic to mirror — replicate it, don't run that script for
-   this check, since executing it has the side effect of recording a
-   review pass). Three distinct outcomes need three different responses —
-   do not collapse them:
-   - **Nothing resolves at `core.hooksPath`** (unset, or set but no
-     executable `pre-push` there) → offer to run
-     `git config core.hooksPath githooks` (per clone; each teammate needs
-     it).
-   - **An executable `pre-push` resolves at `githooks/pre-push` itself but
-     lacks the marker** → this is Step 1's hook-conflict case (a foreign
-     file was left in place there); apply the same replace-or-decline
-     handling, never chaining (see Step 1).
-   - **An executable `pre-push` resolves at a *different* path** — a
-     project using another hook manager (`core.hooksPath=.husky`, etc.) —
-     do **not** offer to overwrite it and do **not** offer to repoint
-     `core.hooksPath` to `githooks`; either one silently disables that
-     manager's own hooks. This plugin has no automated remedy for
-     coexisting with a different hook manager: report it as an open
-     conflict for the human to reconcile (e.g. by having their existing
-     hook invoke `githooks/pre-push` themselves, with correct stdin
-     handling — not something to draft on their behalf here).
+2. The pre-push review gate is active. Resolve `git config core.hooksPath`
+   the same way `scripts/review-ok.sh` does (absolute as-is, relative
+   against repo toplevel — don't compare the raw config value to the
+   literal string `githooks`; a worktree can inherit an absolute
+   `core.hooksPath` from the main checkout that resolves correctly but
+   never equals that literal). Don't run that script for this check itself
+   — running it records a review pass. The pass condition is about
+   *content*, not path identity, since the worktree case above must pass:
+   - **The resolved location has an executable `pre-push` whose content
+     references `.review-passed`** → pass, regardless of which path it
+     resolved from.
+   - **`core.hooksPath` is unset, and `.git/hooks/pre-push` doesn't exist
+     either** → nothing is wired up and nothing else claims the spot:
+     offer to run `git config core.hooksPath githooks` (per clone; each
+     teammate needs it).
+   - **Anything else** — `core.hooksPath` set to something not wired to
+     this gate, unset with `.git/hooks/pre-push` already present, or
+     resolving to `githooks/pre-push` itself without the marker — do
+     **not** offer to change `core.hooksPath` and do **not** offer to
+     replace whatever is there; either action can silently disable another
+     hook manager (husky, lefthook, pre-commit, or a hand-rolled
+     `.git/hooks/` script) or a foreign file at `githooks/pre-push` itself.
+     When it's the latter and Step 1 already asked about this same file
+     this run, don't ask again — just reflect that outcome. Otherwise,
+     report exactly what's currently configured/present and leave
+     reconciling it to the human (not something to draft on their behalf
+     here).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
    `.workflow-log/`.
@@ -319,11 +322,11 @@ End with a short summary: what was written (file by file, including any
 `.claude/settings.json` merge or `CLAUDE.md` import append), what already
 existed and was left fully untouched (plain-content skips, or a
 pre-existing gate script correctly identified as already this gate's),
-any declined append or unresolved hook conflict from Step 1, what was
-deliberately deferred (the open TODOs and what they disable), the doctor
-checklist
-results, and the suggested next action — typically committing the setup
-changes, then starting the first feature on a fresh branch with
+any declined append or unresolved hook/settings conflict from Step 1 or
+Step 5 item 2, what was deliberately deferred (the open TODOs and what
+they disable), the doctor checklist results, and the suggested next
+action — typically committing the setup changes, then starting the first
+feature on a fresh branch with
 `/feature`. For each item still open — including deferrals found in doctor
 mode — offer to run the relevant step (2–4) for just that item now, so
 deferred TODOs are re-offered on every run rather than silently carried

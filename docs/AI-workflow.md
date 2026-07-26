@@ -418,8 +418,9 @@ asks whether the project already has docs for code review/planning
 guidance — pointing `AGENTS.md`'s *Review & Planning Guidance* section at
 them if so, or interviewing the user to seed new files under
 `docs/agent-rules/` if not — and validates the whole setup (hook content
-and executable bit, `core.hooksPath` resolving to it specifically,
-`CLAUDE.md` import, `.gitignore`, settings, CI, the `Commands` section
+and executable bit, `core.hooksPath` resolving to a hook with that same
+content rather than merely to *a* file at that path, `CLAUDE.md` import,
+`.gitignore`, settings, CI, the `Commands` section
 existing with no unfilled placeholder, the guidance section itself
 resolving to real files). Everything is proposed and user-confirmed before
 writing; deferred items stay explicit TODOs. It never
