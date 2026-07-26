@@ -1,55 +1,62 @@
 ---
 name: init-workflow
 description: >
-  Adapts and validates the AI workflow once it's available in a project —
-  whether installed by scripts/install.sh or as a plugin: detects the
+  Bootstraps and validates the AI workflow in a project that has this
+  plugin installed: scaffolds project-owned files on first run, detects the
   project's commands, fills AGENTS.md, seeds docs/agent-rules/, and verifies
   the review gate. Re-run any time as a doctor — it reports what is missing
   or drifted. (Named init-workflow so it does not collide with Claude Code's
   built-in /init command, which generates a CLAUDE.md.)
 ---
 
-# /init-workflow — Adapt and Validate the Workflow
+# /init-workflow — Bootstrap and Validate the Workflow
 
-Run this skill inside a project once its AI workflow tooling is available —
-whether that arrived via `scripts/install.sh` copying the template in, or an
-installed plugin. It does the part installing the tooling cannot: fill the
-project-owned files with *this* project's facts, interactively, and verify
-the setup end to end. It is idempotent — re-run it after a tooling update or
-whenever setup drift is suspected, and it acts as a doctor, reporting what
-is missing rather than redoing what is already filled.
+Run this skill inside a project once this plugin is installed. On a brand
+new project it scaffolds the project-owned files from this skill's bundled
+templates, then fills them with *this* project's facts, interactively, and
+verifies the setup end to end. It is idempotent — re-run it after a plugin
+update or whenever setup drift is suspected, and it acts as a doctor,
+reporting what is missing rather than redoing what is already filled.
 
-**Division of labor:** this skill adapts and validates project-owned files.
-It never edits the workflow tooling's own mechanism — the skills, sub-agents,
-and this guide (`docs/AI-workflow.md`) are off limits regardless of how they
-got here; updates to those come from updating the tooling itself (re-running
-`scripts/install.sh` against a newer template, or updating the plugin), not
-from this skill.
+**Division of labor:** this skill scaffolds, adapts, and validates
+project-owned files. It never edits the plugin's own mechanism — the
+skills, sub-agents, and `docs/AI-workflow.md` are off limits; updates to
+those come from updating the plugin itself, not from this skill.
 
 **Ground rules:**
 
 - **Propose, then write.** Every value you detect is a proposal until the
-  user confirms it. Batch the confirmations (one round for commands, one for
-  AGENTS.md sections, one for agent-rules) instead of asking one question at
-  a time. Never invent facts about the project; where the user defers,
-  leave an explicit `[TODO: …]` rather than a guess.
+  user confirms it. Batch the confirmations (one round for the initial
+  scaffold, one for commands, one for AGENTS.md sections, one for
+  agent-rules) instead of asking one question at a time. Never invent facts
+  about the project; where the user defers, leave an explicit `[TODO: …]`
+  rather than a guess.
 - **Keep `AGENTS.md` lean.** You are filling a map, not writing the
   territory — one line per command, one line per module, one bullet per
   sensitive area. Depth belongs in `docs/`.
-- If `AGENTS.md` does not exist, STOP: this skill adapts project-owned files,
-  it does not create them from nothing. Tell the user to get them in place
-  first — for the copy-based template, run `scripts/install.sh` from a
-  template clone. If the tooling arrived as a plugin with no scaffold step
-  for project-owned files, say so plainly as a current gap rather than
-  guessing at project facts or fabricating the files yourself.
 
 ---
 
-## Step 1 — Assess the current state
+## Step 1 — Scaffold if needed, then assess the current state
 
-Read `AGENTS.md`, `docs/agent-rules/code-critic.md`,
-`docs/agent-rules/plan-critic.md`, and `.claude/ai-workflow-template.rev`
-(if present). Classify each placeholder / `[TODO: …]` as filled or open.
+If `AGENTS.md` does not exist, this is a brand-new project: propose
+scaffolding the full project-owned file set from
+`${CLAUDE_SKILL_DIR}/templates/` — `AGENTS.md`, `CLAUDE.md`,
+`.claude/settings.json`, `.github/workflows/ci.yml.example`,
+`docs/agent-rules/code-critic.md`, `docs/agent-rules/plan-critic.md`,
+`docs/adr/README.md`, `docs/adr/0001-record-architecture-decisions.md`,
+`docs/product-context/README.md`, `githooks/pre-push`, and
+`scripts/review-ok.sh` (preserve the executable bit on the last two). Also
+append `.review-passed`, `.qa-evidence/`, and `.workflow-log/` to
+`.gitignore` if not already present (create the file if it doesn't exist) —
+these are what the workflow writes locally and Step 5 checks for. Present
+the full file list in one block — the same confirm-then-write pattern as
+every other step here — before writing anything. Once written, continue
+below as first-run mode.
+
+Read `AGENTS.md`, `docs/agent-rules/code-critic.md`, and
+`docs/agent-rules/plan-critic.md`. Classify each placeholder / `[TODO: …]`
+as filled or open.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
@@ -149,9 +156,6 @@ confirmation, report what you cannot fix:
    the workflow's independent test evidence).
 7. No unfilled placeholder remains in `AGENTS.md` → *Commands* (other
    sections may legitimately keep TODOs the user deferred).
-8. `.claude/ai-workflow-template.rev` exists and is committed — report the
-   recorded revision and remind that updating = `git pull` in the template
-   clone + re-run `scripts/install.sh` + re-run this skill.
 
 ## Step 6 — Report
 

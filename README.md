@@ -1,4 +1,4 @@
-# AI-Assisted Development Workflow — Project Template
+# AI-Assisted Development Workflow — Claude Code Plugin
 
 A portable, tool-agnostic scaffold for running AI coding agents through a
 structured lifecycle: **plan → critique → implement → test → code-review → QA →
@@ -11,49 +11,50 @@ a single source of reusable knowledge (the *skills*). Implementation itself
 stays with the main agent, which orchestrates the rest.
 
 Read **`docs/AI-workflow.md`** for the full design rationale. This README is the
-quick-start for *installing and adapting* the template in a new project.
+quick-start for *installing and adapting* the plugin in a new project.
 
 ## What's in here
 
 ```
-AGENTS.md                    # Lean project guide (canonical; imported by CLAUDE.md)
-CLAUDE.md                    # Thin: imports AGENTS.md via @AGENTS.md
 .claude/
-├── settings.json            # Permission rules: recording a review pass asks the
-│                            #   human; the gate's bypass flags are denied to agents
-├── agents/                  # Sub-agent definitions (frontmatter + inline prompt)
-│   ├── planner.md           # Orchestration + skills: [plan-draft]
-│   ├── plan-critic.md       # Orchestration + skills: [plan-critic]
-│   ├── code-critic.md       # Orchestration + skills: [code-critic]
-│   └── adversarial-qa.md    # Orchestration + skills: [adversarial-qa]  (+ Playwright)
-└── skills/                  # The reusable knowledge, one directory per skill
-    ├── feature/SKILL.md     # The full workflow (plan→critique→…→PR)
-    ├── init-workflow/SKILL.md # Post-install setup + doctor: fills AGENTS.md,
-    │                        #   seeds agent-rules, validates the gate
-    ├── plan-draft/SKILL.md  # (named plan-draft to avoid Claude Code's built-in /plan)
+├── settings.json                # This repo's own permission rules (see below)
+├── agents/                      # Sub-agent definitions (frontmatter + inline prompt)
+│   ├── planner.md                # Orchestration + skills: [plan-draft]
+│   ├── plan-critic.md            # Orchestration + skills: [plan-critic]
+│   ├── code-critic.md            # Orchestration + skills: [code-critic]
+│   └── adversarial-qa.md         # Orchestration + skills: [adversarial-qa]  (+ Playwright)
+└── skills/                      # The reusable knowledge, one directory per skill
+    ├── feature/SKILL.md          # The full workflow (plan→critique→…→PR)
+    ├── init-workflow/
+    │   ├── SKILL.md               # Bootstrap + doctor: scaffolds a new project,
+    │   │                          #   fills AGENTS.md, seeds agent-rules, validates the gate
+    │   └── templates/             # THE scaffold source — see below
+    ├── plan-draft/SKILL.md       # (named plan-draft to avoid Claude Code's built-in /plan)
     ├── plan-critic/SKILL.md
-    ├── code-critic/SKILL.md # Base review standards (named code-critic to avoid
-    │                        #   shadowing Claude Code's bundled code-review skill)
+    ├── code-critic/SKILL.md      # Base review standards (named code-critic to avoid
+    │                             #   shadowing Claude Code's bundled code-review skill)
     ├── adversarial-qa/SKILL.md
-    ├── workflow-retro/SKILL.md # Optional end-of-session workflow-evaluation
-    │                        #   record (writes to gitignored .workflow-log/)
-    └── workflow-inspect/    # Companion: fills the record's Cost section from
-                             #   session transcripts (SKILL.md + inspect.py)
-.github/workflows/
-└── ci.yml.example           # CI skeleton — rename to ci.yml and fill in
+    ├── workflow-retro/SKILL.md   # Optional end-of-session workflow-evaluation
+    │                             #   record (writes to gitignored .workflow-log/)
+    └── workflow-inspect/         # Companion: fills the record's Cost section from
+                                  #   session transcripts (SKILL.md + inspect.py)
 docs/
-├── adr/                     # Architecture Decision Records (ADR 0001 included)
-├── agent-rules/             # Project-owned skill extensions, read at runtime:
-│   ├── code-critic.md       #   your review rules + privacy anchors
-│   └── plan-critic.md       #   your product's risk lenses
-├── product-context/         # Vision, strategy, requirements (add your own)
-└── AI-workflow.md           # The full guide to this system
-githooks/pre-push            # Review gate: blocks pushing unreviewed commits
-scripts/
-├── install.sh               # Installs/updates the template in a target repo
-└── review-ok.sh             # Records a passing review for the current HEAD
-.gitignore                   # Ignores .review-passed, .qa-evidence/, .workflow-log/
+├── agent-rules/                 # This repo's own real review rules + risk lenses
+└── AI-workflow.md               # The full guide to this system
+githooks/pre-push                # Symlink → .claude/skills/init-workflow/templates/githooks/pre-push
+scripts/review-ok.sh             # Symlink → .claude/skills/init-workflow/templates/scripts/review-ok.sh
+AGENTS.md, CLAUDE.md             # This repo's own real project guide (not a template — see below)
 ```
+
+**`init-workflow/templates/` is the single source of truth for what a new
+project receives**: `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`, a CI
+skeleton, `docs/agent-rules/*`, `docs/adr/*`, `docs/product-context/*`, and
+the two enforcement files (`githooks/pre-push`, `scripts/review-ok.sh`). This
+repo's own root `AGENTS.md`/`CLAUDE.md`/`settings.json`/`docs/agent-rules/*`
+are **not** copies of that template — they're this repo's own real,
+hand-written project files, since this is a docs/tooling repo, not a generic
+app. The two enforcement files *are* meant to be identical everywhere, so at
+root they're symlinks into `templates/` rather than a second copy.
 
 **Orchestration vs. knowledge, one source of truth.** Each skill in
 `.claude/skills/` holds reusable knowledge (standards, checklists, rules) with no
@@ -68,55 +69,37 @@ duplication, nothing to drift.
 sub-agents contain no project-specific text. They name your commands, app URL,
 and default branch *by role* from `AGENTS.md` → *Commands*, and they read your
 own review rules and risk lenses from `docs/agent-rules/` at runtime (a missing
-file means base rules only). You never edit `.claude/` to adapt the template —
-which is also what makes the knowledge layer copyable between projects, and
-installable once at user level (`~/.claude/`) or as a Claude Code plugin later,
-without edits.
+file means base rules only).
 
 ## Installing into a project
 
-From a clone of this template:
+Install the plugin (`/plugin marketplace add`, then `/plugin install` —
+choose the `project` scope if you want the install recorded and shared via
+your project's own git history). Then, inside the project, run
+**`/init-workflow`**.
 
-```sh
-scripts/install.sh /path/to/your-repo
-```
+On a brand-new project, `/init-workflow` scaffolds the project-owned files
+from the plugin's bundled templates (proposing the full list before writing
+anything), then continues straight into adaptation: it detects your
+build/test commands and default branch, drafts the `AGENTS.md` sections from
+the real codebase, interviews you to seed `docs/agent-rules/`, and validates
+the whole setup (hook, `core.hooksPath`, settings, `.gitignore`, CI).
+Everything is proposed and confirmed before it is written; whatever you
+defer stays an explicit TODO. The section below is the manual map of the
+same work.
 
-Files come in two ownership classes:
-
-- **Template-owned** — the skills, sub-agents, git hook, `review-ok.sh`, and
-  the workflow guide. Copied verbatim and **overwritten on every re-run**;
-  they contain nothing project-specific.
-- **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
-  `.claude/settings.json`, the CI example, and the ADR / product-context
-  scaffolding. Created only if missing, **never overwritten**.
-
-The script also appends the three `.gitignore` entries the workflow writes
-locally (`.review-passed`, `.qa-evidence/`, `.workflow-log/`), records
-the installed template revision in `.claude/ai-workflow-template.rev` (commit
-it — the repo history then shows every template update), and prints the
-remaining steps.
-
-**Then adapt it**: open the project in Claude Code and run **`/init-workflow`**.
-It detects your build/test commands and default branch, drafts the `AGENTS.md`
-sections from the real codebase, interviews you to seed `docs/agent-rules/`,
-and validates the whole setup (hook, `core.hooksPath`, settings, `.gitignore`,
-CI). Everything is proposed and confirmed before it is written; whatever you
-defer stays an explicit TODO. The section below is the manual map of the same
-work.
-
-**Updating later** is the same command: `git pull` in the template clone, then
-re-run `scripts/install.sh` against your repo. Template-owned files are
-refreshed; everything you filled in stays untouched. Re-run `/init-workflow`
-afterwards — in doctor mode it reports anything the update newly expects.
+**Updating later**: update the plugin (`/plugin marketplace update` /
+`/plugin update`, per whatever scope you installed at), then re-run
+`/init-workflow` — in doctor mode it reports anything the update newly
+expects.
 
 ## Adapting it to your project — where your content goes
 
 You never edit the skills. All project-specific content lives in files you own:
 
 - **`AGENTS.md`** — overview, architecture, testing conventions, the
-  *Sensitive Areas* (security surface) list — the canonical list `/feature`
-  consults for the critic-skip, model-escalation, and PR-flag decisions — and
-  the *Commands* section, the single home of every `[PLACEHOLDER]`:
+  *Sensitive Areas* (security surface) list, and the *Commands* section, the
+  single home of every `[PLACEHOLDER]`:
 
   | Placeholder            | Replace with                                              |
   |------------------------|----------------------------------------------------------|
@@ -136,7 +119,7 @@ You never edit the skills. All project-specific content lives in files you own:
   output the base rules didn't catch. It includes the privacy anchors
   (sensitive categories, public surfaces, identifier exemptions, existing
   privacy tests) that bind the base privacy rules to your codebase — for a
-  project holding personal data, the most consequential file in the template.
+  project holding personal data, the most consequential file in the plugin.
 - **`docs/agent-rules/plan-critic.md`** — the areas where generic plans
   regularly miss issues that matter for *your* product, read by the
   `plan-critic` skill on every critique.
@@ -164,7 +147,7 @@ recorded review. Human bypass: `git push --no-verify`.
 enforces *freshness*: the pushed commit must be exactly the SHA recorded at
 review time, so any commit made after a review forces a re-review. It does
 **not** verify the review's verdict — `review-ok.sh` records whatever it is
-told, on the agent's honesty. Three mitigations ship with the template:
+told, on the agent's honesty. Three mitigations ship with the scaffold:
 `.claude/settings.json` makes any run of `review-ok.sh` require human
 approval in Claude Code (the human is the final sign-off on the gate) and
 denies the agent the bypass flags (best-effort prefix matching); CI is the

@@ -1,12 +1,12 @@
-# [PROJECT_NAME]
+# AI Workflow Template
 
 Guidance for AI coding agents working in this repository. This file
 (`AGENTS.md`) is the canonical copy; `CLAUDE.md` imports it via `@AGENTS.md` so
 Claude Code (and its sub-agents) load it, while other tools that read
 `AGENTS.md` directly still see one source of truth. Keep it lean — as the
 instruction count grows, instruction-following quality degrades across *all*
-instructions. Deep detail belongs in `docs/` (including `docs/adr/`) and the
-code — this file is the map, not the territory.
+instructions. Deep detail belongs in `docs/` and the code — this file is the
+map, not the territory.
 
 ## Rules — non-negotiable
 
@@ -44,8 +44,10 @@ responsibility.
    (Enable once per clone: `git config core.hooksPath githooks`.) See
    `docs/AI-workflow.md` for how this project obtains that review.
 
-5. <!-- [TODO: project-specific hygiene rule, if any] e.g. "Leave the database
-   clean: run [DB_DOWN_CMD] before ending a session." Delete this rule if none. -->
+5. **Keep `templates/` and `docs/AI-workflow.md`'s file tree in sync.** Adding,
+   removing, or renaming a file under `.claude/skills/init-workflow/templates/`
+   must be reflected in the file tree in `docs/AI-workflow.md` — it's the only
+   enumeration of what a scaffolded project receives.
 
 6. **One clean command per step — use the right tool.** Use the `Read` tool for
    file contents (never `cat`/`head`/`tail`/`sed`); search with a single plain
@@ -57,58 +59,62 @@ responsibility.
 
 ## Project Overview
 
-<!-- [TODO: one paragraph — what this project is, its purpose, and how it fits
-the broader system. Name the stack: language/framework versions, key
-dependencies, infrastructure.] -->
-
-**Before building features, read the product docs** in `docs/product-context/`
-(vision, strategy, requirements). Architecture decision records are in `docs/adr/`.
-This project's structured AI development workflow, if one is configured, is
-documented in `docs/AI-workflow.md`.
+This repo **is** the AI-Assisted Development Workflow template — a Claude
+Code plugin providing the skills and sub-agents (planner, plan-critic,
+code-critic, adversarial-qa) that structure AI-assisted development as
+plan → critique → implement → test → review → QA → PR, with a deterministic
+pre-push review gate below the LLM layer. `docs/AI-workflow.md` is the full
+design rationale; `README.md` is the quick-start for installing it into
+another project. There is no separate product-context/ADR set for this repo
+itself — `docs/AI-workflow.md` fills that role, and the placeholder versions
+of those directories live only in `.claude/skills/init-workflow/templates/`
+(what a scaffolded project receives), not at this repo's own root.
 
 ## Commands
 
-<!-- Replace with YOUR project's canonical commands. Keep them behind a wrapper
-     (make/just/npm script/…) if one adds serialisation or environment setup.
-     Keep this list as the single source of truth for these commands — anything
-     that needs them (scripts, AI tooling, docs) should reference this list by
-     role ("the run-all-tests command") instead of hardcoding a duplicate. -->
+No build step — this is a documentation/skills/scripts repo, nothing to
+compile and no app to run or stop. There is no automated test suite either:
+skill and sub-agent bodies are agent-interpreted prose, not executable code.
+The shell scripts under `githooks/` and `scripts/` are plain POSIX `sh`,
+kept small and reviewed by hand.
 
-- `[BUILD_CMD]` — build
-- `[TEST_CMD]` — run all tests
-- `[CHECK_CMD]` — all checks incl. tests
-- `[RUN_CMD]` — dev server (serves at `[APP_URL]`)
-- `[STOP_CMD]` — stop the dev server
-- single test: `[SINGLE_TEST_EXAMPLE]`
-- default branch: `[DEFAULT_BRANCH]` — reviews diff against it; PRs target it
+- default branch: `master` — reviews diff against it; PRs target it
 
 ## Architecture
 
-<!-- [TODO: package/module layout and the load-bearing design constraints. A
-reader should learn where each kind of code lives and the rules that must not be
-broken. Keep it to the map — link docs/ and docs/adr/ for depth.] -->
+```
+.claude/
+├── agents/                       # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
+└── skills/                       # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
+    │                              #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
+    └── init-workflow/templates/  # THE scaffold source a fresh project's /init-workflow reads
+docs/
+├── agent-rules/                  # This repo's own real review rules + risk lenses (below)
+└── AI-workflow.md                # Full design rationale and file-by-file guide
+githooks/pre-push                 # Symlink into .claude/skills/init-workflow/templates/githooks/pre-push
+scripts/review-ok.sh              # Symlink into .claude/skills/init-workflow/templates/scripts/review-ok.sh
+README.md                         # Quick-start for installing the plugin into another project
+```
 
-```
-[TODO: directory tree with a one-line purpose per top-level module]
-```
+`githooks/pre-push` and `scripts/review-ok.sh` are symlinks, not copies —
+they must never differ from what a scaffolded project receives, so there is
+exactly one copy of their content, inside `templates/`.
 
 ## Testing
 
-<!-- [TODO: test framework, conventions, where tests live, how to run one.] -->
+No automated tests. Verification is manual: dogfooding this repo's own
+workflow on changes to itself (`/feature`, `/code-critic`, `/plan-critic`),
+and — for changes to `.claude/skills/init-workflow/templates/` specifically —
+a manual walkthrough confirming a freshly scaffolded project ends up correct
+(see `docs/AI-workflow.md`, *Evolving the System*).
 
 ## Sensitive Areas — the security surface
 
-The canonical list of files/areas where mistakes are expensive. Treat any
-change touching these with extra scrutiny — a more careful review, a
-stronger reviewer model if one is available, an explicit call-out in the PR
-description. Keep the list short and concrete; if the rationale for an entry
-needs more than a line, link a page under `docs/` for the depth rather than
-expanding here.
-
-<!-- [TODO: one bullet per area — e.g. security config, auth/token/session
-handling, route definitions, sensitive data fields and their rendering paths,
-payment flows, schema migrations. Name concrete files/packages so an agent
-can match a diff against them.] -->
-
-- [TODO: sensitive area 1 — concrete file/package/pattern]
-- [TODO: sensitive area 2]
+- `.claude/skills/init-workflow/templates/` — this is what every scaffolded
+  project's enforcement mechanism and starting rules are built from; an
+  error here propagates silently to every downstream project.
+- `githooks/pre-push` / `scripts/review-ok.sh` (via their symlink target in
+  `templates/`) — the actual review-gate enforcement; a bug here is a
+  silent bypass everywhere the template is used.
+- `.claude/skills/init-workflow/SKILL.md` — the scaffold logic itself; it
+  writes files into a project on the user's behalf.

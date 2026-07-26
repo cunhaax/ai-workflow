@@ -33,44 +33,47 @@ collapsed.)
 
 ## Repository Structure
 
+This is the shape of a project *after* installing the plugin and running
+`/init-workflow`:
+
 ```
 project-root/
 ├── AGENTS.md                              # Lean project guide (canonical)
 ├── CLAUDE.md                              # Thin: imports AGENTS.md via `@AGENTS.md`
 ├── .claude/
-│   ├── settings.json                      # Permission rules guarding the review gate
-│   ├── agents/                            # Sub-agent definitions (frontmatter + inline prompt)
-│   │   ├── planner.md                     # Orchestration + skills: [plan-draft]
-│   │   ├── plan-critic.md                 # Orchestration + skills: [plan-critic]
-│   │   ├── code-critic.md                 # Orchestration + skills: [code-critic]
-│   │   └── adversarial-qa.md              # Orchestration + skills: [adversarial-qa]  (+ Playwright tools)
-│   └── skills/                            # Reusable knowledge, one directory per skill
-│       ├── feature/SKILL.md               # Full workflow (plan → critique → implement → review → QA)
-│       ├── init-workflow/SKILL.md         # Post-install setup + doctor (fills AGENTS.md, seeds agent-rules)
-│       ├── plan-draft/SKILL.md
-│       ├── plan-critic/SKILL.md
-│       ├── code-critic/SKILL.md           # Base review standards (project rules live in docs/agent-rules/)
-│       ├── adversarial-qa/SKILL.md
-│       ├── workflow-retro/SKILL.md        # Optional end-of-session evaluation record (→ .workflow-log/)
-│       └── workflow-inspect/              # Companion: cost half from session transcripts (SKILL.md + inspect.py)
+│   └── settings.json                      # Permission rules guarding the review gate
 ├── .github/workflows/
 │   └── ci.yml.example                     # CI skeleton — rename to ci.yml and fill in
 ├── githooks/
 │   └── pre-push                           # Review gate: blocks pushes of unreviewed commits
 ├── scripts/
-│   ├── install.sh                         # Installs/updates the template in a target repo
 │   └── review-ok.sh                       # Records a passing review for the current HEAD
 ├── docs/
 │   ├── adr/                               # Architecture Decision Records
 │   ├── agent-rules/                       # Project-owned skill extensions (read at runtime)
 │   │   ├── code-critic.md                 #   project review rules + privacy anchors
 │   │   └── plan-critic.md                 #   product risk lenses
-│   ├── product-context/                   # Product vision, strategy, requirements
-│   └── AI-workflow.md                     # This guide
+│   └── product-context/                   # Product vision, strategy, requirements
 └── src/
     └── <module>/
         └── AGENTS.md                      # Optional: module-specific constraints for critical areas
 ```
+
+The plugin itself (`.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`)
+is not vendored into the project — it's supplied by the plugin install and
+lives wherever Claude Code resolves an installed plugin's files. `AGENTS.md`,
+`.claude/settings.json`, `docs/agent-rules/*`, `docs/adr/*`,
+`docs/product-context/*`, `githooks/pre-push`, and `scripts/review-ok.sh` are
+scaffolded into the project by `/init-workflow` from the plugin's bundled
+templates on first run (see *Installing and updating the plugin* below); the
+project owns them from that point on.
+
+This repo (the plugin's own source) is the one exception: it carries its
+own real `.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`, *and*
+its own real `AGENTS.md`/`CLAUDE.md`/`.claude/settings.json`/
+`docs/agent-rules/*` side by side, because it both authors the plugin and
+uses it on itself. See `README.md` for how those two roles are kept
+separate.
 
 > Note: there is no `feature` sub-agent. `feature` is a workflow skill
 > (`.claude/skills/feature/SKILL.md`) the **main** agent runs; it orchestrates
@@ -116,9 +119,9 @@ Supporting pieces:
   review rules and risk lenses from `docs/agent-rules/<skill>.md` at runtime
   (a missing file means base rules only — the code-critic states the absence
   in its output rather than skipping silently). This split is what makes the
-  knowledge layer portable: the same skill files can be copied into any
-  project unchanged — or later installed once at user level (`~/.claude/`) or
-  packaged as a Claude Code plugin.
+  knowledge layer portable: the same skill files apply unchanged to any
+  project, which is what makes distributing them as a single Claude Code
+  plugin (rather than a per-project copy) possible.
 - **Module-level `AGENTS.md`** files are the place for constraints in critical
   areas (e.g. auth, payments) where mistakes are expensive.
 
@@ -339,17 +342,20 @@ test evidence).
 
 ### `.claude/skills/init-workflow/SKILL.md` — `/init-workflow`
 
-The post-install adaptation pass, run by the **main** agent inside a freshly
-installed project (and re-run any time as a doctor). It fills the
-project-owned files with the project's real facts — detects the build/test
-commands and default branch, drafts the `AGENTS.md` sections from the actual
-codebase, interviews the user to seed `docs/agent-rules/` — and validates
-the whole setup (hook executable, `core.hooksPath`, `CLAUDE.md` import,
-`.gitignore`, settings, CI, no unfilled Commands placeholders). Everything
-is proposed and user-confirmed before writing; deferred items stay explicit
-TODOs. It never edits template-owned files — those update via
-`scripts/install.sh`. (Named `init-workflow` to avoid Claude Code's built-in
-`/init`.) The skill file holds the step list and the doctor checklist.
+The bootstrap-and-adaptation pass, run by the **main** agent once the plugin
+is installed in a project (and re-run any time as a doctor). On a brand-new
+project — no `AGENTS.md` yet — it first scaffolds the project-owned files
+from `.claude/skills/init-workflow/templates/` (its bundled source of
+truth), then continues into adaptation: detects the build/test commands and
+default branch, drafts the `AGENTS.md` sections from the actual codebase,
+interviews the user to seed `docs/agent-rules/` — and validates the whole
+setup (hook executable, `core.hooksPath`, `CLAUDE.md` import, `.gitignore`,
+settings, CI, no unfilled Commands placeholders). Everything is proposed and
+user-confirmed before writing; deferred items stay explicit TODOs. It never
+edits the plugin's own mechanism — skills, sub-agents, and this guide update
+via the plugin itself. (Named `init-workflow` to avoid Claude Code's
+built-in `/init`.) The skill file holds the step list and the doctor
+checklist; `templates/` holds everything it scaffolds.
 
 ### `.claude/skills/workflow-retro/SKILL.md` — `/workflow-retro`
 
@@ -616,41 +622,35 @@ workflow behavior; slash commands expose it directly. The workflow itself
 (`.claude/skills/feature/SKILL.md`) is also a skill, so `AGENTS.md` references it
 instead of duplicating the steps.
 
-## Installing and updating the template
+## Installing and updating the plugin
 
-The template is installed per project with `scripts/install.sh`, run from a
-clone of the template repo against the target repository. The script encodes
-the ownership split described above:
+The workflow is distributed as a single Claude Code plugin — install it with
+`/plugin marketplace add` and `/plugin install`, choosing a scope
+(`user`/`project`/`local`) at install time. Project scope records the
+install (and its pinned version, if any) in the project's own
+`.claude/settings.json`, so the choice of workflow version is committed and
+reviewable in that project's git history like any other dependency bump.
 
-- **Template-owned** files — the project-agnostic layer: the skills, the
-  sub-agents, `githooks/pre-push`, `scripts/review-ok.sh`, and this guide —
-  are copied verbatim and **overwritten on every re-run**. Updating a project
-  is `git pull` in the template clone followed by re-running the script.
-- **Project-owned** files — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
-  `.claude/settings.json`, the CI example, and the ADR / product-context
-  scaffolding — are created only if missing and **never overwritten**.
+This gives the same two ownership classes as before, just split across two
+different homes instead of one repo:
 
-It also appends the three `.gitignore` entries the workflow writes locally
-(the gate's review marker, QA evidence, and the retro's
-`.workflow-log/`), records the installed
-template revision in `.claude/ai-workflow-template.rev` (meant to be
-committed, so the repo history shows template-version bumps), warns when the
-target's `settings.json` has drifted from the template's gate rules or when
-`core.hooksPath` is not enabled in the clone, and prints the remaining steps.
+- **Plugin-owned** — the skills, the sub-agents, and this guide. These are
+  not copied into the project at all; they live wherever Claude Code
+  resolves the installed plugin's files, and they update when the plugin
+  updates (`/plugin update`, per whatever scope was chosen).
+- **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
+  `.claude/settings.json`, the CI example, the ADR/product-context
+  scaffolding, and the two enforcement files (`githooks/pre-push`,
+  `scripts/review-ok.sh` — these must physically live in the project's own
+  repo, since a git hook has to fire for humans and every tool, not just
+  Claude). These get scaffolded into the project by `/init-workflow` on
+  first run, from `.claude/skills/init-workflow/templates/` (the plugin's
+  bundled source of truth) — see its skill summary above — then are never
+  touched by the plugin again; the project owns them from that point.
 
-Adaptation is then guided rather than manual: run `/init-workflow` in the
-project (see its skill summary above) to fill the project-owned files
-interactively and validate the setup. Re-run it after every template update —
-in doctor mode it reports anything the updated template newly expects.
-
-Because the skills are project-agnostic, the per-project copy is a
-distribution choice, not a hard requirement: the same skill and agent files
-could be installed once at user level (`~/.claude/skills/`,
-`~/.claude/agents/`) or packaged as a Claude Code plugin, with each project
-carrying only its project-owned files plus the enforcement layer — the git
-hook must live in the repo regardless, because it has to fire for humans and
-every tool, not just for Claude. The per-project copy is the default because
-it versions the workflow with the code and reaches teammates via clone.
+Re-run `/init-workflow` after every plugin update — in doctor mode it
+reports anything the update newly expects, the same as it reports any other
+setup drift.
 
 ## Evolving the System
 

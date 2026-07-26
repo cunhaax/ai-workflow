@@ -1,4 +1,4 @@
-# AI Workflow Template — AI agent guidance
+# [PROJECT_NAME] — AI agent guidance
 
 The canonical guidance for AI coding agents lives in **AGENTS.md**. It is
 imported below so it loads into Claude Code's context (including sub-agents),

@@ -1,61 +1,35 @@
 # Project rules — code-critic
 
 Project-specific extension of the `code-critic` skill
-(`.claude/skills/code-critic/SKILL.md`). The skill reads this file on every
-review — ad-hoc and in the `/feature` workflow — and applies each rule at the
-severity it states, alongside its base standards. The skill itself is
-project-agnostic and template-owned; **this file is owned by the project**
-(the installer never overwrites it), and it is the file that accretes over
-time: every time an agent produces bad output the base standards didn't
-catch, add a rule here — or, better, encode it as a build-enforced test.
-
-Guidance for good rules:
-
-- One bullet per rule, each stating the rule AND its severity
-  (`FAIL` / `NEEDS_DECISION`). Add subsections (Persistence, Security,
-  Privacy, View Layer, …) as the list grows.
-- Name the exact symbol/file/pattern, so the reviewer can grep for it.
-- State the failure mode, not just the prohibition ("otherwise X is
-  silently wrong").
-- Scope to production code vs test code if the two differ.
-- Say whether the rule is diff-scoped or repo-wide.
-
-**Build-enforced rules.** When a rule is mechanically checkable, prefer
-encoding it as an architecture/fitness test over prose here — tests don't
-drift and the human never re-verifies them. For any rule that IS backed by a
-test, the reviewer's job is only to check the diff does not WEAKEN the
-enforcement (deleting/disabling the test, adding an unexplained exemption, or
-restructuring code out of the test's scan scope) — a weakened enforcement is
-`FAIL`. List which rules are build-enforced so the reviewer doesn't re-derive
-them by hand.
+(`.claude/skills/code-critic/SKILL.md`), for changes to this repo itself —
+the AI workflow template.
 
 ## Rules
 
-- [TODO: your rule 1 — the constraint, the symbol/file it applies to, and its severity]
-- [TODO: your rule 2]
+- A file added, removed, or renamed under
+  `.claude/skills/init-workflow/templates/` must be reflected in the file
+  tree in `docs/AI-workflow.md`. `FAIL` if the tree doesn't match.
+- `githooks/pre-push` and `scripts/review-ok.sh` at repo root must remain
+  symlinks into `.claude/skills/init-workflow/templates/`. Replacing either
+  with a regular file (even with identical content) reintroduces the
+  duplication this repo deliberately avoided. `FAIL` if a diff turns either
+  into a non-symlink.
+- Skill and sub-agent files under `.claude/skills/` and `.claude/agents/`
+  (excluding `init-workflow/templates/`) must stay project-agnostic — no
+  project-specific content, commands, or examples baked in. `FAIL` if a diff
+  adds project-specific text outside `templates/` or `docs/agent-rules/`.
 
 ## Privacy anchors
 
-The skill's base privacy rules (deletion by design, public-surface whitelist,
-no personal data in logs/URLs) are generic; these anchors bind them to this
-codebase. Fill per project:
-
-- **Sensitive categories**: [TODO: which data categories are sensitive here
-  (e.g. GDPR Art. 9: political views, religious views, orientation) and the
-  doc that defines them ([COMPLIANCE_DOC path])]
-- **Public surfaces**: [TODO: which views/endpoints are public/unauthenticated
-  (name the controller/view the whitelist test covers)]
-- **Identifier exemptions**: [TODO: identifiers that are public by design and
-  exempt from the log/URL rules (e.g. public usernames)]
-- **Privacy tests**: [TODO: which of the three privacy fitness tests exist,
-  and where — so the reviewer knows which invariants are build-enforced and
-  which still need the by-hand check]
+Not applicable — this repo holds no personal or user data. It is a
+documentation/skills/scripts repo with no application, database, or user
+surface of its own.
 
 ## Checklist
 
-One checklist item per rule in the *Rules* section above — keep the two in
-sync. The reviewer evaluates these as part of the skill's Review Checklist.
-Tag items "(if applicable)" when they only apply to certain diffs.
-
-- [ ] [TODO: checklist item mirroring rule 1]
-- [ ] [TODO: checklist item mirroring rule 2]
+- [ ] Any file added/removed/renamed under `templates/` is reflected in
+      `docs/AI-workflow.md`'s file tree.
+- [ ] `githooks/pre-push` and `scripts/review-ok.sh` at root are still
+      symlinks into `templates/`, not regular files.
+- [ ] No project-specific content leaked into a project-agnostic skill or
+      sub-agent file outside `templates/`/`docs/agent-rules/`.

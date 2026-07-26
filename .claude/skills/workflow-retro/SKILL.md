@@ -115,7 +115,7 @@ aggregates across files, so keep the headings and field labels verbatim):
 - Date: <YYYY-MM-DD of this retro>
 - Branch: <branch>
 - PR: <url | not opened | abandoned>
-- Template revision: <contents of .claude/ai-workflow-template.rev | unknown>
+- Plugin version: <installed workflow plugin version, if discoverable | unknown>
 - Sessions: <session ID(s), oldest first | unknown>
 - Project path: <absolute path(s) of the worktree(s) the sessions ran in | unknown>
 
