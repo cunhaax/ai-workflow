@@ -44,12 +44,13 @@ responsibility.
    (Enable once per clone: `git config core.hooksPath githooks`.) See
    `docs/AI-workflow.md` for how this project obtains that review.
 
-5. **Keep `templates/` and `docs/AI-workflow.md`'s file tree in sync.**
+5. **Keep `templates/` in sync with what describes it.**
    `.claude/skills/init-workflow/templates/` is the canonical enumeration of
    what a scaffolded project receives — `/init-workflow` reads it directly.
-   The file tree in `docs/AI-workflow.md` is a human-readable mirror of it,
-   not a second source; adding, removing, or renaming a file under
-   `templates/` must be reflected there too.
+   The file tree and `.template` → destination mapping in
+   `docs/AI-workflow.md`, and the file listing in `README.md`, are
+   human-readable mirrors of it, not a second source; adding, removing, or
+   renaming a file under `templates/` must be reflected in all three.
 
 6. **One clean command per step — use the right tool.** Use the `Read` tool for
    file contents (never `cat`/`head`/`tail`/`sed`); search with a single plain
@@ -102,13 +103,12 @@ README.md                         # Quick-start for installing the plugin into a
 `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh` are
 symlinks, not copies — they must never differ from what a scaffolded
 project receives, so there is exactly one copy of their content, inside
-`templates/`. This assumes a POSIX clone (`core.symlinks` enabled): on a
-checkout where git materializes symlinks as plain text files, `pre-push`
-and `review-ok.sh` fail loudly (not executable, won't run) but a degraded
-`.claude/settings.json` fails silently — it stops being valid JSON, so its
-`deny` rules on the push-bypass flags quietly disappear rather than erroring.
-`/init-workflow`'s doctor checklist (item 5) catches this on a re-run by
-checking the file actually contains those rules, not just that it exists.
+`templates/`. This assumes a clone where git materializes them as real
+symlinks; exact failure behavior on a checkout where it doesn't is
+platform-dependent and not verified here. `/init-workflow`'s doctor
+checklist (items 1, 2, and 5) is the safety net regardless of platform: it
+checks each file's actual content and executability, not just that it
+exists, and reports drift on any re-run.
 
 ## Testing
 

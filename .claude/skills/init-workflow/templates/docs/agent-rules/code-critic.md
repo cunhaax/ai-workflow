@@ -1,11 +1,12 @@
 # Project rules — code-critic
 
 Project-specific extension of the AI Workflow plugin's `code-critic` skill.
-The skill reads this file on every
-review — ad-hoc and in the `/feature` workflow — and applies each rule at the
-severity it states, alongside its base standards. The skill itself is
-project-agnostic and template-owned; **this file is owned by the project**
-(the installer never overwrites it), and it is the file that accretes over
+The skill reads this file on every review — ad-hoc and in the `/feature`
+workflow — and applies each rule at the severity it states, alongside its
+base standards. The skill itself is project-agnostic and plugin-owned;
+**this file is owned by the project** (`/init-workflow` only writes it once,
+on first scaffold — it never overwrites it afterward), and it is the file
+that accretes over
 time: every time an agent produces bad output the base standards didn't
 catch, add a rule here — or, better, encode it as a build-enforced test.
 

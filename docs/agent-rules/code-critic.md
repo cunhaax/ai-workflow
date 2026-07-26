@@ -7,10 +7,10 @@ the AI workflow template.
 ## Rules
 
 - A file added, removed, or renamed under
-  `.claude/skills/init-workflow/templates/` must be reflected in both the
-  file tree in `docs/AI-workflow.md` and its `.template` → destination
-  mapping paragraph immediately below the tree. `FAIL` if either goes
-  stale.
+  `.claude/skills/init-workflow/templates/` must be reflected in all three
+  places that enumerate it: the file tree in `docs/AI-workflow.md`, its
+  `.template` → destination mapping paragraph immediately below the tree,
+  and `README.md`'s file listing. `FAIL` if any of the three goes stale.
 - `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh`
   at repo root must remain symlinks into
   `.claude/skills/init-workflow/templates/`. Replacing any of them with a
@@ -31,7 +31,8 @@ surface of its own.
 ## Checklist
 
 - [ ] Any file added/removed/renamed under `templates/` is reflected in
-      `docs/AI-workflow.md`'s file tree.
+      `docs/AI-workflow.md`'s file tree, its `.template` → destination
+      mapping paragraph, and `README.md`'s file listing.
 - [ ] `.claude/settings.json`, `githooks/pre-push`, and `scripts/review-ok.sh`
       at root are still symlinks into `templates/`, not regular files.
 - [ ] No project-specific content leaked into a project-agnostic skill or

@@ -1,11 +1,11 @@
 # Project lenses — plan-critic
 
 Project-specific extension of the AI Workflow plugin's `plan-critic` skill.
-The skill reads this file on every
-critique and gives the areas below explicit attention while applying its four
-methods (pre-mortem, inversion, load-bearing assumptions, consistency). The
-skill itself is project-agnostic and template-owned; **this file is owned by
-the project** (the installer never overwrites it).
+The skill reads this file on every critique and gives the areas below
+explicit attention while applying its four methods (pre-mortem, inversion,
+load-bearing assumptions, consistency). The skill itself is project-agnostic
+and plugin-owned; **this file is owned by the project** (`/init-workflow`
+only writes it once, on first scaffold — it never overwrites it afterward).
 
 These are NOT a checklist; they direct extra attention. Write 4–7 concrete
 lenses — the places where generic plans regularly miss issues that matter for

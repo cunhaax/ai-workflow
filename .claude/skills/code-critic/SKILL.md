@@ -280,9 +280,9 @@ Review every change against this checklist. For each item, state one of:
 _If a layer/architecture fitness test enforces boundaries (see the layer
 rule in the AI Workflow plugin's own documentation), do NOT re-derive them
 by hand — verify only that the diff does not **weaken** it: deleting or
-disabling the test, widening a package glob,
-adding an unexplained exemption, or moving code out of the scanned layer. A
-weakened enforcement is `FAIL`._
+disabling the test, widening a package glob, adding an unexplained
+exemption, or moving code out of the scanned layer. A weakened enforcement
+is `FAIL`._
 
 - [ ] Changes respect service boundaries and existing ADRs
 - [ ] No business logic in infrastructure or API layers

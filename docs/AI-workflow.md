@@ -58,8 +58,8 @@ project-root/
 │   │   └── plan-critic.md                 #   product risk lenses
 │   └── product-context/
 │       └── README.md                      # Product-context guide
-├── .gitignore                             # NOT a template file — /init-workflow appends its
-│                                           #   three entries to whatever .gitignore already exists
+├── .gitignore                             # NOT a template file — /init-workflow creates it if
+│                                           #   missing and appends its three entries either way
 └── src/
     └── <module>/
         └── AGENTS.md                      # Optional, NOT scaffolded — you add this yourself
@@ -78,9 +78,10 @@ everything else keeps its relative path.
 The plugin itself (`.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`)
 is not vendored into the project — it's supplied by the plugin install and
 lives wherever Claude Code resolves an installed plugin's files. Everything
-in the tree above is scaffolded into the project by `/init-workflow` from
-the plugin's bundled templates on first run (see *Installing and updating
-the plugin* below); the project owns it from that point on.
+in the tree above, except the two entries marked otherwise, is scaffolded
+into the project by `/init-workflow` from the plugin's bundled templates on
+first run (see *Installing and updating the plugin* below); the project
+owns it from that point on.
 
 This repo (the plugin's own source) is the one exception: it carries its
 own real `.claude/agents/`, `.claude/skills/`, `docs/AI-workflow.md`, *and*
