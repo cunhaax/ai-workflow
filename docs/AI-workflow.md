@@ -326,9 +326,10 @@ mechanically, so neither the agents nor the human re-verify them by hand:
 - **Secret and dependency scanning** — wire a secret scanner (e.g. gitleaks)
   and a dependency audit into the all-checks command, so committed
   credentials and known-vulnerable dependencies fail the build instead of
-  relying on reviewer attention. These are the cheapest security gates in
-  the pipeline. <!-- [TODO: add a secret scanner and a dependency audit for
-  your stack to the all-checks command.] -->
+  relying on reviewer attention. These are the cheapest security gates
+  available — build failures, not judgment calls. <!-- [TODO: add a secret
+  scanner and a dependency audit for your stack to the all-checks
+  command.] -->
 
 Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
@@ -363,8 +364,10 @@ enforcement (a false green is worse than an honest gap the reviewer still sees).
 | Python              | import-linter                                    |
 | Go                  | depguard or arch-go                              |
 
-Wire it into the all-checks command so it gates merges, and list it as
-a build-enforced rule in your code review guidance file
+Wire it into the all-checks command so a violation fails before the review
+step (and at merge time too, if your project's own pipeline runs
+all-checks there), and list it as a build-enforced rule in your code
+review guidance file
 (`docs/agent-rules/code-critic.md` by default) so the reviewer verifies the
 diff doesn't *weaken* the layer test rather than re-deriving boundaries by
 hand. Add further fitness tests the same way — one per

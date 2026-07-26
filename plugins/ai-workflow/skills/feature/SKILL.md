@@ -139,7 +139,7 @@ comes from you, the implementer, so it is a record, not independent proof
 (see *Deterministic enforcement* in the AI Workflow plugin's own
 documentation) — this workflow's job ends at a well-vetted PR; whether your
 project's own CI provides independent evidence on top of that is outside
-its scope.
+this workflow's scope.
 
 **Escalate the model on the security surface.** The `code-critic` runs on
 Sonnet by default (see its wrapper). If the diff touches the security surface

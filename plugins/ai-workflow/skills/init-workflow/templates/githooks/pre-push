@@ -23,7 +23,8 @@
 # is exactly the one reviewed; any later commit forces a re-review). It does
 # not verify the review's verdict — review-ok.sh records whatever it is told.
 # The verdict is covered by the ask-rule in .claude/settings.json (a human
-# approves every recording) and by CI as independent test evidence.
+# approves every recording), and review-ok.sh warns if the gate itself
+# isn't actually active (see scripts/check-hook-status.sh).
 
 [ "$SKIP_REVIEW_GATE" = "1" ] && exit 0
 
