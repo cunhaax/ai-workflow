@@ -501,12 +501,15 @@ documentation, a tool from a plugin-bundled server is callable as
 `mcp__plugin_<plugin-name>_<server-name>__<tool-name>` — e.g.
 `mcp__plugin_ai-workflow_playwright__browser_click` — not the bare
 `mcp__playwright__browser_click` form a project- or user-configured
-server would use. `adversarial-qa.md`'s `tools:` allowlist and the
-`context7` references in `feature/SKILL.md` both use the scoped form
-already. If this plugin's `name` in `plugin.json` (currently
-`ai-workflow`) ever changes, both must be updated in lockstep, or the
-sub-agent's allowlist silently stops matching the real registered tools
-and it loses every browser tool with no obvious error at review time.
+server would use. `adversarial-qa.md`'s `tools:` allowlist uses the scoped
+form already (it has to — it's a literal allowlist Claude Code matches
+against registered tool names). `feature/SKILL.md`'s `context7` mention is
+deliberately kept as descriptive prose rather than a hardcoded tool name,
+so an upstream rename there can't go stale silently. If this plugin's
+`name` in `plugin.json` (currently `ai-workflow`) ever changes,
+`adversarial-qa.md`'s allowlist must be updated in lockstep, or the
+sub-agent silently loses every browser tool with no obvious error at
+review time.
 
 Per Claude Code's plugin reference documentation, MCP servers bundled with
 a plugin start whenever the plugin is *enabled* — not lazily, only when an
