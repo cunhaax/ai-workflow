@@ -93,7 +93,7 @@ would show both bare `/feature` (project-local) and `/ai-workflow:feature`
 (the installed plugin) at once — two command surfaces for the same thing,
 with no way to know if they'd drifted.
 
-A GitHub-form install (`/plugin marketplace add cunhaax/ai-workflow-template`)
+A GitHub-form install (`/plugin marketplace add cunhaax/ai-workflow`)
 sources from the published repo's default branch, not this working tree or
 whatever feature branch you're on — so it doesn't dogfood in-progress
 changes. To actually review working-tree edits to the plugin itself, use
