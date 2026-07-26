@@ -67,7 +67,9 @@ gate, or vice versa:
   Preserve the executable bit on `githooks/pre-push` and
   `scripts/review-ok.sh`. Copy every other file (the rest of the `docs/`
   tree, `.github/workflows/ci.yml.example`) to the same relative path it
-  has under `templates/`.
+  has under `templates/` — except `ci.yml.example`, whose destination
+  counts as present if **either** it or a renamed `.github/workflows/ci.yml`
+  already exists (see the next bullet).
 - **Destination exists as plain content** (`AGENTS.md`, `docs/adr/*`,
   `docs/product-context/*`, `.github/workflows/ci.yml`/`.example`) → leave
   it untouched and list it as "already present" in Step 6's report — never
@@ -85,32 +87,45 @@ Step 6 as a gap: `CLAUDE.md` won't load `AGENTS.md`'s guidance into Claude
 Code.
 
 **`.claude/settings.json`.** A merge target, not a copy target — a
-project-scope plugin install can create this file before `/init-workflow`
-ever runs (see *Installing and updating the plugin* in
-`docs/AI-workflow.md`), so "already exists" here is the common case, not
-the exception. If it exists, read it and propose adding whichever of
-`${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
+project-scope plugin install can create this file (recording the install
+itself) before `/init-workflow` ever runs, so "already exists" here is a
+common case, not the exception. If it exists, read it and propose adding
+whichever of `${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
 `permissions.ask`/`permissions.deny` entries aren't already present,
 preserving everything else the file already has — never a flat overwrite.
-If it doesn't exist, scaffold it directly from the template.
+If it doesn't exist, scaffold it directly from the template. (Known
+limitation: this covers the common shape of a project-scope install
+record; a hand-edited `.claude/settings.json` with unrelated structure
+still needs a human eye on the proposed merge before confirming it.)
 
 **`githooks/pre-push` / `scripts/review-ok.sh`.** If either destination
 exists, check whether its content already references `.review-passed` (the
 marker this gate reads and writes — see the template versions for the
-mechanism). If it does, it's already this gate's file (a prior
-`/init-workflow` run, or a shared clone) — leave it alone, nothing to
-report. If it does **not** — a foreign hook doing something unrelated
-(lint, commit-message checks) — this is a real conflict, not a benign
-"already present": silently leaving it means doctor items 1–2 report green
-while the review gate enforces nothing. Surface it explicitly and ask the
-user how to proceed (chain the template's check into the existing script,
-replace it, or explicitly decline); a declined foreign hook is an open gap
-Step 6 must call out by name, not fold into the general "already present"
-list.
+mechanism). If it does, treat it as already this gate's file (a prior
+`/init-workflow` run, or a shared clone) and leave it alone — this is a
+presence check, not a version check, so a stale copy from before a later
+plugin update still passes it; that gap is accepted for now, not solved
+here. If the marker is **absent** — a foreign hook doing something
+unrelated (lint, commit-message checks) — this is a real conflict, not a
+benign "already present": silently leaving it means the review gate
+enforces nothing while doctor mode reports green. Surface it explicitly and
+ask the user how to proceed: replace it with the template's version, or
+explicitly decline. Do **not** offer to chain the template's check into
+the existing script — a pre-push hook reads its ref list from stdin
+exactly once, and a naively chained script can silently consume it before
+the gate's own `while read` loop runs, producing a hook that exits 0 on
+every push with no error. A declined foreign hook is an open gap Step 6
+must call out by name, not fold into the general "already present" list.
 
 Also append `.review-passed`, `.qa-evidence/`, and `.workflow-log/` to
 `.gitignore` if not already present (create the file if it doesn't exist)
 — these are what the workflow writes locally and Step 5 checks for.
+
+Known limitation: this step has no memory of a prior decline. A file the
+user chose not to scaffold (e.g. a deleted `docs/product-context/README.md`
+placeholder) is proposed again on the next run, since "destination missing"
+can't distinguish "never created" from "deliberately removed." Confirming
+"no" each time is the workaround until this needs solving properly.
 
 Present the full proposal — files to scaffold, the `.claude/settings.json`
 merge diff if any, the `CLAUDE.md` append if applicable, any hook conflict,
@@ -246,14 +261,20 @@ confirmation, report what you cannot fix:
    existence check while enforcing nothing.
 2. The pre-push review gate is active: resolve `git config core.hooksPath`
    (absolute as-is, relative against repo toplevel) and check for an
-   executable `pre-push` there — don't compare the raw config value to the
-   literal string `githooks` (a worktree can inherit an absolute
-   `core.hooksPath` from the main checkout's shared config that resolves
-   correctly but never equals that literal; see `scripts/review-ok.sh` for
-   the resolution logic to mirror — replicate it, don't run that script for
-   this check, since executing it has the side effect of recording a review
-   pass). If no executable `pre-push` resolves, offer to run
-   `git config core.hooksPath githooks` (per clone; each teammate needs it).
+   executable `pre-push` there whose content also references
+   `.review-passed` — a project using a different hook manager
+   (`core.hooksPath=.husky`, etc.) can resolve an unrelated executable
+   `pre-push` that would otherwise pass this check while the gate never
+   runs. Don't compare the raw config value to the literal string
+   `githooks` (a worktree can inherit an absolute `core.hooksPath` from the
+   main checkout's shared config that resolves correctly but never equals
+   that literal; see `scripts/review-ok.sh` for the resolution logic to
+   mirror — replicate it, don't run that script for this check, since
+   executing it has the side effect of recording a review pass). If no
+   matching `pre-push` resolves, offer to run
+   `git config core.hooksPath githooks` (per clone; each teammate needs it)
+   — or, if a foreign hook is what resolved instead, treat it the same as
+   Step 1's hook-conflict case.
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
    `.workflow-log/`.
@@ -262,8 +283,13 @@ confirmation, report what you cannot fix:
 6. CI: `.github/workflows/ci.yml` exists — or only the `.example` does,
    in which case remind that renaming and filling it is still open (CI is
    the workflow's independent test evidence).
-7. No unfilled placeholder remains in `AGENTS.md` → *Commands* (other
-   sections may legitimately keep TODOs the user deferred).
+7. `AGENTS.md` → *Commands* exists as a section and has no unfilled
+   placeholder remaining in it — a project whose hand-written `AGENTS.md`
+   never had a *Commands* section at all has nothing to flag as
+   "unfilled," but `/feature`, `code-critic`, and `adversarial-qa` all read
+   it by role and will fail at runtime without it; treat a missing section
+   the same as an unfilled placeholder (other sections may legitimately
+   keep TODOs the user deferred).
 8. `AGENTS.md` has a `Review & Planning Guidance` section with entries
    labeled exactly `Code review guidance` and `Planning guidance` — a
    renamed or paraphrased label is invisible to both skills, which key on
@@ -277,10 +303,13 @@ confirmation, report what you cannot fix:
 
 ## Step 6 — Report
 
-End with a short summary: what was written (file by file), what already
-existed and was left untouched (any Step 1 skip, merge, or declined
-append), any unresolved hook conflict from Step 1, what was deliberately
-deferred (the open TODOs and what they disable), the doctor checklist
+End with a short summary: what was written (file by file, including any
+`.claude/settings.json` merge or `CLAUDE.md` import append), what already
+existed and was left fully untouched (plain-content skips, or a
+pre-existing gate script correctly identified as already this gate's),
+any declined append or unresolved hook conflict from Step 1, what was
+deliberately deferred (the open TODOs and what they disable), the doctor
+checklist
 results, and the suggested next action — typically committing the setup
 changes, then starting the first feature on a fresh branch with
 `/feature`. For each item still open — including deferrals found in doctor

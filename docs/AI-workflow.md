@@ -741,13 +741,16 @@ different homes instead of one repo:
   is missing — no file's presence gates another's, so adopting the gate
   doesn't require rewriting a project's existing guidance doc, and a
   pre-existing `AGENTS.md` still gets the gate. `.claude/settings.json` is
-  merged rather than overwritten if it already exists (see the note two
-  paragraphs above on project-scope install creating it first);
-  `githooks/pre-push`/`scripts/review-ok.sh` are left alone only if they
-  already are this gate's files. Sourced from
+  merged rather than overwritten if it already exists (a project-scope
+  install, per the paragraph above, can create it first); both
+  `githooks/pre-push` and `scripts/review-ok.sh` are left alone only if
+  their content already identifies them as this gate's files, and flagged
+  as a conflict otherwise. Sourced from
   `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
-  bundled source of truth) — see its skill summary above — then never
-  touched by the plugin again; the project owns them from that point.
+  bundled source of truth) — see its skill summary above. `.claude/settings.json`
+  and the two gate scripts are re-inspected (merged or conflict-checked) on
+  every later run; everything else in this list, once written, is not
+  touched by the plugin again — the project owns it from that point.
   `docs/agent-rules/*` is the one exception: Step 4 only copies these two
   from `templates/` if the project doesn't already have equivalent docs —
   see that step for the full logic.
