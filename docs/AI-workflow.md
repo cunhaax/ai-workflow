@@ -364,13 +364,11 @@ enforcement (a false green is worse than an honest gap the reviewer still sees).
 | Python              | import-linter                                    |
 | Go                  | depguard or arch-go                              |
 
-Wire it into the all-checks command so a violation fails before the review
-step (and at merge time too, if your project's own pipeline runs
-all-checks there), and list it as a build-enforced rule in your code
-review guidance file
-(`docs/agent-rules/code-critic.md` by default) so the reviewer verifies the
-diff doesn't *weaken* the layer test rather than re-deriving boundaries by
-hand. Add further fitness tests the same way — one per
+Wire it into the all-checks command so a violation is a build failure, not
+a reviewer judgment call, and list it as a build-enforced rule in your code
+review guidance file (`docs/agent-rules/code-critic.md` by default) so the
+reviewer verifies the diff doesn't *weaken* the layer test rather than
+re-deriving boundaries by hand. Add further fitness tests the same way — one per
 mechanically checkable rule.
 
 ### `plugins/ai-workflow/skills/adversarial-qa/SKILL.md` — `/adversarial-qa`
