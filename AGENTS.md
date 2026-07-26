@@ -178,9 +178,8 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
   Its tools are only reachable under the plugin-scoped name
   `mcp__plugin_ai-workflow_<server>__<tool>` (see *Bundled MCP servers* in
   `docs/AI-workflow.md`) — renaming this plugin requires updating
-  `adversarial-qa.md`'s `tools:` allowlist and `feature/SKILL.md`'s
-  `context7` references in the same change, or they silently stop
-  matching real tools.
+  `adversarial-qa.md`'s `tools:` allowlist in the same change, or it
+  silently stops matching real tools.
 
 ## Review & Planning Guidance
 

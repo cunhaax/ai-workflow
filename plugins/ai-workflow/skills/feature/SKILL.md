@@ -114,10 +114,8 @@ every individual step.
 memory for version-sensitive details.** Before writing code against an
 external library or framework — especially anything that could have
 changed since training (recent APIs, config shape, breaking changes) — use
-the bundled `context7` MCP server
-(`mcp__plugin_ai-workflow_context7__resolve-library-id`, then
-`mcp__plugin_ai-workflow_context7__get-library-docs`) to pull current docs
-rather than guessing. Skip it for stdlib/language-core usage you're
+the bundled `context7` MCP server — resolve the library ID, then query its
+docs — to pull current docs rather than guessing. Skip it for stdlib/language-core usage you're
 already confident about. This is a quality aid, not a gate like the
 canonical commands in Rule 1 — if the lookup errors or the library isn't
 found, note it in your summary and proceed on your best existing
