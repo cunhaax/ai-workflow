@@ -4,5 +4,7 @@
   "version": "0.1.0",
   "author": {
     "name": "André Cunha"
-  }
+  },
+  "homepage": "https://github.com/cunhaax/ai-workflow-template/blob/master/docs/AI-workflow.md",
+  "repository": "https://github.com/cunhaax/ai-workflow-template"
 }

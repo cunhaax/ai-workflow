@@ -80,12 +80,18 @@ This repo has no project-local skills or sub-agents of its own —
 is the one real source; if you want `/feature` etc. available while working
 on this repo, install the plugin the same way any consumer would (see
 *Installing into a project* in `README.md`), rather than relying on
-special-cased project-local copies. That's deliberate, not an oversight: project-local symlinks back into
-`plugins/ai-workflow/` were considered and rejected, because with the
-plugin also installed globally, Claude Code would show both bare
-`/feature` (project-local) and `/ai-workflow:feature` (the installed
-plugin) at once — two command surfaces for the same thing, with no way to
-know if they'd drifted.
+special-cased project-local copies. That's deliberate, not an oversight:
+project-local symlinks back into `plugins/ai-workflow/` were considered and
+rejected, because with the plugin also installed globally, Claude Code
+would show both bare `/feature` (project-local) and `/ai-workflow:feature`
+(the installed plugin) at once — two command surfaces for the same thing,
+with no way to know if they'd drifted.
+
+A marketplace install pins a *published* version, not this working tree —
+so a normal install only dogfoods the last released version, not whatever
+you're currently editing. To actually review working-tree changes to the
+plugin itself, install from a local path pointing at this checkout instead
+of the GitHub form.
 
 ## Commands
 

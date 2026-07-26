@@ -15,9 +15,10 @@ own context window — we replicate the roles of a real development team: planne
 plan critic, code critic, and QA. (Implementation is deliberately not
 delegated — the main agent plays the developer, as the workflow below shows.)
 
-This template is deliberately **Claude-native**: the sub-agents and skills live
-directly in `.claude/`, using Claude Code's own mechanisms (sub-agent
-definitions, skills, and the `skills:` preload) with no intermediate layer. The
+This template is deliberately **Claude-native**: the sub-agents and skills
+use Claude Code's own mechanisms (sub-agent definitions, skills, and the
+`skills:` preload) with no intermediate layer, distributed as a plugin from
+`plugins/ai-workflow/` in this repo's source. The
 root `AGENTS.md` still gives baseline, cross-tool project context, but the deep
 agent/skill definitions are Claude-specific. (If you later need the workflow
 knowledge to be portable to another AGENTS.md-aware tool, you would lift the
@@ -75,9 +76,13 @@ directly rather than this diagram. `templates/`'s `AGENTS.md.template`/
 `CLAUDE.md`/`.claude/settings.json` (dropping the `.template` suffix);
 everything else keeps its relative path.
 
-The plugin itself (`plugins/ai-workflow/agents/`, `plugins/ai-workflow/skills/`, `docs/AI-workflow.md`)
+The plugin itself (`plugins/ai-workflow/agents/`, `plugins/ai-workflow/skills/`)
 is not vendored into the project — it's supplied by the plugin install and
-lives wherever Claude Code resolves an installed plugin's files. Everything
+lives wherever Claude Code resolves an installed plugin's files. This guide
+isn't inside that installed payload either (`plugin.json`'s `source` is
+`./plugins/ai-workflow`, and this file lives outside it, at the repo root)
+— it's linked from `plugin.json`'s `homepage` field instead, in this repo's
+own source. Everything
 in the tree above, except the two entries marked otherwise, is scaffolded
 into the project by `/init-workflow` from the plugin's bundled templates on
 first run (see *Installing and updating the plugin* below); the project
@@ -606,13 +611,16 @@ knowledge — the same file the matching sub-agent preloads. For example,
 a `description` the tool matches invocations against, and a body that is the
 knowledge itself.
 
-The eight wired-up commands are `/feature`, `/init-workflow`, `/plan-draft`,
-`/plan-critic`, `/code-critic`, `/adversarial-qa`, `/workflow-retro`, and
-`/workflow-inspect`. `/feature` is the primary entry point — it triggers the
-full orchestrated workflow; `/init-workflow` is the one-time setup (and
-recurring doctor) pass; `/workflow-retro` and `/workflow-inspect` are the
-optional evaluation pair (outcome record, then cost fill-in); the others
-invoke individual steps ad-hoc.
+The eight wired-up commands are `feature`, `init-workflow`, `plan-draft`,
+`plan-critic`, `code-critic`, `adversarial-qa`, `workflow-retro`, and
+`workflow-inspect` — installed via this plugin, Claude Code may expose them
+namespaced as `/ai-workflow:feature` etc. rather than bare `/feature`
+(unverified — see *Installing and updating the plugin*, this hasn't been
+exercised end to end yet). `feature` is the primary entry point — it
+triggers the full orchestrated workflow; `init-workflow` is the one-time
+setup (and recurring doctor) pass; `workflow-retro` and `workflow-inspect`
+are the optional evaluation pair (outcome record, then cost fill-in); the
+others invoke individual steps ad-hoc.
 
 **Naming note (Claude Code).** Claude Code **bundles** a skill named
 `code-review`, and project skills shadow bundled skills completely and by
@@ -670,10 +678,12 @@ reviewable in that project's git history like any other dependency bump.
 This gives the same two ownership classes as before, just split across two
 different homes instead of one repo:
 
-- **Plugin-owned** — the skills, the sub-agents, and this guide. These are
-  not copied into the project at all; they live wherever Claude Code
-  resolves the installed plugin's files, and they update when the plugin
-  updates (`/plugin update`, per whatever scope was chosen).
+- **Plugin-owned** — the skills and the sub-agents. These are not copied
+  into the project at all; they live wherever Claude Code resolves the
+  installed plugin's files, and they update when the plugin updates
+  (`/plugin update`, per whatever scope was chosen). This guide isn't part
+  of that installed payload (see *Repository Structure* above) — it's
+  linked from `plugin.json`'s `homepage` field, in this repo's own source.
 - **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
   `.claude/settings.json`, the CI example, the ADR/product-context
   scaffolding, and the two enforcement files (`githooks/pre-push`,
