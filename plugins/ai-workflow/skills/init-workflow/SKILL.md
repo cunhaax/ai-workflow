@@ -52,15 +52,12 @@ which Step 4 creates (or doesn't, if the project already has equivalent
 docs) once it knows the answer; writing them here too would leave an
 orphaned stub if Step 4 points elsewhere instead. For everything else:
 strip the `.template` suffix from `AGENTS.md.template`, `CLAUDE.md.template`,
-and `settings.json.template` (the last one lands at `.claude/settings.json`
-— **never drop the suffix on the source copy in `templates/` itself**,
-only on the destination: Claude Code auto-loads `AGENTS.md`/`CLAUDE.md` by
-that exact name, so an un-suffixed copy left inside `templates/` would be
-picked up as this project's live guidance the next time anyone edits that
-directory), preserve the executable bit on `githooks/pre-push` and
-`scripts/review-ok.sh`, and copy every other file (the rest of the `docs/`
-tree, `.github/workflows/ci.yml.example`) to the same relative path it has
-under `templates/`. Also append `.review-passed`, `.qa-evidence/`, and
+and `settings.json.template` on the destination copy only — never on the
+source inside `templates/` (see `AGENTS.md` Rule 5 for why) — preserve the
+executable bit on `githooks/pre-push` and `scripts/review-ok.sh`, and copy
+every other file (the rest of the `docs/` tree,
+`.github/workflows/ci.yml.example`) to the same relative path it has under
+`templates/`. Also append `.review-passed`, `.qa-evidence/`, and
 `.workflow-log/` to `.gitignore` if not already present (create the file if
 it doesn't exist) — these are what the workflow writes locally and Step 5
 checks for. Present the full file list in one block — the same
@@ -68,9 +65,13 @@ confirm-then-write pattern as every other step here — before writing
 anything. Once written, continue below as first-run mode.
 
 Read `AGENTS.md`. If it has a **Review & Planning Guidance** section, read
-the files it names; otherwise check `docs/agent-rules/code-critic.md` and
-`docs/agent-rules/plan-critic.md` directly. Classify each placeholder /
-`[TODO: …]` as filled or open.
+the files it names — on a project you just scaffolded, its two entries
+point at `docs/agent-rules/code-critic.md`/`plan-critic.md`, which don't
+exist yet (Step 4 hasn't run); that absence is expected here, not a failed
+read to report under Rule 2. Otherwise (no section — i.e. a pre-existing
+project that hasn't scaffolded via this flow) check
+`docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
+directly. Classify each placeholder / `[TODO: …]` as filled or open.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
@@ -123,48 +124,59 @@ For each still-open section, draft from evidence and confirm before writing:
 
 ## Step 4 — Seed review and planning guidance
 
+`AGENTS.md`'s `Review & Planning Guidance` section takes exactly two
+entries, labeled precisely `Code review guidance` and `Planning guidance`
+(Step 5 and both skills key on these literal labels — do not paraphrase
+them).
+
 First ask: does this project already have docs for code review standards
 and/or planning risk areas — a style guide, `CONTRIBUTING.md`, an
 engineering handbook, anything like that? Handle each of the two
 (code review guidance, planning guidance) independently based on the
 answer:
 
-- **Doesn't have one** → interview briefly, draft a new file at the default
-  path, and point `AGENTS.md`'s `Review & Planning Guidance` section at it:
+- **Doesn't have one** → copy `${CLAUDE_SKILL_DIR}/templates/docs/agent-rules/code-critic.md`
+  (or `plan-critic.md`) to the default path as the starting point — it
+  already carries the Rules/Checklist structure, the build-enforced-rules
+  doctrine, and the guidance comments; do not draft either file from
+  scratch. Interview briefly to fill it in, then point `AGENTS.md`'s
+  section at it:
   - Does the app hold personal data? Which categories are sensitive, and is
     there a compliance doc? Which surfaces are public/unauthenticated? Any
     identifiers public by design? Do any of the three privacy fitness tests
     already exist?
-    → draft the *Privacy anchors* section of `docs/agent-rules/code-critic.md`.
+    → fill the *Privacy anchors* section of `docs/agent-rules/code-critic.md`.
   - Any hard constraints the team already knows agents get wrong (framework
     conventions, forbidden APIs, required registrations)?
-    → draft them as rules with severities, mirrored in the *Checklist* section.
+    → add them as rules with severities, mirrored in the *Checklist* section.
   - What are this product's highest-risk areas — the places where a generic
     plan would miss something that matters here?
-    → draft 4–7 lenses for `docs/agent-rules/plan-critic.md`.
+    → fill 4–7 lenses in `docs/agent-rules/plan-critic.md`.
 - **Already has one** → point `AGENTS.md`'s section at that existing file
-  instead of drafting a new one. Still ask the privacy/compliance question
-  above for code review guidance specifically — `code-critic` binds its
-  privacy rules to whatever PRIVACY anchors it finds in the named file
-  (see that skill), so if the existing doc doesn't have them, they need a
-  home. Offer to append a `## AI Agent Privacy Anchors` section to the
-  *end* of the existing file (clearly delineated, so it reads as an
-  addition rather than rewriting the user's own doc) — on the user's
-  explicit confirmation, since this edits a file they own that this plugin
-  didn't create. If they decline, say so plainly in the Step 6 report:
-  privacy anchors are not captured, and why. The hard-constraints and
+  instead of copying the template. Still ask the privacy/compliance
+  question above for code review guidance specifically — `code-critic`
+  binds its privacy rules to whatever `## Privacy anchors` section it finds
+  in the named file (see that skill), so if the existing doc doesn't have
+  one, it needs a home. Offer to append a `## Privacy anchors` section to
+  the *end* of the existing file (same heading the template uses, so
+  `code-critic` recognizes it the same way; clearly delineated as an
+  addition, not a rewrite of the user's own doc) — on the user's explicit
+  confirmation, since this edits a file they own that this plugin didn't
+  create. If they decline, say so plainly in the Step 6 report: privacy
+  anchors are not captured, and why. The hard-constraints and
   high-risk-area questions are framed as "anything not already covered by
   your existing doc" rather than a full draft, and only produce output if
   the user has something to add.
 
-Then present the drafted content (whichever combination of new files,
-appended sections, and `AGENTS.md` pointer updates applies) in one block
-for confirmation before writing — the same confirm-then-write pattern as
-Steps 2 and 3; an answered question is input to the draft, not approval of
-it. It is fine for newly drafted files to start thin — they are designed to
-accrete (see *Evolving the System* in the AI Workflow plugin's own
-documentation). Record only what the user confirms; keep the guidance
-comments in newly drafted files for future additions.
+Then present the drafted content (whichever combination of copied/filled
+files, appended sections, and `AGENTS.md` pointer updates applies) in one
+block for confirmation before writing — the same confirm-then-write
+pattern as Steps 2 and 3; an answered question is input to the draft, not
+approval of it. It is fine for newly filled files to stay thin beyond what
+the interview produced — they are designed to accrete (see *Evolving the
+System* in the AI Workflow plugin's own documentation). Record only what
+the user confirms; keep the guidance comments in newly filled files for
+future additions.
 
 ## Step 5 — Validate the setup (doctor checklist)
 
@@ -192,11 +204,16 @@ confirmation, report what you cannot fix:
    the workflow's independent test evidence).
 7. No unfilled placeholder remains in `AGENTS.md` → *Commands* (other
    sections may legitimately keep TODOs the user deferred).
-8. `AGENTS.md` has a `Review & Planning Guidance` section, and every file
-   it names actually exists. A missing section or a dangling entry means
-   `code-critic`/`plan-critic` are silently falling back to the default
-   paths (or running on base standards alone if those are also absent) —
-   surface this rather than letting it stay invisible.
+8. `AGENTS.md` has a `Review & Planning Guidance` section with entries
+   labeled exactly `Code review guidance` and `Planning guidance` — a
+   renamed or paraphrased label is invisible to both skills, which key on
+   the literal text, and silently falls back to the default
+   `docs/agent-rules/` paths with no warning. Every file an entry names
+   must also actually exist: a missing section (or one missing an entry)
+   falls back to the default path if present; an entry that names a file
+   which doesn't exist runs that skill on base standards/lenses alone (it
+   does *not* fall back further to the default path) — either gap should
+   be surfaced, not left to fail silently on the next review.
 
 ## Step 6 — Report
 

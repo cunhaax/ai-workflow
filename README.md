@@ -104,11 +104,13 @@ On a brand-new project, `/init-workflow` scaffolds the project-owned files
 from the plugin's bundled templates (proposing the full list before writing
 anything), then continues straight into adaptation: it detects your
 build/test commands and default branch, drafts the `AGENTS.md` sections from
-the real codebase, interviews you to seed `docs/agent-rules/`, and validates
-the whole setup (hook, `core.hooksPath`, settings, `.gitignore`, CI).
-Everything is proposed and confirmed before it is written; whatever you
-defer stays an explicit TODO. The section below is the manual map of the
-same work.
+the real codebase, asks whether you already have docs for code
+review/planning guidance (pointing `AGENTS.md` at them if so, or seeding
+`docs/agent-rules/` if not), and validates the whole setup (hook,
+`core.hooksPath`, settings, `.gitignore`, CI, the guidance section itself
+resolving to real files). Everything is proposed and confirmed before it is
+written; whatever you defer stays an explicit TODO. The section below is
+the manual map of the same work.
 
 **Updating later**: update the plugin (`/plugin marketplace update` /
 `/plugin update`, per whatever scope you installed at), then re-run

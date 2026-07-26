@@ -54,9 +54,9 @@ project-root/
 │   ├── adr/
 │   │   ├── README.md                      # ADR format guide
 │   │   └── 0001-record-architecture-decisions.md
-│   ├── agent-rules/                       # Project-owned skill extensions (read at runtime)
-│   │   ├── code-critic.md                 #   project review rules + privacy anchors
-│   │   └── plan-critic.md                 #   product risk lenses
+│   ├── agent-rules/                       # Project-owned skill extensions (read at runtime) —
+│   │   ├── code-critic.md                 #   review rules + privacy anchors — Step 4 creates
+│   │   └── plan-critic.md                 #   risk lenses — these two conditionally, see below
 │   └── product-context/
 │       └── README.md                      # Product-context guide
 ├── .gitignore                             # NOT a template file — /init-workflow creates it if
@@ -66,7 +66,7 @@ project-root/
         └── AGENTS.md                      # Optional, NOT scaffolded — you add this yourself
 ```
 
-The **canonical enumeration** of what `/init-workflow` scaffolds is
+The **canonical enumeration** of what `/init-workflow` can scaffold is
 `plugins/ai-workflow/skills/init-workflow/templates/` itself, not this tree — the two
 entries marked above aren't template files. This tree exists for human
 orientation and must stay in sync with `templates/` (AGENTS.md Rule 5 in
@@ -74,7 +74,15 @@ this repo requires it), but Step 1 of `/init-workflow` reads `templates/`
 directly rather than this diagram. `templates/`'s `AGENTS.md.template`/
 `CLAUDE.md.template`/`settings.json.template` land at `AGENTS.md`/
 `CLAUDE.md`/`.claude/settings.json` (dropping the `.template` suffix);
-everything else keeps its relative path.
+everything else keeps its relative path — **except**
+`docs/agent-rules/code-critic.md`/`plan-critic.md`, which Step 1
+deliberately does not copy. Step 4 asks first whether the project already
+has equivalent docs elsewhere: if not, it copies these two from
+`templates/` and fills them in; if so, it points `AGENTS.md`'s *Review &
+Planning Guidance* section at the existing file instead, and neither
+template file is ever written. See that skill's own Step 4 for the full
+logic — this is the one place the tree and the scaffold behavior
+genuinely diverge, by design.
 
 The plugin itself (`plugins/ai-workflow/agents/`, `plugins/ai-workflow/skills/`)
 is not vendored into the project — it's supplied by the plugin install and
@@ -82,10 +90,10 @@ lives wherever Claude Code resolves an installed plugin's files. This guide isn'
 entry's `source` is `./plugins/ai-workflow`, and this file lives outside
 it, at the repo root) — it's linked from `plugin.json`'s `homepage` field
 instead, in this repo's own source. Everything in the tree above, except
-the two entries marked otherwise, is scaffolded
-into the project by `/init-workflow` from the plugin's bundled templates on
-first run (see *Installing and updating the plugin* below); the project
-owns it from that point on.
+the two entries marked otherwise and the two conditional `docs/agent-rules/`
+files just discussed, is scaffolded into the project by `/init-workflow`
+from the plugin's bundled templates on first run (see *Installing and
+updating the plugin* below); the project owns it from that point on.
 
 This repo (the plugin's own source) is the one exception, but not the way
 you might expect: it carries `plugins/ai-workflow/agents/`,
@@ -286,8 +294,8 @@ mechanically, so neither the agents nor the human re-verify them by hand:
   code-critic skill tells the reviewer to verify only that a diff doesn't
   *weaken* these tests, not to re-derive the rules. Start with the layer rule
   (*Your first fitness test*, below). <!-- [TODO: add fitness tests for your
-  stack and list them as build-enforced rules in
-  docs/agent-rules/code-critic.md.] -->
+  stack and list them as build-enforced rules in your code review guidance
+  file (docs/agent-rules/code-critic.md by default).] -->
 - **The pre-push review gate** (`githooks/pre-push`, enabled once per clone
   via `git config core.hooksPath githooks`): after a code-critic pass with
   no FAIL items, the agent records the reviewed HEAD with `scripts/review-ok.sh`;
@@ -348,9 +356,10 @@ enforcement (a false green is worse than an honest gap the reviewer still sees).
 | Go                  | depguard or arch-go                              |
 
 Wire it into the all-checks command and CI so it gates merges, and list it as
-a build-enforced rule in `docs/agent-rules/code-critic.md` so the reviewer
-verifies the diff doesn't *weaken* the layer test rather than re-deriving
-boundaries by hand. Add further fitness tests the same way — one per
+a build-enforced rule in your code review guidance file
+(`docs/agent-rules/code-critic.md` by default) so the reviewer verifies the
+diff doesn't *weaken* the layer test rather than re-deriving boundaries by
+hand. Add further fitness tests the same way — one per
 mechanically checkable rule.
 
 ### `plugins/ai-workflow/skills/adversarial-qa/SKILL.md` — `/adversarial-qa`
@@ -712,15 +721,18 @@ different homes instead of one repo:
   (`/plugin update`, per whatever scope was chosen). This guide isn't part
   of that installed payload (see *Repository Structure* above) — it's
   linked from `plugin.json`'s `homepage` field, in this repo's own source.
-- **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `docs/agent-rules/*`,
-  `.claude/settings.json`, the CI example, the ADR/product-context
-  scaffolding, and the two enforcement files (`githooks/pre-push`,
-  `scripts/review-ok.sh` — these must physically live in the project's own
-  repo, since a git hook has to fire for humans and every tool, not just
-  Claude). These get scaffolded into the project by `/init-workflow` on
-  first run, from `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
+- **Project-owned** — `AGENTS.md`, `CLAUDE.md`, `.claude/settings.json`,
+  the CI example, the ADR/product-context scaffolding, and the two
+  enforcement files (`githooks/pre-push`, `scripts/review-ok.sh` — these
+  must physically live in the project's own repo, since a git hook has to
+  fire for humans and every tool, not just Claude). These get scaffolded
+  into the project by `/init-workflow` on first run, from
+  `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
   bundled source of truth) — see its skill summary above — then are never
   touched by the plugin again; the project owns them from that point.
+  `docs/agent-rules/*` is the one exception: Step 4 only copies these two
+  from `templates/` if the project doesn't already have equivalent docs —
+  see that step for the full logic.
 
 Re-run `/init-workflow` after every plugin update — in doctor mode it
 reports anything the update newly expects, the same as it reports any other

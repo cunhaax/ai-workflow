@@ -44,14 +44,20 @@ responsibility.
    (Enable once per clone: `git config core.hooksPath githooks`.) See
    `docs/AI-workflow.md` for how this project obtains that review.
 
-5. **Keep `templates/` in sync with what describes it.**
+5. **Keep `templates/` in sync with what describes it — and never strip a
+   `.template` suffix on the source copy itself.**
    `plugins/ai-workflow/skills/init-workflow/templates/` is the canonical
    enumeration of what a scaffolded project receives — `/init-workflow`
    reads it directly. The file tree and `.template` → destination mapping in
    `docs/AI-workflow.md`, and the `init-workflow/templates/` enumeration
    paragraph in `README.md`, are human-readable mirrors of it, not a second
    source; adding, removing, or renaming a file under `templates/` must be
-   reflected in all three.
+   reflected in all three. The suffix on `AGENTS.md.template`/
+   `CLAUDE.md.template` is what stops Claude Code from auto-loading them as
+   *this repo's own* live guidance — renaming either to drop the suffix
+   inside `templates/` (as opposed to on a scaffolded project's destination
+   copy, where dropping it is correct) would have that placeholder-riddled
+   file silently take over the next time anyone works in `templates/`.
 
 6. **One clean command per step — use the right tool.** Use the `Read` tool for
    file contents (never `cat`/`head`/`tail`/`sed`); search with a single plain
