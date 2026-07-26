@@ -63,7 +63,9 @@ project receives: `AGENTS.md.template`, `CLAUDE.md.template`,
 root `AGENTS.md`/`CLAUDE.md`/`docs/agent-rules/*` are real, hand-written
 files, not copies of the template; `.claude/settings.json`,
 `githooks/pre-push`, and `scripts/review-ok.sh` are symlinks into
-`templates/` instead — see `docs/AI-workflow.md` for the rationale.
+`templates/` instead — see this repo's own `AGENTS.md` (*Architecture*
+section) for the rationale, which is specific to this repo's own root
+layout rather than the general plugin design `docs/AI-workflow.md` covers.
 
 Each skill in `plugins/ai-workflow/skills/` holds reusable, project-agnostic
 knowledge (standards, checklists, rules) with no orchestration; each
@@ -133,16 +135,27 @@ You never edit the skills. All project-specific content lives in files you own:
   | `[APP_URL]`            | Local app URL for QA (e.g. `http://localhost:3000`)       |
   | `[DEFAULT_BRANCH]`     | `main` / `master` — the branch reviews diff against       |
 
-- **`docs/agent-rules/code-critic.md`** — your repo's hard review constraints
-  (one bullet per rule, each with a severity), read by the `code-critic` skill
-  on every review. This is the file that grows over time as agents produce bad
-  output the base rules didn't catch. It includes the privacy anchors
-  (sensitive categories, public surfaces, identifier exemptions, existing
-  privacy tests) that bind the base privacy rules to your codebase — for a
-  project holding personal data, the most consequential file in the plugin.
-- **`docs/agent-rules/plan-critic.md`** — the areas where generic plans
-  regularly miss issues that matter for *your* product, read by the
-  `plan-critic` skill on every critique.
+- **`AGENTS.md`'s *Review & Planning Guidance* section** — names the code
+  review and planning guidance files by role. `code-critic`/`plan-critic`
+  read whatever it points to, falling back to the defaults below if it's
+  absent. `/init-workflow` asks up front whether you already have docs for
+  this (a style guide, `CONTRIBUTING.md`, an engineering handbook) — if so
+  it points here at your existing file instead of creating a new one, so
+  you don't have to duplicate content you already maintain.
+- **`docs/agent-rules/code-critic.md`** (the default target) — your repo's
+  hard review constraints (one bullet per rule, each with a severity). This
+  is the file that grows over time as agents produce bad output the base
+  rules didn't catch. It includes the privacy anchors (sensitive
+  categories, public surfaces, identifier exemptions, existing privacy
+  tests) that bind the base privacy rules to your codebase — for a project
+  holding personal data, the most consequential file in the plugin. If you
+  point at an existing doc instead, `/init-workflow` still asks for these
+  and offers to append them as a clearly delineated section at the end of
+  it, since a pre-existing doc won't have them.
+- **`docs/agent-rules/plan-critic.md`** (the default target) — the areas
+  where generic plans regularly miss issues that matter for *your*
+  product. Read as free-form lenses, not a checklist, whether it's this
+  default file or something you already had.
 - **`docs/product-context/`** and **`docs/adr/`** — your vision/strategy docs and
   architecture decisions.
 
@@ -189,8 +202,9 @@ of which works from the default branch itself. Then drive the work with
 See *Evolving the System* in `docs/AI-workflow.md` (the canonical version —
 this section deliberately doesn't restate it). The short version: start small
 (planner + code-critic first); every time an agent's bad output slips past
-the rules, add a rule to `docs/agent-rules/code-critic.md` — or better, a
-build-enforced fitness test; keep `AGENTS.md` lean.
+the rules, add a rule to wherever `AGENTS.md`'s *Review & Planning Guidance*
+points for code review (`docs/agent-rules/code-critic.md` by default) — or
+better, a build-enforced fitness test; keep `AGENTS.md` lean.
 
 ## License
 

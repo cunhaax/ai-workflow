@@ -87,10 +87,13 @@ applying the four methods above — they are not a separate checklist.
 ## Project-Specific Lenses
 
 This skill is project-agnostic; each project extends it without editing it.
-Check `AGENTS.md` for a **Review & Planning Guidance** section naming a
-planning guidance file. If present, read whatever file it names. If
-`AGENTS.md` has no such section, fall back to checking
-`docs/agent-rules/plan-critic.md` directly.
+Check the repo-root `AGENTS.md` (not a module-level one) for a **Review &
+Planning Guidance** section. If it has a
+"Planning guidance" entry, read the file it names. If `AGENTS.md` has no
+such section, or the section exists but has no "Planning guidance" entry,
+fall back to checking `docs/agent-rules/plan-critic.md` directly. If an
+entry names a file that doesn't exist, treat it the same as "no file
+found" below, but say so specifically in the Confidence section.
 
 Whatever is found — this skill's own lens format or a pre-existing project
 doc (a style guide, an engineering handbook, product docs) — apply it the

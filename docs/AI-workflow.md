@@ -93,10 +93,14 @@ you might expect: it carries `plugins/ai-workflow/agents/`,
 source — *and*, side by side, its own real `AGENTS.md`/`CLAUDE.md`/
 `.claude/settings.json`/`docs/agent-rules/*`, because it's a real project in
 its own right, not just a plugin package. It does **not**, however, carry
-project-local `.claude/skills/`/`.claude/agents/` copies of its own tooling
-— that was tried and rejected (see `README.md`), because it collides with
-the plugin also being installed globally. To dogfood `/feature` etc. while
-working on this repo, install the plugin the same way any consumer would.
+project-local `.claude/skills/`/`.claude/agents/` copies of its own tooling.
+That was tried — twice, in two shapes, during this plugin's initial
+packaging — and rejected both times: with the plugin also installed
+globally, Claude Code would show both bare `/feature` (project-local) and
+`/ai-workflow:feature` (the installed plugin) at once, two command surfaces
+for the same thing with no way to know if they'd drifted. To dogfood
+`/feature` etc. while working on this repo, install the plugin the same
+way any consumer would.
 
 > Note: there is no `feature` sub-agent. `feature` is a workflow skill
 > (`plugins/ai-workflow/skills/feature/SKILL.md`) the **main** agent runs; it orchestrates
@@ -139,12 +143,19 @@ Supporting pieces:
 - **Project-specific content lives outside the skills.** The skills are
   project-agnostic: they name the project's commands, app URL, and default
   branch *by role* from `AGENTS.md` → *Commands*, and read the project's own
-  review rules and risk lenses from `docs/agent-rules/<skill>.md` at runtime
-  (a missing file means base rules only — the code-critic states the absence
-  in its output rather than skipping silently). This split is what makes the
-  knowledge layer portable: the same skill files apply unchanged to any
-  project, which is what makes distributing them as a single Claude Code
-  plugin (rather than a per-project copy) possible.
+  review rules and risk lenses at runtime from whatever file `AGENTS.md`'s
+  *Review & Planning Guidance* section names — falling back to
+  `docs/agent-rules/<skill>.md` if that section is absent or incomplete,
+  and to base rules alone if nothing is found either way (the code-critic
+  states the absence in its output rather than skipping silently). The
+  indirection through `AGENTS.md` means a project can point at a doc it
+  already had before adopting this plugin — a style guide,
+  `CONTRIBUTING.md` — instead of duplicating that content into a new file;
+  see *Installing and updating the plugin* for how `/init-workflow` decides
+  which applies. This split is what makes the knowledge layer portable: the
+  same skill files apply unchanged to any project, which is what makes
+  distributing them as a single Claude Code plugin (rather than a
+  per-project copy) possible.
 - **Module-level `AGENTS.md`** files are the place for constraints in critical
   areas (e.g. auth, payments) where mistakes are expensive.
 
@@ -193,6 +204,10 @@ Brief description of the project, its purpose, and how it fits into the broader 
 - Sub-agents and skills: supplied by the installed AI workflow plugin
 - AI workflow guide: the plugin's own documentation
 
+## Review & Planning Guidance
+- Code review guidance: `docs/agent-rules/code-critic.md`
+- Planning guidance: `docs/agent-rules/plan-critic.md`
+
 ## Workflow for New Features
 Use the `/feature` slash command to trigger the full workflow (plan, critique,
 implement, review, QA) with explicit gates between steps. See the installed
@@ -239,8 +254,9 @@ produce findings or an explicit "no concerns, because…". It critiques
 substance, not writing, and never rewrites the plan — suggestions go in a
 "Suggested Plan Amendments" section; the developer decides what to adopt.
 The skill file holds the methods and the output format; the project's own
-risk lenses live in `docs/agent-rules/plan-critic.md`, which the skill reads
-at critique time.
+risk lenses live wherever `AGENTS.md`'s *Review & Planning Guidance*
+section points (defaulting to `docs/agent-rules/plan-critic.md`), which the
+skill reads at critique time.
 
 ### `plugins/ai-workflow/skills/code-critic/SKILL.md` — `/code-critic`
 
@@ -252,8 +268,9 @@ cover the plan *and* the branches/boundaries the plan never enumerated lives
 here — and its verdicts (`PASS` / `PASS (N/A)` / `FAIL` / `NEEDS_DECISION` /
 **Open Question**) are what the `/feature` gates key on. The base standards
 (including the base privacy rules) live in the skill; the project's own
-rules and privacy anchors live in `docs/agent-rules/code-critic.md`, which
-the skill reads at review time. Any mechanically checkable rule should
+rules and privacy anchors live wherever `AGENTS.md`'s *Review & Planning
+Guidance* section points (defaulting to `docs/agent-rules/code-critic.md`),
+which the skill reads at review time. Any mechanically checkable rule should
 graduate to a build-enforced test (below), after which the reviewer only
 checks that the diff doesn't weaken the enforcement. The skill file holds
 the full standards, checklist, and output format.
@@ -377,10 +394,14 @@ project — no `AGENTS.md` yet — it first scaffolds the project-owned files
 from `plugins/ai-workflow/skills/init-workflow/templates/` (its bundled source of
 truth), then continues into adaptation: detects the build/test commands and
 default branch, drafts the `AGENTS.md` sections from the actual codebase,
-interviews the user to seed `docs/agent-rules/` — and validates the whole
-setup (hook executable, `core.hooksPath`, `CLAUDE.md` import, `.gitignore`,
-settings, CI, no unfilled Commands placeholders). Everything is proposed and
-user-confirmed before writing; deferred items stay explicit TODOs. It never
+asks whether the project already has docs for code review/planning
+guidance — pointing `AGENTS.md`'s *Review & Planning Guidance* section at
+them if so, or interviewing the user to seed new files under
+`docs/agent-rules/` if not — and validates the whole setup (hook
+executable, `core.hooksPath`, `CLAUDE.md` import, `.gitignore`, settings,
+CI, no unfilled Commands placeholders, the guidance section itself
+resolving to real files). Everything is proposed and user-confirmed before
+writing; deferred items stay explicit TODOs. It never
 edits the plugin's own mechanism — skills, sub-agents, and this guide update
 via the plugin itself. (Named `init-workflow` to avoid Claude Code's
 built-in `/init`.) The skill file holds the step list and the doctor
@@ -710,8 +731,10 @@ setup drift.
 - **Start small.** Begin with the planner and code-critic; add QA and
   plan-critic once the basic workflow is stable.
 - **Track failure patterns.** Every time an agent produces bad output your
-  rules didn't catch, add a rule to `docs/agent-rules/code-critic.md` (the
-  file is designed to accrete) or a lens to `docs/agent-rules/plan-critic.md`.
+  rules didn't catch, add a rule to whatever `AGENTS.md`'s *Review &
+  Planning Guidance* section names for code review (`docs/agent-rules/code-critic.md`
+  by default — the file is designed to accrete) or a lens to its planning
+  counterpart (`docs/agent-rules/plan-critic.md` by default).
   The skills in `plugins/ai-workflow/skills/` stay project-agnostic and plugin-owned,
   so plugin updates never collide with your rules.
 - **Tune the workflow itself with evidence, not intuition.** Run

@@ -2,10 +2,11 @@
 name: code-critic
 description: >
   Code review checklist and coding standards, extended per project by
-  docs/agent-rules/code-critic.md. Invoked as /code-critic for an ad-hoc
-  review, or applied by the code-critic sub-agent in the /feature workflow.
-  (Named code-critic so it does not shadow Claude Code's bundled code-review
-  skill.)
+  whatever file AGENTS.md's Review & Planning Guidance section names
+  (defaulting to docs/agent-rules/code-critic.md). Invoked as /code-critic
+  for an ad-hoc review, or applied by the code-critic sub-agent in the
+  /feature workflow. (Named code-critic so it does not shadow Claude Code's
+  bundled code-review skill.)
 ---
 
 # /code-critic — Code Review
@@ -239,21 +240,25 @@ protected by tests, not per-diff checklist prose.
 ## Project-Specific Rules
 
 This skill is project-agnostic; each project extends it without editing it.
-Check `AGENTS.md` for a **Review & Planning Guidance** section naming a code
-review guidance file. If present, read whatever file it names. If
-`AGENTS.md` has no such section, fall back to checking
-`docs/agent-rules/code-critic.md` directly.
+Check the repo-root `AGENTS.md` (not a module-level one) for a **Review &
+Planning Guidance** section. If it has a
+"Code review guidance" entry, read the file it names. If `AGENTS.md` has no
+such section, or the section exists but has no "Code review guidance"
+entry, fall back to checking `docs/agent-rules/code-critic.md` directly. If
+an entry names a file that doesn't exist, treat it the same as "no file
+found" below, but say so specifically (a named-but-missing file is a broken
+pointer worth surfacing, not just an absent extension).
 
-If the named (or default) file exists and uses this skill's Rules /
-Checklist / severity format, apply every rule in it alongside the base
-standards above, exactly like the base ones — including the don't-weaken
-doctrine for any rule it marks as build-enforced, and its PRIVACY anchors,
-which bind the privacy rules above to this codebase's sensitive categories,
-public surfaces, and existing fitness tests. If it's a pre-existing project
-doc without that structure (a style guide, `CONTRIBUTING.md`, an
-engineering handbook), it won't have severities to apply — weigh it as
-additional context instead, and judge severity yourself using this skill's
-normal `PASS`/`FAIL`/`NEEDS_DECISION` framework.
+If a file is found, apply every constraint in it alongside the base
+standards above: where it states a severity, use it exactly as stated
+(including the don't-weaken doctrine for anything it marks as
+build-enforced); where it states none — a pre-existing project doc without
+this skill's format, such as a style guide, `CONTRIBUTING.md`, or an
+engineering handbook — judge severity yourself using this skill's normal
+`PASS`/`FAIL`/`NEEDS_DECISION` framework. Either way, treat any PRIVACY
+anchors it contains as binding on the privacy rules above (sensitive
+categories, public surfaces, existing fitness tests), regardless of
+whether the rest of the file follows this skill's structure.
 
 If no file is found either way, proceed with the base standards alone and
 say so in the review output (one line) — the gap should be visible, not
