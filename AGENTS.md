@@ -48,9 +48,10 @@ responsibility.
    `.claude/skills/init-workflow/templates/` is the canonical enumeration of
    what a scaffolded project receives — `/init-workflow` reads it directly.
    The file tree and `.template` → destination mapping in
-   `docs/AI-workflow.md`, and the file listing in `README.md`, are
-   human-readable mirrors of it, not a second source; adding, removing, or
-   renaming a file under `templates/` must be reflected in all three.
+   `docs/AI-workflow.md`, and the `init-workflow/templates/` enumeration
+   paragraph in `README.md`, are human-readable mirrors of it, not a second
+   source; adding, removing, or renaming a file under `templates/` must be
+   reflected in all three.
 
 6. **One clean command per step — use the right tool.** Use the `Read` tool for
    file contents (never `cat`/`head`/`tail`/`sed`); search with a single plain
@@ -106,9 +107,12 @@ project receives, so there is exactly one copy of their content, inside
 `templates/`. This assumes a clone where git materializes them as real
 symlinks; exact failure behavior on a checkout where it doesn't is
 platform-dependent and not verified here. `/init-workflow`'s doctor
-checklist (items 1, 2, and 5) is the safety net regardless of platform: it
-checks each file's actual content and executability, not just that it
-exists, and reports drift on any re-run.
+checklist is the safety net regardless of platform: items 1 and 2 check
+that `githooks/pre-push` and `scripts/review-ok.sh` exist and are
+executable, and item 5 checks that `.claude/settings.json` actually
+contains its `ask`/`deny` rules rather than merely existing — so a degraded
+materialization of any of the three surfaces on the next `/init-workflow`
+run.
 
 ## Testing
 

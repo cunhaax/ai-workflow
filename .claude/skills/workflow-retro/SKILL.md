@@ -55,7 +55,7 @@ merges, and the log must outlive it. Resolve the location with a single
 `git rev-parse --path-format=absolute --git-common-dir`: that prints the
 shared `.git` directory, whose **parent** is the main worktree root, and the
 log directory is `.workflow-log/` there (covered by the `.gitignore` entry
-the installer added). In a plain single-checkout clone this resolves to the
+`/init-workflow` adds). In a plain single-checkout clone this resolves to the
 repository root itself. Sanity-check the result: if the resolved parent path
 still contains a `.git` segment (e.g. the project is a git *submodule*, where
 the common dir lives under the outer repo's `.git/modules/`), the layout is

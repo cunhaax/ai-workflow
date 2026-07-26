@@ -59,7 +59,7 @@ project-root/
 │   └── product-context/
 │       └── README.md                      # Product-context guide
 ├── .gitignore                             # NOT a template file — /init-workflow creates it if
-│                                           #   missing and appends its three entries either way
+│                                              #   missing and appends its three entries either way
 └── src/
     └── <module>/
         └── AGENTS.md                      # Optional, NOT scaffolded — you add this yourself
