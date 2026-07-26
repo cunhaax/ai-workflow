@@ -94,10 +94,11 @@ whichever of `${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
 `permissions.ask`/`permissions.deny` entries aren't already present,
 preserving everything else the file already has — never a flat overwrite.
 If it doesn't exist, scaffold it directly from the template. If the
-existing file doesn't parse as JSON, or `permissions`/`permissions.ask`/
-`permissions.deny` are present but not the expected shape (an object, and
-two arrays), do not attempt a merge and do not guess a fix — flag it as an
-unresolved item in this step's proposal (the same way a hook conflict is
+existing file doesn't parse as JSON, its root value isn't an object, or
+`permissions`/`permissions.ask`/`permissions.deny` are present but not the
+expected shape (an object, and two arrays), do not attempt a merge and do
+not guess a fix — flag it as an unresolved item in this step's proposal
+(the same way a hook conflict is
 flagged) and continue with the rest of Step 1; a malformed pre-existing
 file on this security-relevant path needs the user's own eyes, not an
 agent's improvised repair.
@@ -132,8 +133,9 @@ can't distinguish "never created" from "deliberately removed." Confirming
 "no" each time is the workaround until this needs solving properly.
 
 Present the full proposal — files to scaffold, the `.claude/settings.json`
-merge diff if any, the `CLAUDE.md` append if applicable, any hook conflict,
-and what's already present and left alone — in one block for confirmation
+merge diff if any, the `CLAUDE.md` append if applicable, any hook or
+settings conflict, and what's already present and left alone — in one
+block for confirmation
 before writing anything, the same confirm-then-write pattern as every other
 step here. Once confirmed and written, continue below.
 
@@ -263,33 +265,40 @@ confirmation, report what you cannot fix:
    and their content references `.review-passed` — existence alone isn't
    enough; a foreign hook at either path (see Step 1) would pass an
    existence check while enforcing nothing.
-2. The pre-push review gate is active. Resolve `git config core.hooksPath`
-   the same way `scripts/review-ok.sh` does (absolute as-is, relative
-   against repo toplevel — don't compare the raw config value to the
-   literal string `githooks`; a worktree can inherit an absolute
-   `core.hooksPath` from the main checkout that resolves correctly but
-   never equals that literal). Don't run that script for this check itself
-   — running it records a review pass. The pass condition is about
-   *content*, not path identity, since the worktree case above must pass:
-   - **The resolved location has an executable `pre-push` whose content
-     references `.review-passed`** → pass, regardless of which path it
-     resolved from.
-   - **`core.hooksPath` is unset, and `.git/hooks/pre-push` doesn't exist
-     either** → nothing is wired up and nothing else claims the spot:
-     offer to run `git config core.hooksPath githooks` (per clone; each
-     teammate needs it).
-   - **Anything else** — `core.hooksPath` set to something not wired to
-     this gate, unset with `.git/hooks/pre-push` already present, or
-     resolving to `githooks/pre-push` itself without the marker — do
-     **not** offer to change `core.hooksPath` and do **not** offer to
-     replace whatever is there; either action can silently disable another
-     hook manager (husky, lefthook, pre-commit, or a hand-rolled
-     `.git/hooks/` script) or a foreign file at `githooks/pre-push` itself.
-     When it's the latter and Step 1 already asked about this same file
-     this run, don't ask again — just reflect that outcome. Otherwise,
-     report exactly what's currently configured/present and leave
-     reconciling it to the human (not something to draft on their behalf
-     here).
+2. The pre-push review gate is active. Resolve where git will actually
+   execute a pre-push hook with `git rev-parse --git-path hooks/pre-push`
+   — this single command already accounts for `core.hooksPath` (set,
+   unset, absolute, or relative), linked worktrees, submodules, and
+   `--separate-git-dir` clones, so don't hand-roll the resolution or
+   compare against a literal path like `.git/hooks/pre-push` (in a linked
+   worktree `.git` is a file, not a directory, so that literal never
+   exists regardless of what's actually installed). Don't run
+   `scripts/review-ok.sh` for this check — running it records a review
+   pass. Check whether the file this resolves to exists, is executable,
+   and its content references `.review-passed`:
+   - **Yes to all three** → pass, regardless of which path it resolved
+     from (a worktree inheriting the main checkout's absolute
+     `core.hooksPath` resolves here correctly and must pass).
+   - **The file has the marker but isn't executable** → this can't be a
+     foreign hook (the marker identifies it as this gate's own file), so
+     it's safe to offer `chmod +x` directly.
+   - **No file exists there at all, and `core.hooksPath` is unset** —
+     nothing is wired up and nothing else claims the spot: offer to run
+     `git config core.hooksPath githooks` (per clone; each teammate needs
+     it).
+   - **Anything else** — a file exists there without the marker (a
+     foreign hook, whether from another manager or a leftover file), or
+     nothing exists there but `core.hooksPath` is set to something (a
+     manager like husky/lefthook that hasn't installed a `pre-push` hook
+     yet, but still owns that config value) — do **not** offer to change
+     `core.hooksPath` and do **not** offer to replace whatever is there;
+     either action can silently disable another hook manager. When it's
+     the same file Step 1 already asked about this run, don't ask again —
+     just reflect that outcome. Otherwise, report exactly what's currently
+     configured/present and leave reconciling it to the human — including,
+     if they want the two to coexist, that their existing hook would need
+     to invoke `githooks/pre-push` itself with correct stdin handling (see
+     Step 1's stdin note), not something to draft on their behalf here.
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
    `.workflow-log/`.
