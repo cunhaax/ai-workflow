@@ -92,8 +92,13 @@ it, at the repo root) — it's linked from `plugin.json`'s `homepage` field
 instead, in this repo's own source. Everything in the tree above, except
 the two entries marked otherwise and the two conditional `docs/agent-rules/`
 files just discussed, is scaffolded into the project by `/init-workflow`
-from the plugin's bundled templates on first run (see *Installing and
-updating the plugin* below); the project owns it from that point on.
+from the plugin's bundled templates whenever it's found missing — the
+review-gate files (`.claude/settings.json`, `githooks/pre-push`,
+`scripts/review-ok.sh`) and `AGENTS.md`/`CLAUDE.md` are each proposed on
+their own trigger, independently of one another, so a project that already
+has its own `AGENTS.md` still gets the gate scaffolded (see that skill's
+Step 1; see *Installing and updating the plugin* below); the project owns
+each file from that point on.
 
 This repo (the plugin's own source) is the one exception, but not the way
 you might expect: it carries `plugins/ai-workflow/agents/`,
@@ -726,7 +731,9 @@ different homes instead of one repo:
   enforcement files (`githooks/pre-push`, `scripts/review-ok.sh` — these
   must physically live in the project's own repo, since a git hook has to
   fire for humans and every tool, not just Claude). These get scaffolded
-  into the project by `/init-workflow` on first run, from
+  into the project by `/init-workflow` whenever missing — independently of
+  whether `AGENTS.md` itself already exists, so adopting the gate doesn't
+  require rewriting a project's existing guidance doc — from
   `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
   bundled source of truth) — see its skill summary above — then are never
   touched by the plugin again; the project owns them from that point.

@@ -42,42 +42,63 @@ updates to those come from updating the plugin itself, not from this skill.
 
 ## Step 1 — Scaffold if needed, then assess the current state
 
-If `AGENTS.md` does not exist, this is a brand-new project: propose
-scaffolding every file under `${CLAUDE_SKILL_DIR}/templates/` to its
+Two independent things can be missing, and each is scaffolded on its own
+trigger — a project can have hand-written its own `AGENTS.md` long before
+adopting this plugin's review gate, so gate scaffolding must not wait for
+`AGENTS.md` to be absent.
+
+**Review-gate files.** Propose scaffolding whichever of `githooks/pre-push`,
+`scripts/review-ok.sh`, and `.claude/settings.json` don't already exist —
+from `${CLAUDE_SKILL_DIR}/templates/`, at the same relative path they have
+there, preserving the executable bit on the first two and stripping the
+`.template` suffix from `settings.json.template` (landing at
+`.claude/settings.json`, **not** project root) on the destination copy
+only — never on the source inside `templates/` itself. If any of the three
+already exists, leave it untouched and list it as "already present" in
+Step 6's report rather than overwriting it silently; a project may have its
+own hook there already. Also append `.review-passed`, `.qa-evidence/`, and
+`.workflow-log/` to `.gitignore` if not already present (create the file if
+it doesn't exist) — these are what the workflow writes locally and Step 5
+checks for.
+
+**Project guidance.** If `AGENTS.md` does not exist, propose scaffolding
+every remaining file under `${CLAUDE_SKILL_DIR}/templates/` to its
 project-relative destination (this is the plugin's canonical enumeration —
 see the file tree in the plugin's own documentation, kept in sync with this
 directory by rule) — **except**
 `docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`,
 which Step 4 creates (or doesn't, if the project already has equivalent
 docs) once it knows the answer; writing them here too would leave an
-orphaned stub if Step 4 points elsewhere instead. For everything else:
-strip the `.template` suffix from `AGENTS.md.template` and
-`CLAUDE.md.template` (landing at `AGENTS.md`/`CLAUDE.md`) and from
-`settings.json.template` (landing at `.claude/settings.json`, **not**
-project root) — on the destination copy only; never strip it on the
-source inside `templates/` itself, since an un-suffixed `AGENTS.md`/
-`CLAUDE.md` left there would be auto-loaded by Claude Code as this
-project's live guidance instead of a template. Preserve the executable
-bit on `githooks/pre-push` and `scripts/review-ok.sh`, and copy every
-other file (the rest of the `docs/` tree,
-`.github/workflows/ci.yml.example`) to the same relative path it has under
-`templates/`. Also append `.review-passed`, `.qa-evidence/`, and
-`.workflow-log/` to `.gitignore` if not already present (create the file if
-it doesn't exist) — these are what the workflow writes locally and Step 5
-checks for. Present the full file list in one block — the same
-confirm-then-write pattern as every other step here — before writing
-anything. Once written, continue below as first-run mode.
+orphaned stub if Step 4 points elsewhere instead. Strip the `.template`
+suffix from `AGENTS.md.template` and `CLAUDE.md.template` (landing at
+`AGENTS.md`/`CLAUDE.md`) on the destination copy only — never on the source
+inside `templates/` itself, since an un-suffixed `AGENTS.md`/`CLAUDE.md`
+left there would be auto-loaded by Claude Code as this project's live
+guidance instead of a template. If `CLAUDE.md` already exists (e.g. from
+Claude Code's own `/init`) while `AGENTS.md` does not, leave the existing
+`CLAUDE.md` alone and instead offer to append the `@AGENTS.md` import line
+to it, rather than overwriting it with the template's version — report it
+as "already present" the same way if the user declines. Copy every other
+file (the rest of the `docs/` tree, `.github/workflows/ci.yml.example`) to
+the same relative path it has under `templates/`, skipping (and reporting)
+any that already exist.
 
-Read `AGENTS.md`. If it has a **Review & Planning Guidance** section, read
-the files it names. A named file that doesn't exist yet is expected input
-to Step 4, not a Rule 2 failure to report — this applies whether `AGENTS.md`
-was just scaffolded (its two entries default to
-`docs/agent-rules/code-critic.md`/`plan-critic.md`, which Step 4 hasn't
-created yet) or pre-existing (a project adopting this flow for the first
-time, whose named or default files may not exist either). Otherwise (no
-section at all) check `docs/agent-rules/code-critic.md` and
-`docs/agent-rules/plan-critic.md` directly. Classify each placeholder /
-`[TODO: …]` as filled or open.
+Present the full file list — split into what will be written and what's
+already present and left alone — in one block for confirmation before
+writing anything, the same confirm-then-write pattern as every other step
+here. Once confirmed and written, continue below.
+
+Read `AGENTS.md` (whether just scaffolded or pre-existing). If it has a
+**Review & Planning Guidance** section, read the files it names. A named
+file that doesn't exist yet is not a Rule 2 failure to stop on here — it's
+expected input to Step 4, whether `AGENTS.md` was just scaffolded (its two
+entries default to `docs/agent-rules/code-critic.md`/`plan-critic.md`,
+which Step 4 hasn't created yet) or pre-existing (a project adopting this
+flow for the first time, whose named or default files may not exist
+either); Step 5 item 8 decides separately whether a still-missing file gets
+reported once you're in doctor mode. Otherwise (no section at all) check
+`docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
+directly. Classify each placeholder / `[TODO: …]` as filled or open.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
@@ -223,9 +244,10 @@ confirmation, report what you cannot fix:
 
 ## Step 6 — Report
 
-End with a short summary: what was written (file by file), what was
-deliberately deferred (the open TODOs and what they disable), the doctor
-checklist results, and the suggested next action — typically committing the
+End with a short summary: what was written (file by file), what already
+existed and was left untouched (Step 1's review-gate/`CLAUDE.md` skips),
+what was deliberately deferred (the open TODOs and what they disable), the
+doctor checklist results, and the suggested next action — typically committing the
 setup changes, then starting the first feature on a fresh branch with
 `/feature`. For each item still open — including deferrals found in doctor
 mode — offer to run the relevant step (2–4) for just that item now, so

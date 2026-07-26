@@ -100,9 +100,12 @@ in-progress edits. Point the marketplace at a local checkout instead:
 /plugin install ai-workflow@ai-workflow
 ```
 
-On a brand-new project, `/init-workflow` scaffolds the project-owned files
-from the plugin's bundled templates (proposing the full list before writing
-anything), then continues straight into adaptation: it detects your
+`/init-workflow` scaffolds whichever project-owned files are missing from
+the plugin's bundled templates (proposing the full list before writing
+anything) — the review-gate files and `AGENTS.md`/`CLAUDE.md` are each
+proposed independently, so adopting this on a project with its own
+pre-existing `AGENTS.md` still gets the gate. On a brand-new project it
+continues straight into adaptation: it detects your
 build/test commands and default branch, drafts the `AGENTS.md` sections from
 the real codebase, asks whether you already have docs for code
 review/planning guidance (pointing `AGENTS.md` at them if so, or seeding
