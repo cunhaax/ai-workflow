@@ -102,17 +102,20 @@ in-progress edits. Point the marketplace at a local checkout instead:
 
 `/init-workflow` scaffolds whichever project-owned files are missing from
 the plugin's bundled templates (proposing the full list before writing
-anything) — the review-gate files and `AGENTS.md`/`CLAUDE.md` are each
-proposed independently, so adopting this on a project with its own
-pre-existing `AGENTS.md` still gets the gate. On a brand-new project it
-continues straight into adaptation: it detects your
-build/test commands and default branch, drafts the `AGENTS.md` sections from
-the real codebase, asks whether you already have docs for code
-review/planning guidance (pointing `AGENTS.md` at them if so, or seeding
-`docs/agent-rules/` if not), and validates the whole setup (hook,
-`core.hooksPath`, settings, `.gitignore`, CI, the guidance section itself
-resolving to real files). Everything is proposed and confirmed before it is
-written; whatever you defer stays an explicit TODO. The section below is
+anything) — every file's own destination gates its own scaffolding, so
+adopting this on a project with its own pre-existing `AGENTS.md` still gets
+the review gate, and vice versa. (`.claude/settings.json` is merged rather
+than overwritten if it already exists — a project-scope install can create
+it first — and a foreign pre-existing `githooks/pre-push` is flagged as a
+conflict rather than silently trusted.) It then continues into adaptation:
+detects your build/test commands and default branch, drafts the
+`AGENTS.md` sections from the real codebase, asks whether you already have
+docs for code review/planning guidance (pointing `AGENTS.md` at them if so,
+or seeding `docs/agent-rules/` if not), and validates the whole setup
+(hook, `core.hooksPath`, settings, `.gitignore`, CI, the guidance section
+itself resolving to real files). Everything is proposed and confirmed
+before it is written; whatever you defer stays an explicit TODO. The
+section below is
 the manual map of the same work.
 
 **Updating later**: update the plugin (`/plugin marketplace update` /

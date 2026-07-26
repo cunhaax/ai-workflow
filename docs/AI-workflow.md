@@ -92,13 +92,16 @@ it, at the repo root) — it's linked from `plugin.json`'s `homepage` field
 instead, in this repo's own source. Everything in the tree above, except
 the two entries marked otherwise and the two conditional `docs/agent-rules/`
 files just discussed, is scaffolded into the project by `/init-workflow`
-from the plugin's bundled templates whenever it's found missing — the
-review-gate files (`.claude/settings.json`, `githooks/pre-push`,
-`scripts/review-ok.sh`) and `AGENTS.md`/`CLAUDE.md` are each proposed on
-their own trigger, independently of one another, so a project that already
-has its own `AGENTS.md` still gets the gate scaffolded (see that skill's
-Step 1; see *Installing and updating the plugin* below); the project owns
-each file from that point on.
+from the plugin's bundled templates whenever its own destination is found
+missing — each file's presence is checked independently, so a project that
+already has its own `AGENTS.md` still gets the review gate scaffolded (and
+vice versa). `.claude/settings.json` is the one file handled as a merge
+rather than a copy, since a project-scope plugin install can create it
+before `/init-workflow` ever runs; `githooks/pre-push`/`scripts/review-ok.sh`
+are left alone only if they already are this gate's files, not any
+pre-existing script at that path (see that skill's Step 1; see *Installing
+and updating the plugin* below); the project owns each file from that
+point on.
 
 This repo (the plugin's own source) is the one exception, but not the way
 you might expect: it carries `plugins/ai-workflow/agents/`,
@@ -403,10 +406,13 @@ test evidence).
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 
 The bootstrap-and-adaptation pass, run by the **main** agent once the plugin
-is installed in a project (and re-run any time as a doctor). On a brand-new
-project — no `AGENTS.md` yet — it first scaffolds the project-owned files
-from `plugins/ai-workflow/skills/init-workflow/templates/` (its bundled source of
-truth), then continues into adaptation: detects the build/test commands and
+is installed in a project (and re-run any time as a doctor). It first
+scaffolds whichever project-owned files are missing, from
+`plugins/ai-workflow/skills/init-workflow/templates/` (its bundled source of
+truth) — each file's own destination gates its own scaffolding, so this
+runs the same whether the project is brand-new or already has some of its
+own `AGENTS.md`/`CLAUDE.md`/gate files — then continues into adaptation:
+detects the build/test commands and
 default branch, drafts the `AGENTS.md` sections from the actual codebase,
 asks whether the project already has docs for code review/planning
 guidance — pointing `AGENTS.md`'s *Review & Planning Guidance* section at
@@ -731,11 +737,16 @@ different homes instead of one repo:
   enforcement files (`githooks/pre-push`, `scripts/review-ok.sh` — these
   must physically live in the project's own repo, since a git hook has to
   fire for humans and every tool, not just Claude). These get scaffolded
-  into the project by `/init-workflow` whenever missing — independently of
-  whether `AGENTS.md` itself already exists, so adopting the gate doesn't
-  require rewriting a project's existing guidance doc — from
+  into the project by `/init-workflow` whenever each one's own destination
+  is missing — no file's presence gates another's, so adopting the gate
+  doesn't require rewriting a project's existing guidance doc, and a
+  pre-existing `AGENTS.md` still gets the gate. `.claude/settings.json` is
+  merged rather than overwritten if it already exists (see the note two
+  paragraphs above on project-scope install creating it first);
+  `githooks/pre-push`/`scripts/review-ok.sh` are left alone only if they
+  already are this gate's files. Sourced from
   `plugins/ai-workflow/skills/init-workflow/templates/` (the plugin's
-  bundled source of truth) — see its skill summary above — then are never
+  bundled source of truth) — see its skill summary above — then never
   touched by the plugin again; the project owns them from that point.
   `docs/agent-rules/*` is the one exception: Step 4 only copies these two
   from `templates/` if the project doesn't already have equivalent docs —

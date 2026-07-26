@@ -2,22 +2,25 @@
 name: init-workflow
 description: >
   Bootstraps and validates the AI workflow in a project that has this
-  plugin installed: scaffolds project-owned files on first run, detects the
-  project's commands, fills AGENTS.md, points it at review/planning
-  guidance (seeding docs/agent-rules/ or reusing an existing doc), and
-  verifies the review gate. Re-run any time as a doctor — it reports what
-  is missing or drifted. (Named init-workflow so it does not collide with
-  Claude Code's built-in /init command, which generates a CLAUDE.md.)
+  plugin installed: scaffolds whichever project-owned files are missing,
+  detects the project's commands, fills AGENTS.md, points it at
+  review/planning guidance (seeding docs/agent-rules/ or reusing an
+  existing doc), and verifies the review gate. Re-run any time as a
+  doctor — it reports what is missing or drifted. (Named init-workflow so
+  it does not collide with Claude Code's built-in /init command, which
+  generates a CLAUDE.md.)
 ---
 
 # /init-workflow — Bootstrap and Validate the Workflow
 
-Run this skill inside a project once this plugin is installed. On a brand
-new project it scaffolds the project-owned files from this skill's bundled
-templates, then fills them with *this* project's facts, interactively, and
-verifies the setup end to end. It is idempotent — re-run it after a plugin
-update or whenever setup drift is suspected, and it acts as a doctor,
-reporting what is missing rather than redoing what is already filled.
+Run this skill inside a project once this plugin is installed. It
+scaffolds whichever project-owned files are missing from this skill's
+bundled templates — independently of one another, so a project can already
+have its own `AGENTS.md`, its own `CLAUDE.md`, or none of it — then fills
+them with *this* project's facts, interactively, and verifies the setup end
+to end. It is idempotent — re-run it after a plugin update or whenever
+setup drift is suspected, and it acts as a doctor, reporting what is
+missing rather than redoing what is already filled.
 
 **Division of labor:** this skill scaffolds, adapts, and validates
 project-owned files. It never edits the plugin's own mechanism — the
@@ -42,51 +45,78 @@ updates to those come from updating the plugin itself, not from this skill.
 
 ## Step 1 — Scaffold if needed, then assess the current state
 
-Two independent things can be missing, and each is scaffolded on its own
-trigger — a project can have hand-written its own `AGENTS.md` long before
-adopting this plugin's review gate, so gate scaffolding must not wait for
-`AGENTS.md` to be absent.
-
-**Review-gate files.** Propose scaffolding whichever of `githooks/pre-push`,
-`scripts/review-ok.sh`, and `.claude/settings.json` don't already exist —
-from `${CLAUDE_SKILL_DIR}/templates/`, at the same relative path they have
-there, preserving the executable bit on the first two and stripping the
-`.template` suffix from `settings.json.template` (landing at
-`.claude/settings.json`, **not** project root) on the destination copy
-only — never on the source inside `templates/` itself. If any of the three
-already exists, leave it untouched and list it as "already present" in
-Step 6's report rather than overwriting it silently; a project may have its
-own hook there already. Also append `.review-passed`, `.qa-evidence/`, and
-`.workflow-log/` to `.gitignore` if not already present (create the file if
-it doesn't exist) — these are what the workflow writes locally and Step 5
-checks for.
-
-**Project guidance.** If `AGENTS.md` does not exist, propose scaffolding
-every remaining file under `${CLAUDE_SKILL_DIR}/templates/` to its
+Every file under `${CLAUDE_SKILL_DIR}/templates/` maps to a
 project-relative destination (this is the plugin's canonical enumeration —
 see the file tree in the plugin's own documentation, kept in sync with this
-directory by rule) — **except**
-`docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`,
-which Step 4 creates (or doesn't, if the project already has equivalent
-docs) once it knows the answer; writing them here too would leave an
-orphaned stub if Step 4 points elsewhere instead. Strip the `.template`
-suffix from `AGENTS.md.template` and `CLAUDE.md.template` (landing at
-`AGENTS.md`/`CLAUDE.md`) on the destination copy only — never on the source
-inside `templates/` itself, since an un-suffixed `AGENTS.md`/`CLAUDE.md`
-left there would be auto-loaded by Claude Code as this project's live
-guidance instead of a template. If `CLAUDE.md` already exists (e.g. from
-Claude Code's own `/init`) while `AGENTS.md` does not, leave the existing
-`CLAUDE.md` alone and instead offer to append the `@AGENTS.md` import line
-to it, rather than overwriting it with the template's version — report it
-as "already present" the same way if the user declines. Copy every other
-file (the rest of the `docs/` tree, `.github/workflows/ci.yml.example`) to
-the same relative path it has under `templates/`, skipping (and reporting)
-any that already exist.
+directory by rule), **except** `docs/agent-rules/code-critic.md` and
+`docs/agent-rules/plan-critic.md`, which Step 4 creates (or doesn't, if the
+project already has equivalent docs) once it knows the answer; writing them
+here too would leave an orphaned stub if Step 4 points elsewhere instead.
+Check every other mapped file's destination on its **own** trigger — one
+file's presence never gates another's, since a project can have
+hand-written its own `AGENTS.md` long before adopting this plugin's review
+gate, or vice versa:
 
-Present the full file list — split into what will be written and what's
-already present and left alone — in one block for confirmation before
-writing anything, the same confirm-then-write pattern as every other step
-here. Once confirmed and written, continue below.
+- **Destination missing → scaffold it.** Strip the `.template` suffix from
+  `AGENTS.md.template` and `CLAUDE.md.template` (landing at
+  `AGENTS.md`/`CLAUDE.md`) and from `settings.json.template` (landing at
+  `.claude/settings.json`, **not** project root) — on the destination copy
+  only; never strip it on the source inside `templates/` itself, since an
+  un-suffixed `AGENTS.md`/`CLAUDE.md` left there would be auto-loaded by
+  Claude Code as this project's live guidance instead of a template.
+  Preserve the executable bit on `githooks/pre-push` and
+  `scripts/review-ok.sh`. Copy every other file (the rest of the `docs/`
+  tree, `.github/workflows/ci.yml.example`) to the same relative path it
+  has under `templates/`.
+- **Destination exists as plain content** (`AGENTS.md`, `docs/adr/*`,
+  `docs/product-context/*`, `.github/workflows/ci.yml`/`.example`) → leave
+  it untouched and list it as "already present" in Step 6's report — never
+  overwrite a file the project already owns.
+- **Destination exists but needs special handling** (`CLAUDE.md`,
+  `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`) —
+  see immediately below.
+
+**`CLAUDE.md`.** If it exists (e.g. from Claude Code's own `/init`) and
+doesn't already contain `@AGENTS.md`, offer to append the import line —
+never overwrite it with the template's version, and never append if the
+import is already there (avoids a duplicate on a project that deleted
+`AGENTS.md` but kept `CLAUDE.md`). If the user declines, report it in
+Step 6 as a gap: `CLAUDE.md` won't load `AGENTS.md`'s guidance into Claude
+Code.
+
+**`.claude/settings.json`.** A merge target, not a copy target — a
+project-scope plugin install can create this file before `/init-workflow`
+ever runs (see *Installing and updating the plugin* in
+`docs/AI-workflow.md`), so "already exists" here is the common case, not
+the exception. If it exists, read it and propose adding whichever of
+`${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
+`permissions.ask`/`permissions.deny` entries aren't already present,
+preserving everything else the file already has — never a flat overwrite.
+If it doesn't exist, scaffold it directly from the template.
+
+**`githooks/pre-push` / `scripts/review-ok.sh`.** If either destination
+exists, check whether its content already references `.review-passed` (the
+marker this gate reads and writes — see the template versions for the
+mechanism). If it does, it's already this gate's file (a prior
+`/init-workflow` run, or a shared clone) — leave it alone, nothing to
+report. If it does **not** — a foreign hook doing something unrelated
+(lint, commit-message checks) — this is a real conflict, not a benign
+"already present": silently leaving it means doctor items 1–2 report green
+while the review gate enforces nothing. Surface it explicitly and ask the
+user how to proceed (chain the template's check into the existing script,
+replace it, or explicitly decline); a declined foreign hook is an open gap
+Step 6 must call out by name, not fold into the general "already present"
+list.
+
+Also append `.review-passed`, `.qa-evidence/`, and `.workflow-log/` to
+`.gitignore` if not already present (create the file if it doesn't exist)
+— these are what the workflow writes locally and Step 5 checks for.
+
+Present the full proposal — files to scaffold, the `.claude/settings.json`
+merge diff if any, the `CLAUDE.md` append if applicable, any hook conflict,
+and what's already present and left alone — in one block for confirmation
+before writing anything, the same confirm-then-write pattern as every other
+step here. Once confirmed and written, continue below.
 
 Read `AGENTS.md` (whether just scaffolded or pre-existing). If it has a
 **Review & Planning Guidance** section, read the files it names. A named
@@ -95,9 +125,9 @@ expected input to Step 4, whether `AGENTS.md` was just scaffolded (its two
 entries default to `docs/agent-rules/code-critic.md`/`plan-critic.md`,
 which Step 4 hasn't created yet) or pre-existing (a project adopting this
 flow for the first time, whose named or default files may not exist
-either); Step 5 item 8 decides separately whether a still-missing file gets
-reported once you're in doctor mode. Otherwise (no section at all) check
-`docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
+either); Step 5 item 8 decides separately, in whichever mode you end up in,
+whether a still-missing file gets reported. Otherwise (no section at all)
+check `docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
 directly. Classify each placeholder / `[TODO: …]` as filled or open.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
@@ -210,7 +240,10 @@ future additions.
 Check each item and collect the results — fix only with the user's
 confirmation, report what you cannot fix:
 
-1. `githooks/pre-push` and `scripts/review-ok.sh` exist and are executable.
+1. `githooks/pre-push` and `scripts/review-ok.sh` exist, are executable,
+   and their content references `.review-passed` — existence alone isn't
+   enough; a foreign hook at either path (see Step 1) would pass an
+   existence check while enforcing nothing.
 2. The pre-push review gate is active: resolve `git config core.hooksPath`
    (absolute as-is, relative against repo toplevel) and check for an
    executable `pre-push` there — don't compare the raw config value to the
@@ -245,10 +278,11 @@ confirmation, report what you cannot fix:
 ## Step 6 — Report
 
 End with a short summary: what was written (file by file), what already
-existed and was left untouched (Step 1's review-gate/`CLAUDE.md` skips),
-what was deliberately deferred (the open TODOs and what they disable), the
-doctor checklist results, and the suggested next action — typically committing the
-setup changes, then starting the first feature on a fresh branch with
+existed and was left untouched (any Step 1 skip, merge, or declined
+append), any unresolved hook conflict from Step 1, what was deliberately
+deferred (the open TODOs and what they disable), the doctor checklist
+results, and the suggested next action — typically committing the setup
+changes, then starting the first feature on a fresh branch with
 `/feature`. For each item still open — including deferrals found in doctor
 mode — offer to run the relevant step (2–4) for just that item now, so
 deferred TODOs are re-offered on every run rather than silently carried
