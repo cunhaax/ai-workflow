@@ -265,40 +265,56 @@ confirmation, report what you cannot fix:
    and their content references `.review-passed` — existence alone isn't
    enough; a foreign hook at either path (see Step 1) would pass an
    existence check while enforcing nothing.
-2. The pre-push review gate is active. Resolve where git will actually
-   execute a pre-push hook with `git rev-parse --git-path hooks/pre-push`
-   — this single command already accounts for `core.hooksPath` (set,
-   unset, absolute, or relative), linked worktrees, submodules, and
-   `--separate-git-dir` clones, so don't hand-roll the resolution or
-   compare against a literal path like `.git/hooks/pre-push` (in a linked
-   worktree `.git` is a file, not a directory, so that literal never
-   exists regardless of what's actually installed). Don't run
-   `scripts/review-ok.sh` for this check — running it records a review
-   pass. Check whether the file this resolves to exists, is executable,
-   and its content references `.review-passed`:
+2. The pre-push review gate is active. From the repo toplevel, resolve
+   where git will actually execute a pre-push hook with
+   `git rev-parse --git-path hooks/pre-push` (treat the output as relative
+   to the toplevel) — this single command already accounts for
+   `core.hooksPath` (set, unset, absolute, or relative), linked worktrees,
+   submodules, and `--separate-git-dir` clones, so don't hand-roll the
+   resolution or compare against a literal path like `.git/hooks/pre-push`
+   (in a linked worktree `.git` is a file, not a directory, so that
+   literal never exists regardless of what's actually installed). Don't
+   run `scripts/review-ok.sh` for this check — running it records a
+   review pass. Check whether the file this resolves to exists, is
+   executable, and its content references `.review-passed`:
    - **Yes to all three** → pass, regardless of which path it resolved
      from (a worktree inheriting the main checkout's absolute
      `core.hooksPath` resolves here correctly and must pass).
    - **The file has the marker but isn't executable** → this can't be a
      foreign hook (the marker identifies it as this gate's own file), so
      it's safe to offer `chmod +x` directly.
-   - **No file exists there at all, and `core.hooksPath` is unset** —
-     nothing is wired up and nothing else claims the spot: offer to run
-     `git config core.hooksPath githooks` (per clone; each teammate needs
-     it).
-   - **Anything else** — a file exists there without the marker (a
-     foreign hook, whether from another manager or a leftover file), or
-     nothing exists there but `core.hooksPath` is set to something (a
-     manager like husky/lefthook that hasn't installed a `pre-push` hook
-     yet, but still owns that config value) — do **not** offer to change
-     `core.hooksPath` and do **not** offer to replace whatever is there;
-     either action can silently disable another hook manager. When it's
-     the same file Step 1 already asked about this run, don't ask again —
-     just reflect that outcome. Otherwise, report exactly what's currently
+   - **No file exists there, `core.hooksPath` is unset, and item 1 above
+     passed** (`githooks/pre-push` itself exists, is executable, and has
+     the marker) — the gate's own file is ready and nothing else claims
+     that config value: offer `git config core.hooksPath githooks` (per
+     clone; each teammate needs it).
+   - **No file exists there, but item 1 did *not* pass** — don't offer the
+     config change; it would point `core.hooksPath` at a file that isn't
+     ready. The actual gap is item 1's finding (missing, not executable,
+     or a foreign file at `githooks/pre-push` — see Step 1), not this
+     item's; report it as such. Fixing item 1 is the real remedy, and a
+     later doctor run will then offer the config change.
+   - **Anything else** — a file exists at the resolved location without
+     the marker (a foreign hook, whether from another manager or a
+     leftover file), or nothing exists there but `core.hooksPath` is set
+     to something (a manager like husky/lefthook that owns that config
+     value, whether or not it has installed a `pre-push` hook) — do
+     **not** offer to change `core.hooksPath` and do **not** offer to
+     replace whatever is there; either action can silently disable
+     another hook manager. Report exactly what's currently
      configured/present and leave reconciling it to the human — including,
      if they want the two to coexist, that their existing hook would need
      to invoke `githooks/pre-push` itself with correct stdin handling (see
      Step 1's stdin note), not something to draft on their behalf here.
+
+   Known divergence: `scripts/review-ok.sh` itself still resolves
+   `core.hooksPath` directly rather than through `git rev-parse --git-path
+   hooks/pre-push`, so it can warn "no active pre-push hook" in a
+   configuration this item would correctly pass (`core.hooksPath` unset
+   with a working default-location hook). That script is real, shipped,
+   security-relevant behavior — not something to change as a side effect
+   of a doctor-prose fix — so this is recorded here rather than silently
+   left inconsistent.
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
    `.workflow-log/`.

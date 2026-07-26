@@ -418,11 +418,13 @@ asks whether the project already has docs for code review/planning
 guidance — pointing `AGENTS.md`'s *Review & Planning Guidance* section at
 them if so, or interviewing the user to seed new files under
 `docs/agent-rules/` if not — and validates the whole setup (hook content
-and executable bit, `core.hooksPath` resolving to a hook with that same
-content rather than merely to *a* file at that path, `CLAUDE.md` import,
-`.gitignore`, settings, CI, the `Commands` section
-existing with no unfilled placeholder, the guidance section itself
-resolving to real files). Everything is proposed and user-confirmed before
+and executable bit, where git itself will actually execute a pre-push hook
+from — resolved via `git rev-parse --git-path hooks/pre-push` rather than
+hand-rolled from `core.hooksPath`, since that single command already
+accounts for worktrees, submodules, and separate git dirs — `CLAUDE.md`
+import, `.gitignore`, settings, CI, the `Commands` section existing with no
+unfilled placeholder, the guidance section itself resolving to real
+files). Everything is proposed and user-confirmed before
 writing; deferred items stay explicit TODOs. It never
 edits the plugin's own mechanism — skills, sub-agents, and this guide update
 via the plugin itself. (Named `init-workflow` to avoid Claude Code's
