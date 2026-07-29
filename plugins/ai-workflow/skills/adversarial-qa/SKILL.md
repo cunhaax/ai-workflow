@@ -31,6 +31,15 @@ to understand what the feature does — not as a checklist to tick through.
    blocker. Do not substitute curl, SQL, or any other workaround for browser
    exploration — those answer different questions.
 
+   For mechanical setup with a known, fixed sequence — logging in,
+   navigating through boilerplate screens to reach the feature under test —
+   batch the steps into one `browser_run_code_unsafe` call instead of a
+   click/type/snapshot round trip per step; each round trip returns a full
+   accessibility snapshot, which adds up fast. Reserve the granular tools
+   (`browser_click`, `browser_snapshot`, etc.) for the actual exploration in
+   step 2, where you need to see state after each action to decide the next
+   one.
+
 2. Probe beyond the happy path. Try things the planner likely did not
    enumerate: narrow viewports, keyboard-only navigation, browser back button,
    multiple tabs on the same form, paste of weird/long/XSS content, reloading
@@ -54,9 +63,13 @@ to understand what the feature does — not as a checklist to tick through.
 
 ## Evidence
 
-Save screenshots under `.qa-evidence/` at the repo root (gitignored). Every
-finding in the report MUST cite at least one screenshot there, with a
-one-sentence description of what it shows.
+Only take a screenshot once you've decided something is a finding worth
+reporting — never while just looking around. `browser_take_screenshot`
+returns an image, which costs meaningfully more than the text snapshots from
+`browser_snapshot`, so screenshotting every step of the exploration adds up
+quickly for no benefit. Save each finding's screenshot under `.qa-evidence/`
+at the repo root (gitignored); every finding in the report MUST cite at least
+one screenshot there, with a one-sentence description of what it shows.
 
 ---
 
