@@ -13,6 +13,7 @@ silently dropped, and a missing file becomes a warning line instead of an
 error. Numbers are therefore lower bounds whenever warnings are present.
 """
 import json
+import re
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -42,6 +43,32 @@ def fmt_tokens(n):
     return f"{n / 1000:.1f}k" if n >= 1000 else str(n)
 
 
+def fmt_model(model_id):
+    """Normalize a raw API model id ('claude-opus-5', 'us.anthropic.claude-3-7-
+    sonnet-20250219-v1:0', ...) down to a short label ('opus-5', 'sonnet-3-7')."""
+    m = model_id
+    m = re.sub(r"^(us|eu|apac)\.anthropic\.", "", m)
+    m = re.sub(r"^anthropic\.", "", m)
+    m = re.sub(r"^claude-", "", m)
+    m = re.sub(r"-v\d+:\d+$", "", m)      # bedrock version suffix
+    m = re.sub(r"-\d{8}$", "", m)         # date-stamped snapshot suffix
+    return m
+
+
+def effective_model(tally):
+    """Effective model actually used, read from the transcript's own message
+    records — not the spawn meta, which only carries an explicit override and
+    is absent (shows as 'default') whenever a sub-agent ran on its agent
+    definition's own default model instead."""
+    if not tally.models:
+        return "?"
+    common = tally.models.most_common()
+    label = fmt_model(common[0][0])
+    if len(common) > 1:
+        label += f" (+{len(common) - 1} other)"
+    return label
+
+
 def iter_records(path, unparsed):
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
@@ -67,6 +94,7 @@ class Tally:
         self.cache_create = 0
         self.first_ts = None
         self.last_ts = None
+        self.models = Counter()
 
     def add(self, rec):
         ts = parse_ts(rec.get("timestamp"))
@@ -75,12 +103,16 @@ class Tally:
                 self.first_ts = ts
             if self.last_ts is None or ts > self.last_ts:
                 self.last_ts = ts
-        usage = (rec.get("message") or {}).get("usage")
+        message = rec.get("message") or {}
+        usage = message.get("usage")
         if usage:
             self.messages += 1
             self.output += usage.get("output_tokens") or 0
             self.cache_read += usage.get("cache_read_input_tokens") or 0
             self.cache_create += usage.get("cache_creation_input_tokens") or 0
+            model = message.get("model")
+            if model and model != "<synthetic>":
+                self.models[model] += 1
 
     @property
     def duration(self):
@@ -175,19 +207,18 @@ def main():
             meta_index[tuid] = (meta, meta_path.with_suffix("").with_suffix(".jsonl"),
                                 meta_path.parent.parent.name)
 
-    agent_rows = []       # per spawn: label, model, tally, reads, note
+    agent_rows = []       # per spawn: label, tally, reads, note (model comes from tally)
     related_sessions = set()
     for spawn in sorted(spawns, key=lambda s: s["ts"] or TS_MIN):
         entry = meta_index.get(spawn["tool_use_id"])
         row = {"label": spawn["type"], "desc": spawn["desc"], "ts": spawn["ts"],
-               "model": "", "tally": Tally(), "reads": set(), "note": ""}
+               "tally": Tally(), "reads": set(), "note": ""}
         if entry is None:
             row["note"] = "sub-agent transcript not found"
             warnings.append(f"{spawn['type']} ({spawn['desc']}): sub-agent "
                             f"transcript not found — its cost is missing")
         else:
             meta, jsonl_path, owner_sid = entry
-            row["model"] = meta.get("model", "")
             if owner_sid not in session_ids:
                 related_sessions.add(owner_sid)
             if jsonl_path.exists():
@@ -254,7 +285,8 @@ def main():
         out.append(f"- Wall-clock: {main_tally.first_ts.strftime('%Y-%m-%d %H:%M')} → "
                    f"{main_tally.last_ts.strftime('%Y-%m-%d %H:%M')} UTC "
                    f"({fmt_duration(main_tally.duration)}, includes idle time)")
-    out.append(f"- Main agent: {main_tally.messages} assistant messages; "
+    out.append(f"- Main agent: model {effective_model(main_tally)}; "
+               f"{main_tally.messages} assistant messages; "
                f"output {fmt_tokens(main_tally.output)} tokens; "
                f"cache read {fmt_tokens(main_tally.cache_read)}; "
                f"cache write {fmt_tokens(main_tally.cache_create)}")
@@ -267,12 +299,17 @@ def main():
         if r["note"]:
             out.append(f"  | {r['label']} | ? | — | — | — | — | — ({r['note']}) |")
         else:
-            out.append(f"  | {r['label']} | {r['model'] or 'default'} | "
+            out.append(f"  | {r['label']} | {effective_model(t)} | "
                        f"{fmt_tokens(t.output)} | {fmt_tokens(t.cache_read)} | "
                        f"{fmt_duration(t.duration)} | {t.messages} | {len(r['reads'])} |")
     out.append("")
     out.append(f"- Sub-agent share of output tokens: {share}% "
                f"({fmt_tokens(agent_output)} of {fmt_tokens(total_output)})")
+    total_working = main_tally.duration + sum(r["tally"].duration for r in agent_rows)
+    out.append(f"- Total working time (sum of each agent's own duration, main + "
+               f"sub-agents): {fmt_duration(total_working)} (approximate — agents "
+               f"that ran concurrently each still add their own duration, so this "
+               f"can exceed wall-clock)")
     if planner_reads:
         runs_note = ("" if planner_runs == 1 else
                      f" (approximate — {planner_runs} planner runs, reads "
