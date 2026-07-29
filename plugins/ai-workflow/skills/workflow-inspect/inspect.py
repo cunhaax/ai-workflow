@@ -305,11 +305,6 @@ def main():
     out.append("")
     out.append(f"- Sub-agent share of output tokens: {share}% "
                f"({fmt_tokens(agent_output)} of {fmt_tokens(total_output)})")
-    total_working = main_tally.duration + sum(r["tally"].duration for r in agent_rows)
-    out.append(f"- Total working time (sum of each agent's own duration, main + "
-               f"sub-agents): {fmt_duration(total_working)} (approximate — agents "
-               f"that ran concurrently each still add their own duration, so this "
-               f"can exceed wall-clock)")
     if planner_reads:
         runs_note = ("" if planner_runs == 1 else
                      f" (approximate — {planner_runs} planner runs, reads "
