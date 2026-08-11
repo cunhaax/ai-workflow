@@ -184,18 +184,20 @@ review of the current HEAD.
 
 ### Step 7 — Exploratory QA
 
-Run this step only when the change has a **UI surface**: the diff touches
-templates/views, static assets, or a controller path that renders a view,
-fragment, or client-driven (e.g. HTMX/AJAX) response. For changes with no UI
-surface (pure service/repository logic, migrations, build/config work), skip
+Run this step only when the change has a **UI and/or API surface**: the diff
+touches templates/views, static assets, a controller path that renders a
+view, fragment, or client-driven (e.g. HTMX/AJAX) response, or exposes/changes
+a REST (or other network-callable) endpoint. For changes with neither surface
+(pure internal service/repository logic, migrations, build/config work), skip
 this step and state in your summary that QA was skipped and why. When in
 doubt, run it.
 
-Invoke the `adversarial-qa` sub-agent for an adversarial browser probe of the feature. Its
-role is to catch things the plan and the committed tests did not anticipate —
-NOT to re-verify the plan's Requirements (those are locked down by the
-committed end-to-end tests written during implementation). Pass the approved
-plan text so the agent understands the feature, not as a checklist.
+Invoke the `adversarial-qa` sub-agent for an adversarial probe of the feature
+through whichever surface(s) it exposes. Its role is to catch things the plan
+and the committed tests did not anticipate — NOT to re-verify the plan's
+Requirements (those are locked down by the committed end-to-end tests written
+during implementation). Pass the approved plan text so the agent understands
+the feature, not as a checklist.
 
 ### Step 8 — Relay QA findings
 
@@ -205,9 +207,9 @@ a PR and wait for direction on each (fix now, defer, or ignore).
 For each finding the user chooses to **defer**, file a GitHub issue labeled
 `known-issue` (`gh issue create --label known-issue …`) describing the
 behaviour, where it lives, the QA pass that found it, and sign it with model
-attribution. QA screenshots under `.qa-evidence/` are session-local
+attribution. QA evidence under `.qa-evidence/` is session-local
 (gitignored), so the issue body must stand alone: include reproduction steps
-and describe in words what the screenshot showed. The QA skill checks that
+and describe in words what the evidence showed. The QA skill checks that
 label on every pass, so deferred findings are reported as known instead of
 being re-triaged each time. Do not file issues for findings the user chooses
 to ignore outright.
@@ -216,7 +218,7 @@ to ignore outright.
 
 Only open a PR after the code review has passed and every QA finding has
 been dispositioned (fixed / deferred / ignored) — or QA was skipped because
-there is no UI surface.
+there is no UI or API surface.
 
 The PR body is where the human review starts — it must carry the pipeline's
 conclusions so the reviewer does not have to reconstruct them from the diff
@@ -232,7 +234,7 @@ or a session transcript:
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
   that was raised, and the decision the user made on each.
 - **QA outcome** — findings with their dispositions (fixed / deferred with
-  issue number / ignored), or "skipped: no UI surface". Describe each finding
+  issue number / ignored), or "skipped: no UI or API surface". Describe each finding
   in words — `.qa-evidence/` is gitignored and session-local, so its paths
   are dead links to anyone reading the PR; the durable record for a deferred
   finding is its `known-issue` issue.
