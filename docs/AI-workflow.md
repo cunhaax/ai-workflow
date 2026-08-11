@@ -281,12 +281,15 @@ mechanically checkable rule.
 **Exploratory and adversarial — not a re-verification of the spec.**
 Committed end-to-end tests encode the plan's Requirements deterministically
 (code-critic checks their completeness); this skill's job is to go
-**beyond** them — drives the running app via Playwright MCP, probes past the
-happy path, surfaces anything that looks wrong even outside the feature's
-plan. Checks open `known-issue` GitHub issues so deferred findings are
-reported as known, not re-triaged; STOPs on blockers with no curl/SQL
-substitutes. Evidence lands in `.qa-evidence/` (gitignored, session-local),
-which is why deferred findings must be fully described in their issue.
+**beyond** them — first decides which surface(s) the feature exposes (UI,
+API, or both), then drives a UI surface via Playwright MCP and an API surface
+via `curl`/Bash, probing past the happy path on each and surfacing anything
+that looks wrong even outside the feature's plan. Checks open `known-issue`
+GitHub issues so deferred findings are reported as known, not re-triaged;
+STOPs on blockers rather than substituting `curl`/SQL for browser exploration
+on a UI surface. Evidence lands in `.qa-evidence/` (gitignored,
+session-local), which is why deferred findings must be fully described in
+their issue.
 
 ### `plugins/ai-workflow/skills/feature/SKILL.md` — `/feature`
 
@@ -298,7 +301,7 @@ plan-critic may be skipped only for trivial changes **and** only when the
 user explicitly asks; `[AC-n]` acceptance tests are written before
 implementation and may not be weakened to pass; no push or PR until
 code-critic passes with no FAIL items, escalated to Opus on security-surface
-diffs; QA runs only for changes with a UI surface; the PR body carries the
+diffs; QA runs only for changes with a UI and/or API surface; the PR body carries the
 pipeline's conclusions (plan summary, AC → test table, review outcome, QA
 dispositions, test evidence).
 
@@ -355,7 +358,8 @@ interactively via `claude --agent <name>`.
   diff`, `git log`); never runs the test suite or mutates files; applies
   `code-critic`.
 - **`adversarial-qa`** — QA engineer. Applies `adversarial-qa` to drive the
-  running app via Playwright MCP tools and surface what the plan and tests
+  running app through whichever surface(s) it exposes — via Playwright MCP
+  tools for UI, `curl`/Bash for API — and surface what the plan and tests
   missed.
 
 There is no `feature` sub-agent — `feature` is a main-agent skill that
@@ -421,7 +425,7 @@ flowchart TB
     Planner -.-> ADR & Docs & Code
     Critic -.-> ADR & Docs & Code
     Reviewer -.-> ADR & Code
-    QA -. drives via Playwright .-> App
+    QA -. drives via Playwright/curl .-> App
 
     classDef hub fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff;
     classDef agent fill:#059669,stroke:#065f46,color:#ffffff;
