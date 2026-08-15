@@ -98,7 +98,7 @@ After approval, retain the plan text — you will pass it to the
 ### Step 2 — Implement
 
 **Acceptance tests first.** Before implementing, write the end-to-end tests
-from the plan's Test Strategy — at minimum the `[AC-<branch>-n]`-tagged ones. They
+from the plan's Test Strategy — at minimum the `[AC-<slug>-n]`-tagged ones. They
 encode the approved contract, so drift from the plan surfaces as a failing
 test during implementation instead of a surprise at review. Tests derived
 from the plan may not be weakened, loosened, or rewritten to make them pass
@@ -226,9 +226,9 @@ or a session transcript:
 
 - **Plan summary** — the requirements and approach in a few sentences, plus a
   link to the source spec if there was one.
-- **Acceptance criteria → test table** — one row per `AC-<branch>-n` from the
+- **Acceptance criteria → test table** — one row per `AC-<slug>-n` from the
   plan's Approval Summary: the criterion, and the committed test(s) tagged
-  `[AC-<branch>-n]` that prove it. This is the reviewer's traceability skim —
+  `[AC-<slug>-n]` that prove it. This is the reviewer's traceability skim —
   a criterion without a test row must not reach the PR (the code-critic
   enforces this earlier).
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`

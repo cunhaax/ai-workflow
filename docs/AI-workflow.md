@@ -176,8 +176,8 @@ bulky reference material into sibling files in the skill's directory).
 Produces the implementation plan before any code is written. Opens with a
 phone-sized **Approval Summary**, pins a **Contract** section before the
 Approach, and treats **tests as the plan's deterministic oracle** — every
-user-visible claim maps to a committed test tagged `[AC-<branch>-n]`
-(branch-namespaced so it stays unique across the whole test suite); manual "try X,
+user-visible claim maps to a committed test tagged `[AC-<slug>-n]`
+(slug-namespaced so it stays unique across the whole test suite); manual "try X,
 confirm Y" checklists are banned. Ambiguities surface as `NEEDS_DECISION` in
 the plan text, never as questions from inside a sub-agent. (Named
 `plan-draft`, not `plan`, to avoid colliding with Claude Code's built-in
@@ -299,7 +299,7 @@ critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
 may not create one — Rule 3); plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
-user explicitly asks; `[AC-<branch>-n]` acceptance tests (branch-namespaced so
+user explicitly asks; `[AC-<slug>-n]` acceptance tests (slug-namespaced so
 tags stay unique across the whole suite, not just within one plan) are
 written before implementation and may not be weakened to pass; no push or PR
 until code-critic passes with no FAIL items, escalated to Opus on security-surface

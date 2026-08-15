@@ -59,7 +59,7 @@ offending diff line, and flag it as `FAIL`.
 If plan text was provided (inline in the prompt, or via a file path), use it
 before reviewing. Use it as follows:
 - **Approval Summary / Acceptance Criteria**: the human-approved contract.
-  Verify every `AC-<branch>-n` has a committed test (via the `[AC-<branch>-n]`
+  Verify every `AC-<slug>-n` has a committed test (via the `[AC-<slug>-n]`
   tags in Test Strategy) that would fail if the criterion were broken — a
   criterion without one is `FAIL`.
 - **Contract** section (if present): cross-check the diff's routes, form
@@ -158,7 +158,7 @@ the committed tests cover the plan, so that responsibility lives here.
   not `test_order_2`.
 - Use the Given-When-Then pattern.
 - Never test implementation details — test behaviour.
-- Tests that encode the plan's Test Strategy (the `[AC-<branch>-n]`-tagged ones
+- Tests that encode the plan's Test Strategy (the `[AC-<slug>-n]`-tagged ones
   especially) are the contract, not implementation detail: a diff that
   weakens, loosens, or deletes one so the suite passes is `FAIL` unless the
   review input documents an approved plan deviation covering it.
@@ -307,8 +307,8 @@ is `FAIL`._
 - [ ] Implementation follows the Approach described in the plan — no undiscussed
   design alternatives introduced
 - [ ] All steps in the plan are accounted for in the changes
-- [ ] Every acceptance criterion (`AC-<branch>-n`) in the Approval Summary
-  maps to a committed test tagged `[AC-<branch>-n]` that would fail if the
+- [ ] Every acceptance criterion (`AC-<slug>-n`) in the Approval Summary
+  maps to a committed test tagged `[AC-<slug>-n]` that would fail if the
   criterion were broken
 - [ ] Diff matches the plan's Contract section — routes, fields, response
   shapes, error rendering, schema _(skip if Contract is "None")_

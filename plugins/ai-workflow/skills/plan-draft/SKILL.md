@@ -37,13 +37,16 @@ Before planning, collect all relevant context:
   be longer. Each acceptance criterion must be
   user-visible behaviour, not implementation ("a visitor submitting an
   invalid form sees the error next to the field", not "add a guard clause
-  in the controller"). Number each criterion `AC-<branch>-n`, where
-  `<branch>` is the current git branch name with `/` replaced by `-` — plain
+  in the controller"). Number each criterion `AC-<slug>-n`, where `<slug>` is
+  derived from the current git branch name: strip one leading type prefix if
+  present (`worktree-`, `feat-`, `feature-`, `fix-`, `bugfix-`, `hotfix-`,
+  `chore-`, or similar — these are redundant, every branch in the suite has
+  one), replace remaining `/` with `-`, and truncate to 30 characters — plain
   `AC-n` restarts at 1 for every feature and collides with every other
   feature's `AC-1` once tests live side by side in the same suite, so the
-  branch prefix is what keeps the tag globally unique and greppable. Every
-  `AC-<branch>-n` MUST map to at least one Test Strategy entry tagged
-  `[AC-<branch>-n]`; a criterion with no test is an incomplete plan.
+  slug is what keeps the tag globally unique, greppable, and short. Every
+  `AC-<slug>-n` MUST map to at least one Test Strategy entry tagged
+  `[AC-<slug>-n]`; a criterion with no test is an incomplete plan.
   Everything below the summary is the detailed contract the summary stands
   on — the two must never disagree.
 - **The Contract section is written before Approach** and is what the
@@ -109,7 +112,7 @@ Before planning, collect all relevant context:
      elsewhere — the code-critic skill cross-checks diffs against Approval
      Summary / Contract / Requirements / Approach / Edge Cases / Test
      Strategy / Files / Out of Scope, and the feature skill presents the
-     Approval Summary (Step 1c), writes the [AC-<branch>-n]-tagged tests first
+     Approval Summary (Step 1c), writes the [AC-<slug>-n]-tagged tests first
      (Step 2), and builds the PR's AC → test table (Step 9). When adding,
      renaming, or removing a section, update those consumers in sync. -->
 
@@ -119,10 +122,11 @@ Before planning, collect all relevant context:
 ## Approval Summary
 **Goal:** [1–2 sentences — what the user gains]
 
-**Acceptance Criteria** — each user-visible and testable (`<branch>` = current
-git branch name, `/` replaced by `-`):
-- AC-<branch>-1: [one line: given/when/then]
-- AC-<branch>-2: [...]
+**Acceptance Criteria** — each user-visible and testable (`<slug>` = current
+git branch name with a redundant leading type prefix like `feat-`/`fix-`/
+`worktree-` stripped, `/` replaced by `-`, truncated to 30 chars):
+- AC-<slug>-1: [one line: given/when/then]
+- AC-<slug>-2: [...]
 
 **Key decisions:** [2–3 bullets, one line each]
 
@@ -172,8 +176,8 @@ name where one applies.]
 1. [Edge case]: [handling strategy]
 
 ## Test Strategy
-- [AC-<branch>-1] [test name]: [what it verifies]
-- [AC-<branch>-2] [...]
+- [AC-<slug>-1] [test name]: [what it verifies]
+- [AC-<slug>-2] [...]
 - [edge-N] [test name]: [what it verifies]
 
 ## Environment & Preconditions
