@@ -38,11 +38,10 @@ Before planning, collect all relevant context:
   user-visible behaviour, not implementation ("a visitor submitting an
   invalid form sees the error next to the field", not "add a guard clause
   in the controller"). Number each criterion `AC-<branch>-n`, where
-  `<branch>` is the current git branch name with `/` replaced by `-` (the
-  same normalization the `workflow-retro` log filename uses) — plain `AC-n`
-  restarts at 1 for every feature and collides with every other feature's
-  `AC-1` once tests live side by side in the same suite, so the branch
-  prefix is what keeps the tag globally unique and greppable. Every
+  `<branch>` is the current git branch name with `/` replaced by `-` — plain
+  `AC-n` restarts at 1 for every feature and collides with every other
+  feature's `AC-1` once tests live side by side in the same suite, so the
+  branch prefix is what keeps the tag globally unique and greppable. Every
   `AC-<branch>-n` MUST map to at least one Test Strategy entry tagged
   `[AC-<branch>-n]`; a criterion with no test is an incomplete plan.
   Everything below the summary is the detailed contract the summary stands
