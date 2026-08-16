@@ -69,8 +69,10 @@ before reviewing. Use it as follows:
   used to verify Plan Compliance and that all specified edge cases are handled.
 - **Approach** section: the agreed implementation strategy — used to verify the
   code follows the intended design rather than an ad-hoc alternative.
-- **Edge Cases** section: the enumerated scenarios that must be handled —
-  cross-reference against the code and tests.
+- **Edge Cases** section: the enumerated scenarios that must be handled.
+  Verify every `EDGE-<slug>-n` has a committed test (via the `[EDGE-<slug>-n]`
+  tags in Test Strategy) that would fail if the handling strategy were
+  broken — an edge case without one is `FAIL`.
 - **Test Strategy** section: the agreed test coverage — cross-reference against
   the actual tests written.
 - **Files** section: the planned file manifest — cross-check against the diff. A
@@ -310,6 +312,9 @@ is `FAIL`._
 - [ ] Every acceptance criterion (`AC-<slug>-n`) in the Approval Summary
   maps to a committed test tagged `[AC-<slug>-n]` that would fail if the
   criterion were broken
+- [ ] Every edge case (`EDGE-<slug>-n`) in the Edge Cases section maps to a
+  committed test tagged `[EDGE-<slug>-n]` that would fail if the handling
+  strategy were broken
 - [ ] Diff matches the plan's Contract section — routes, fields, response
   shapes, error rendering, schema _(skip if Contract is "None")_
 - [ ] All requirements from the Requirements section are addressed
@@ -327,7 +332,8 @@ is `FAIL`._
 - [ ] No implicit assumptions that should be explicit (add comments or types)
 
 ### Edge Cases
-- [ ] All edge cases identified in the plan are explicitly handled _(if plan provided)_
+- [ ] All edge cases identified in the plan (`EDGE-<slug>-n`) are explicitly
+  handled _(if plan provided)_
 - [ ] Null/empty/zero/negative inputs are handled where applicable
 - [ ] Concurrent access scenarios are considered where applicable
 - [ ] Failure modes of external dependencies are handled (timeouts, retries, fallbacks)
