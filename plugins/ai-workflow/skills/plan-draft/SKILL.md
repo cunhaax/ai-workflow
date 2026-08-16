@@ -74,7 +74,12 @@ Before planning, collect all relevant context:
   This is where scope disagreements surface cheaply and what stops the
   implementer gold-plating. Write "None" only if you mean it.
 - List ALL edge cases explicitly in **Edge Cases** — do not assume any can be
-  skipped.
+  skipped. Number each edge case `EDGE-<slug>-n`, reusing the same `<slug>`
+  derived for acceptance criteria (see above) — plain `edge-N` restarts at 1
+  for every feature and collides with every other feature's `edge-1` once
+  tests live side by side in the same suite. Every `EDGE-<slug>-n` MUST map
+  to at least one Test Strategy entry tagged `[EDGE-<slug>-n]`; an edge case
+  with no test is an incomplete plan.
 - Flag any potential single-responsibility concerns in the proposed approach.
 - Propose a test strategy that covers the happy path AND every identified edge
   case. Tests are the plan's deterministic oracle — every claim the plan makes
@@ -172,13 +177,14 @@ name where one applies.]
 ## Out of Scope
 - [What a reader might expect but this change deliberately excludes]
 
-## Edge Cases
-1. [Edge case]: [handling strategy]
+## Edge Cases  (`<slug>` = same slug as Acceptance Criteria above)
+- EDGE-<slug>-1: [Edge case]: [handling strategy]
+- EDGE-<slug>-2: [...]
 
 ## Test Strategy
 - [AC-<slug>-1] [test name]: [what it verifies]
 - [AC-<slug>-2] [...]
-- [edge-N] [test name]: [what it verifies]
+- [EDGE-<slug>-1] [test name]: [what it verifies]
 
 ## Environment & Preconditions
 [Non-behavioural setup the implementer needs — e.g. "migration edited in place,
