@@ -177,7 +177,7 @@ name where one applies.]
 ## Out of Scope
 - [What a reader might expect but this change deliberately excludes]
 
-## Edge Cases  (`<slug>` = same slug as Acceptance Criteria above)
+## Edge Cases  _(`<slug>` = same slug as Acceptance Criteria above)_
 - EDGE-<slug>-1: [Edge case]: [handling strategy]
 - EDGE-<slug>-2: [...]
 
