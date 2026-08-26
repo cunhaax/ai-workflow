@@ -275,6 +275,136 @@ review is the no-cost way to get a second.
      especially high-stakes change. It is not a standard step. Do not rename
      the skill back to `code-review` unless you want the shadowing. -->
 
+## Delegated mode
+
+Applies only when you were launched as the `task-runner` sub-agent by
+`/feature`'s multi-task orchestrator, running in a harness-provisioned
+worktree — never in standalone use. Your invoker is `/feature`, not a
+human; every pause below is relayed by it and answered via `SendMessage`.
+
+**Preconditions.** The harness already provisioned your worktree and
+branch. Confirm you are not literally on `BASE_BRANCH` and continue — do
+not ask anyone to create a branch. If you *are* on `BASE_BRANCH`, that is
+a harness failure: emit `TASK-RESULT` `BLOCKED` / `RECOVERABLE` and stop
+(Rule 2 in `AGENTS.md`), never work around it.
+
+**You cannot enter plan mode.** Confirmed directly: the `EnterPlanMode`
+tool is not available to a worktree-isolated sub-agent, and your edit
+tools are not restricted while a plan is pending — there is no harness
+lock backing Step 1's approval gate for you the way there is for a
+standalone session. The real, load-bearing compensation: **your
+`PLAN_APPROVAL` pause below must assert `LAST_COMMIT: none`** — a
+checkable pre-approval baseline, not a promise — and your invoker may
+independently verify it with a read-only `git -C <your-worktree>
+rev-parse HEAD` rather than trust the self-report alone. Do not implement
+anything before that pause is answered. This is weaker than a harness
+lock (it catches divergence from the baseline, not intent), and this
+skill says so plainly rather than implying parity.
+
+**Step 1c, replaced.** Instead of presenting the plan and critique and
+exiting plan mode, emit a `TASK-RESULT` block and end your turn:
+
+```
+=== TASK-RESULT <task-id> ===
+STATUS: PAUSED
+PAUSE_ID: <next integer for this task, starting at 1>
+PAUSE_KIND: PLAN_APPROVAL
+ASK: <the full plan, then the full critique, clearly separated>
+RESUME_AT: Step 2
+LAST_COMMIT: none
+WORKTREE: <absolute path>
+BRANCH: <your branch name>
+```
+
+Wait — do not poll, sleep, or proceed. You will be resumed via
+`SendMessage` with full context retained (confirmed empirically: this
+works from a normal session, not only for teammates). The `RESUME`
+message echoes your `PAUSE_ID`; if a `RESUME` arrives with a different
+id than your current outstanding pause, reject it and re-emit your
+current `PAUSED` block unchanged — a stale or duplicate answer must never
+be applied to the wrong question. A well-formed `RESUME` carries
+`ANSWERS:` (one of `APPROVED`, `AMEND: <text>`, or `RE-PLAN: <text>`) and
+`CONTINUE_FROM:`. On `AMEND`, fold the named amendments in yourself (same
+transcription-not-planning rule as standalone) and proceed. On
+`RE-PLAN`, re-invoke `planner` and `plan-critic` and pause again — lead
+the new `ASK:` with a **delta** section, same convention as standalone.
+
+**Step 2 material deviation, replaced.** Do not re-enter plan mode — you
+cannot. Pause:
+
+```
+STATUS: PAUSED
+PAUSE_KIND: MATERIAL_DEVIATION
+ASK: <what changed, what it invalidates — including, explicitly, anything
+      it might invalidate for sibling tasks you cannot see; say so>
+RESUME_AT: <the step you stopped at>
+```
+
+Minor deviations are still just noted in your final `COMPLETE` result, not
+paused on.
+
+**Step 5, replaced.** Pause with `PAUSE_KIND: NEEDS_DECISION`, every
+flagged item in `ASK:`.
+
+**Step 8, replaced.** Pause with `PAUSE_KIND: QA_FINDINGS`, every finding
+in `ASK:`, asking for one disposition (fix / defer / ignore) per finding.
+Filing `known-issue` GitHub issues for deferred findings stays your job,
+same as standalone.
+
+**Step 9, adjusted.** Build the PR body in a file inside your own worktree
+and pass it with `gh pr create --body-file <path> --base <BASE_BRANCH>` —
+never a heredoc or an unquoted multi-line `-b` argument: worktree
+isolation refuses Bash constructs it can't trace without running them, and
+`AGENTS.md` Rule 6 bans `$(…)` glue regardless. Then emit your final
+result:
+
+```
+=== TASK-RESULT <task-id> ===
+STATUS: COMPLETE
+PR: <url>
+REVIEWED_SHA: <the SHA scripts/review-ok.sh recorded>
+AC_TABLE: <the plan's AC -> test table>
+REVIEW: PASS
+QA: PASS | PASS_WITH_DEFERRED | SKIPPED_NO_SURFACE
+DEFERRED_ISSUES: <issue numbers, only if QA: PASS_WITH_DEFERRED>
+TESTS: PASS
+TEST_SUMMARY: <one line: count and result from the final full run>
+LAST_COMMIT: <full SHA of your branch tip>
+WORKTREE: <absolute path>
+BRANCH: <your branch name>
+```
+
+`REVIEW:` may only be `PASS` — if the review has not cleanly passed, you
+are not done; that is a `PAUSED` or `BLOCKED`, never a `COMPLETE`.
+
+**Responding to your invoker between your own turns.** `/feature` may
+`SendMessage` you one of:
+- `HOLD` — finish your current tool call, make no further edits, commits,
+  or pushes, and reply immediately with `STATUS: HELD`, `HOLD_REF:` (the
+  deviating sibling's id from the message), `STOPPED_AT:` (the step you
+  stopped at), plus the required `LAST_COMMIT:`/`WORKTREE:`/`BRANCH:`.
+  This does **not** consume or replace any `PAUSE_ID` you were separately
+  waiting on for a real question — if you were already `PAUSED`, that
+  pause stays live and still needs its own `RESUME` once the hold is
+  lifted.
+- `RELEASE` — resume normal work from wherever you left off. Carries no
+  `PAUSE_ID`; accept it unconditionally while `HELD`.
+- `RESOLVE-CONFLICT` — merge `BASE_BRANCH` into your own branch in your
+  own worktree, resolve, re-run the project's test command, re-run
+  `code-critic`, re-run `scripts/review-ok.sh`, and report `COMPLETE` again
+  with the new `REVIEWED_SHA`. If resolving would change behaviour beyond
+  mechanical reconciliation, pause with `NEEDS_DECISION` instead of
+  deciding it yourself.
+- `WIND-DOWN` — commit or clearly report uncommitted work, push nothing
+  further, and reply `STATUS: BLOCKED`, `BLOCKED_KIND: WOUND_DOWN`, naming
+  what is done versus not, plus `LAST_COMMIT:`/`WORKTREE:`/`BRANCH:`.
+
+**Malformed states.** If you cannot produce a well-formed `TASK-RESULT` at
+all — a fatal error, context exhaustion — there is nothing more you can
+do; your invoker treats a turn with no result block as `BLOCKED` / `DEAD`
+on its own. Never end a turn silently when you could instead emit
+whatever partial `BLOCKED` block you can.
+
 ---
 
 ## Important Rules

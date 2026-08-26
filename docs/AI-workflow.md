@@ -6,9 +6,13 @@ This repo structures AI-assisted development as a real dev team: a **planner**,
 a **plan critic**, a **code critic**, and **QA**, each in its own context
 window, backed by one shared copy of the standards they apply — plus
 deterministic gates below the LLM layer so the load-bearing rules don't rely
-on anyone re-verifying them by hand. Implementation itself is *not*
-delegated — the main agent plays the developer; sub-agents plan, critique,
-and review.
+on anyone re-verifying them by hand. For a single task, implementation is
+*not* delegated — the main agent plays the developer; sub-agents plan,
+critique, and review. `/feature`'s multi-task mode is the one exception:
+each task is implemented by its own `task-runner` sub-agent, isolated in
+its own worktree — but within that sub-agent's own tree, the same
+principle holds one level down: *it* is the main agent of its tree, and
+the four review/planning agents it invokes stay read-only underneath it.
 
 Distributed as a single Claude Code plugin from `plugins/ai-workflow/` in
 this repo's source — deliberately **Claude-native** (sub-agents, skills, the
@@ -399,11 +403,18 @@ interactively via `claude --agent <name>`.
   running app through whichever surface(s) it exposes — via Playwright MCP
   tools for UI, `curl`/Bash for API — and surface what the plan and tests
   missed.
+- **`task-runner`** — the one sub-agent that *implements*. Applies
+  `task-lifecycle` in delegated mode inside an isolated worktree, running
+  as one task from a `/feature` multi-task breakdown — invoking the four
+  agents above itself, the same way the main agent does for a single-task
+  request. See *Multi-task features* below.
 
-There is no `feature` sub-agent — `feature` is a main-agent skill that
-orchestrates the four above; `init-workflow`, `workflow-retro`, and
-`workflow-inspect` are likewise main-agent-only, interactive rather than
-delegated.
+`feature` and `task-runner` are the two agents in this plugin that write
+code; every other sub-agent is read-only for review purposes. `feature`
+itself has no sub-agent of its own for the single-task case — it is a
+main-agent skill that orchestrates the four review/planning agents
+directly; `init-workflow`, `workflow-retro`, and `workflow-inspect` are
+likewise main-agent-only, interactive rather than delegated.
 
 Design choices: only `planner` carries `WebFetch` (external specs enter at
 exactly one point); the plan-stage critics run on the stronger model tier (a
@@ -502,6 +513,97 @@ changes.
 (`/ai-workflow:feature`) or exposed bare (`/feature`) — this hasn't been
 exercised end-to-end yet. This guide uses the bare form as shorthand either
 way.*
+
+## Multi-task features
+
+A request spanning several PRs runs through the same `/feature` command as
+a single task — it clarifies, then triages: an already-well-scoped ask
+still goes straight through `task-lifecycle` inline, unchanged. A request
+naming several independently reviewable deliverables gets decomposed
+instead, and each resulting task runs as its own `task-runner` sub-agent:
+
+```mermaid
+flowchart TB
+    User([User])
+    Main{{"/feature<br/>orchestrator"}}
+    T1[["task-runner<br/>(task A)"]]
+    T2[["task-runner<br/>(task B, depends on A)"]]
+    Tracker[(Project tracker)]
+    Integration([Feature-integration branch])
+    Default([Default branch])
+
+    User -- "1. multi-PR request" --> Main
+    Main -- "2. clarify + decompose +<br/>approval screen" --> User
+    User -- "3. approve breakdown" --> Main
+    Main -- "4. file tickets" --> Tracker
+
+    Main -- "5. launch (worktree,<br/>base = Integration)" --> T1
+    T1 -- "6. pause: plan approval,<br/>NEEDS_DECISION, QA findings" ---> Main
+    Main -- "↻ relay to human,<br/>resume with answer" ----> User
+    T1 -- "7. PR" --> Integration
+
+    Main -- "8. launch only after A<br/>merges into Integration" --> T2
+    T2 -- "9. PR" --> Integration
+
+    Main -- "10. closure: tests +<br/>code-critic + final PR" --> Default
+
+    classDef hub fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff;
+    classDef agent fill:#059669,stroke:#065f46,color:#ffffff;
+    classDef actor fill:#f59e0b,stroke:#b45309,color:#1f2937;
+    classDef ctx fill:#e5e7eb,stroke:#9ca3af,color:#1f2937;
+
+    class Main hub;
+    class T1,T2 agent;
+    class User actor;
+    class Tracker,Integration,Default ctx;
+```
+
+Each `task-runner` is the main agent of its own tree — it invokes
+`planner`/`plan-critic`/`code-critic`/`adversarial-qa` itself, exactly the
+way the main agent does for a single-task request, and it *implements*
+its task (the one exception to "sub-agents are read-only" in this
+plugin). It cannot enter plan mode itself (confirmed: the tool isn't
+available to a worktree-isolated sub-agent), so every point where it
+would present something to a human instead ends its turn with a result
+block the orchestrator relays.
+
+**Load-bearing mechanics, all confirmed against this repo before shipping:**
+- Each task's worktree branches from the feature-integration branch, not
+  the project's default branch — via the documented `worktree.baseRef:
+  "head"` setting, which is why the human always starts the session
+  already on that branch. This is a **project-wide** setting (it affects
+  every worktree-isolated agent in the project, not just `/feature`'s
+  tasks) — an explicit, `/init-workflow`-offered opt-in, never shipped in
+  the scaffolding template, with an exit reminder at feature closure so it
+  doesn't silently outlive the feature that needed it.
+- Task PRs merge into the integration branch with a regular merge, never
+  squash (checked up front — a squash-only repository can't support the
+  dependency model's ancestry check). The final integration-branch → 
+  default-branch PR may squash freely, since nothing branches off it
+  afterward.
+- A dependent task launches only once its prerequisite's PR has actually
+  merged, verified via `gh`/`git`, never a sub-agent's own say-so.
+- Concurrent tasks needing a shared dev server or database are **not**
+  this plugin's problem to solve at the orchestration level — that's the
+  project's own canonical-commands job (Rule 1). `/init-workflow` offers
+  to scaffold a `Makefile`-based lock guard for exactly this, with an
+  explicit warning if declined, since the alternative is agents silently
+  colliding and burning tokens diagnosing what's actually just a race.
+
+**Requirements this mode has that the single-task path doesn't:** Claude
+Code ≥ v2.1.206 (`SendMessage`'s sub-agent addressing, needed for the
+relay above, and call-level worktree isolation — checked by `/feature`
+itself before doing anything else on this path); an `AGENTS.md` → *Task
+Tracking* section, filled in via `/init-workflow`; and the
+`worktree.baseRef` opt-in above.
+
+**Deliberately out of scope:** automated merging (the human always
+merges every PR, including the final one); resuming a partially-executed
+multi-task feature in a brand-new session (the tracker plus git/`gh` hold
+enough state to reconstruct by hand, but nothing automates it);
+`/workflow-retro`/`/workflow-inspect` coverage for a multi-task run (both
+stay shaped for a single feature branch — a multi-task run's evaluation
+data is a known gap, not yet solved).
 
 ## Installing and Updating the Plugin
 

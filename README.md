@@ -13,6 +13,12 @@ what actually ships.
 - **`/feature` — one command, the whole lifecycle.** Plan → critique →
   implement → test → code-review → QA → PR. You don't orchestrate the
   steps yourself; the workflow does, end to end.
+- **Scales to a multi-PR feature, same command.** A request spanning
+  several PRs gets clarified, decomposed into dependency-ordered tasks,
+  tracked in your own tracker, and run as isolated tasks in parallel —
+  with every approval still relayed back to you and an integration check
+  before the final PR. See *Multi-task features* in
+  [`docs/AI-workflow.md`](docs/AI-workflow.md).
 - **It stops and asks instead of guessing.** When a critic raises a
   `NEEDS_DECISION`, or QA turns up something the plan didn't anticipate, the
   loop halts and hands you the decision — fix now, defer with a filed
@@ -80,7 +86,11 @@ what actually ships.
 
    Start on a fresh branch you create yourself — the agents won't create
    or switch branches, and the workflow diffs against and opens a PR
-   against your default branch.
+   against your default branch. For a request that spans several PRs,
+   start on a **feature-integration branch** instead — same idea, one
+   level up: each task diffs against and PRs into that branch, and
+   `/feature` opens one final PR from it to your default branch once
+   everything's merged and verified together.
 
 ## Reviewing a small change yourself
 

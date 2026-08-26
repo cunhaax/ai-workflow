@@ -107,6 +107,8 @@ worktree, nothing):
    branch is the feature-integration branch.
 9. What the human will be asked for later — plan approvals, `NEEDS_DECISION`s,
    QA dispositions, per task. This is not fire-and-forget.
+10. The concurrency cap this run will use (default 2, changeable here) —
+    see `feature/delegation.md` for how it's applied.
 
 Nothing is written until the human approves. On a substantive change to
 the breakdown after this point, re-present with a **delta** section first

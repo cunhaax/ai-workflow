@@ -7,7 +7,7 @@
     {
       "name": "ai-workflow",
       "source": "./plugins/ai-workflow",
-      "description": "Structured AI-assisted development workflow: plan, critique, implement, review, QA — with deterministic pre-push enforcement below the LLM layer."
+      "description": "Structured AI-assisted development workflow: plan, critique, implement, review, QA — scaling from a single task to a multi-task feature orchestrated across isolated tasks — with deterministic pre-push enforcement below the LLM layer."
     }
   ]
 }
