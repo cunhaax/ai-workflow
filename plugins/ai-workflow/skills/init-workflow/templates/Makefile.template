@@ -1,0 +1,26 @@
+# Concurrency guard for /feature's multi-task mode.
+#
+# Multiple agents can be running this project's test/run/stop commands at
+# once — one per task, each in its own git worktree, potentially against a
+# shared dev server or database. These targets wrap the project's own
+# commands in a file lock so concurrent invocations serialize instead of
+# colliding. This is glue, not a build system: it does not replace whatever
+# the project already uses to build/test/run — it wraps it.
+#
+# Platform note: this template uses `lockf`, which ships by default on
+# macOS/BSD. On Linux, replace `lockf -t 0` with `flock` (from
+# util-linux) — e.g. `flock $(LOCKFILE) -c '[TEST_CMD]'` — since `lockf`
+# is not a standard shell command there.
+
+LOCKFILE := .make.lock
+
+.PHONY: test run stop
+
+test:
+	lockf $(LOCKFILE) sh -c '[TEST_CMD]'
+
+run:
+	lockf $(LOCKFILE) sh -c '[RUN_CMD]'
+
+stop:
+	lockf $(LOCKFILE) sh -c '[STOP_CMD]'

@@ -40,6 +40,12 @@ what actually ships.
    /plugin install ai-workflow@ai-workflow
    ```
 
+   The single-task workflow below works on any Claude Code version this
+   plugin supports. `/feature`'s **multi-task** mode additionally requires
+   Claude Code ≥ v2.1.206 (needed for `SendMessage`'s sub-agent addressing
+   and call-level worktree isolation) — `/feature` checks this itself and
+   tells you if your version is too old before it does anything else.
+
 2. **Scaffold and adapt it to your project:**
 
    ```
@@ -50,6 +56,15 @@ what actually ships.
    review and planning guidance at your existing docs (or seeds new ones),
    and validates the setup. Every write is proposed and confirmed — re-run
    it any time as a doctor.
+
+   It scaffolds from `plugins/ai-workflow/skills/init-workflow/templates/`:
+   `AGENTS.md`/`CLAUDE.md`, `.claude/settings.json`, the pre-push review
+   gate (`githooks/pre-push`, `scripts/review-ok.sh`,
+   `scripts/check-hook-status.sh`), `docs/adr/`, `docs/product-context/`,
+   `docs/agent-rules/{code-critic,plan-critic}.md`, and — only if you opt
+   into `/feature`'s multi-task mode — a `Makefile` concurrency guard. Each
+   file's own destination gates its own scaffolding; nothing here overwrites
+   a file your project already owns.
 
 3. **Enable the review gate (once per clone):**
 

@@ -48,11 +48,15 @@ updates to those come from updating the plugin itself, not from this skill.
 Every file under `${CLAUDE_SKILL_DIR}/templates/` maps to a
 project-relative destination (this is the plugin's canonical enumeration —
 see the file tree in the plugin's own documentation, kept in sync with this
-directory by rule), **except** `docs/agent-rules/code-critic.md` and
+directory by rule), **except**: `docs/agent-rules/code-critic.md` and
 `docs/agent-rules/plan-critic.md`, which Step 4 creates (or doesn't, if the
-project already has equivalent docs) once it knows the answer; writing them
-here too would leave an orphaned stub if Step 4 points elsewhere instead.
-Check every other mapped file's destination on its **own** trigger — one
+project already has equivalent docs) once it knows the answer — writing
+them here too would leave an orphaned stub if Step 4 points elsewhere
+instead; and `Makefile.template`, which Step 3's concurrency-guard
+question creates (or doesn't) once it knows whether the project wants
+`/feature`'s multi-task mode at all — most projects will never get this
+file, and that's the intended default, not a gap. Check every other
+mapped file's destination on its **own** trigger — one
 file's presence never gates another's, since a project can have
 hand-written its own `AGENTS.md` long before adopting this plugin's review
 gate, or vice versa:
@@ -173,9 +177,13 @@ check, not a version check, so a stale copy from before a later plugin
 update still reads as `ACTIVE`; that gap is accepted for now, not solved
 here.
 
-Also append `.review-passed`, `.qa-evidence/`, and `.workflow-log/` to
-`.gitignore` if not already present (create the file if it doesn't exist)
-— these are what the workflow writes locally and Step 5 checks for.
+Also append `.review-passed`, `.qa-evidence/`, `.workflow-log/`,
+`.claude/worktrees/`, and `.claude/settings.local.json` to `.gitignore` if
+not already present (create the file if it doesn't exist) — these are
+what the workflow writes locally, plus the two paths `/feature`'s
+multi-task mode needs kept out of version control (task worktrees, and
+the per-clone settings override used to enable it), and Step 5 checks for
+all of them.
 
 Known limitation: this step has no memory of a prior decline. A file the
 user chose not to scaffold (e.g. a deleted `docs/product-context/README.md`
@@ -200,7 +208,12 @@ flow for the first time, whose named or default files may not exist
 either); Step 5 item 7 decides separately, in whichever mode you end up in,
 whether a still-missing file gets reported. Otherwise (no section at all)
 check `docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
-directly. Classify each placeholder / `[TODO: …]` as filled or open.
+directly. Classify each placeholder / `[TODO: …]` as filled or open —
+**except** anything inside `## Task Tracking`, excluded from this ratio
+entirely (see Step 3): it is optional and legitimately stays all-`[TODO:]`
+forever on a project that never uses `/feature`'s multi-task mode, and
+counting it would tip an otherwise-complete `AGENTS.md` back into
+first-run mode the moment Step 5 item 8 appends it.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
@@ -250,6 +263,32 @@ For each still-open section, draft from evidence and confirm before writing:
   user has no time now, leave the TODO in place and say so in the report.
 - **Rule 5** (project hygiene rule): ask whether one applies (e.g. reset a
   dev database at session end); fill it or delete the placeholder.
+- **Task Tracking** (optional — ask once, default "only `/feature`'s
+  single-task path"): *"Will this project use `/feature`'s multi-task
+  mode (one request coordinated across several PRs), or only its
+  single-task path?"* On "only single-task": leave the section's
+  `[TODO:]` bullets in place; this is not a gap to report in Step 6, it is
+  a deliberate choice. On "multi-task": interview the seven bullets, fill
+  them, and continue to the next question below.
+- **Concurrency guard** (asked only if the previous answer was
+  "multi-task"): *"Would you like a `Makefile` that wraps your test/run/stop
+  commands with a file lock (`lockf`/`flock`), so concurrent `/feature`
+  tasks can't collide on your dev server, database, or other shared
+  state?"* On accept, scaffold `Makefile` from
+  `${CLAUDE_SKILL_DIR}/templates/Makefile.template` (or append `test`/
+  `run`/`stop` targets to an existing `Makefile`, confirm-then-write) using
+  the already-confirmed `[TEST_CMD]`/`[RUN_CMD]`/`[STOP_CMD]` from Step 2,
+  and update `AGENTS.md` → *Commands* to point at the new `make test`/
+  `make run`/`make stop` targets. **On decline, print this verbatim, not
+  as a footnote:** *"Without a concurrency guard, running `/feature` with
+  more than one task in parallel can cause agents to collide on your dev
+  server, database, or other shared state — invisibly, and expensively:
+  agents will spend time and tokens trying to diagnose failures that are
+  actually just concurrent commands stepping on each other. Declining
+  means you are responsible for ensuring your project's own commands are
+  safe to run concurrently from different worktrees."* Record the
+  decision; it is not re-asked as a fresh interview question on a later
+  run (Step 5 items 9–10 keep it visible instead — see below).
 
 ## Step 4 — Seed review and planning guidance
 
@@ -358,6 +397,37 @@ confirmation, report what you cannot fix:
    which doesn't exist runs that skill on base standards/lenses alone (it
    does *not* fall back further to the default path) — either gap should
    be surfaced, not left to fail silently on the next review.
+8. **Task Tracking.** If the section is absent from an `AGENTS.md` that is
+   otherwise mostly filled (doctor mode), **offer to append it** —
+   confirm-then-write, the same pattern as the `CLAUDE.md` import append —
+   rather than silently reporting it missing; check for the `## Task
+   Tracking` heading first so this can never double-append, regardless of
+   whether the mode heuristic above guessed right. If the section is
+   present, validate it the same way as any other: no remaining `[TODO:`
+   means configured; report which fields are still open as a deferral
+   otherwise. If the section is absent-and-declined, or entirely commented
+   out with every field left as `[TODO:]`, report `n/a — project does not
+   use /feature's multi-task mode`, not a gap. **Known limitation** (same
+   voice as the gate-marker check above): this is a placeholder check, not
+   a liveness check — a filled-but-stale entry (a tracker command that no
+   longer works, an abandoned status vocabulary) reads as configured.
+9. **Claude Code version floor.** Multi-task `/feature` requires ≥ v2.1.206.
+   Run `claude --version`; below the floor, report it as a gap for the
+   multi-task path specifically (never for the single-task path, which has
+   no such requirement) — this is a WARN item, not a hard failure, since an
+   undetermined version shouldn't block the rest of the report.
+10. **Concurrency guard.** Report `worktree.baseRef`'s resolution
+    **informationally on every run when Task Tracking (item 8) is
+    configured** — naming which settings file supplied it and, if it's the
+    user-global `~/.claude/settings.json`, warning the blast radius is
+    every repository, not just this one — and as a named gap when unset.
+    Separately, report whether a concurrency guard was set up (a
+    `Makefile` with `test`/`run`/`stop` targets, or `AGENTS.md` →
+    *Commands* pointing at `make` targets) — present, absent-and-declined
+    (state the standing risk in one line, don't re-print the full warning
+    every run), or never addressed (offer the Step 3 interview question
+    now). None of this is checked when Task Tracking is not configured —
+    a `/feature`-single-task-only project has no reason to see it.
 
 ## Step 6 — Report
 

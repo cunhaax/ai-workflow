@@ -20,6 +20,13 @@ below apply the same way in both cases except where marked otherwise.
 Run the full structured development workflow: plan → critique → implement →
 test → code-review → QA → PR.
 
+**Input: `BASE_BRANCH`.** The branch this lifecycle's code review diffs
+against (Step 4) and its PR targets (Step 9). Defaults to `AGENTS.md` →
+*Commands* → default branch. The caller may supply a different value
+explicitly — `/feature`'s multi-task orchestrator does this, passing its
+feature-integration branch instead of the project's default branch, in
+its per-task brief.
+
 ---
 
 ## Workflow
@@ -151,7 +158,9 @@ Commit your work first — the review must cover the committed state, because
 hook compares against it.
 
 Invoke the `code-critic` sub-agent to review all changes against project
-standards. Pass the approved plan text, and include the summary output of the
+standards — the diff to review is against `BASE_BRANCH` (see *Input* above),
+not necessarily the project's default branch. Pass the approved plan text,
+and include the summary output of the
 most recent full test-suite run (Step 3). The reviewer is not allowed to run
 the test suite itself — it verifies coverage statically and needs a record
 that the committed tests ran and passed on the reviewed state. That summary
@@ -227,7 +236,8 @@ to ignore outright.
 
 Only open a PR after the code review has passed and every QA finding has
 been dispositioned (fixed / deferred / ignored) — or QA was skipped because
-there is no UI or API surface.
+there is no UI or API surface. The PR targets `BASE_BRANCH` (`gh pr create
+--base <BASE_BRANCH>`) — not necessarily the project's default branch.
 
 The PR body is where the human review starts — it must carry the pipeline's
 conclusions so the reviewer does not have to reconstruct them from the diff

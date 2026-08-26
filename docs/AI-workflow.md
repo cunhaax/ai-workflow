@@ -23,6 +23,12 @@ are Claude-specific.
 > project-agnostic and need no editing. See `README.md` for installing and
 > adapting.
 
+`/feature`'s single-task workflow has no version requirement beyond
+whatever this plugin already needs. Its **multi-task** mode requires
+Claude Code ≥ v2.1.206 (`SendMessage`'s sub-agent addressing, call-level
+worktree isolation) — `/feature` itself checks this before doing anything
+else on that path.
+
 ## Repository Structure
 
 Shape of a project *after* installing the plugin and running `/init-workflow`:
@@ -45,6 +51,8 @@ project-root/
 │   │   └── plan-critic.md                 #   risk lenses — these two conditionally, see below
 │   └── product-context/                   # Product vision, strategy, requirements
 ├── .gitignore                             # /init-workflow creates/appends this
+├── Makefile                                # Optional: concurrency guard for /feature's
+│                                            #   multi-task mode — only if opted into
 └── src/<module>/AGENTS.md                 # Optional, NOT scaffolded — add these yourself
 ```
 
@@ -159,6 +167,13 @@ Brief description of the project, its purpose, and how it fits into the broader 
 - Product vision, strategy, requirements: `docs/product-context/`
 - Architecture Decision Records: `docs/adr/`
 - Sub-agents and skills: supplied by the installed AI workflow plugin
+
+## Task Tracking
+Optional — only read by `/feature`'s multi-task mode. Leave the `[TODO: …]`
+placeholders in place if this project has no tracker.
+- Tracker: `[TODO: e.g. GitHub issues, Trello, Jira, or none]`
+- Create a task: `[TODO: exact command or tool call]`
+- (five more entries — see `AGENTS.md.template` for the full set)
 
 ## Review & Planning Guidance
 - Code review guidance: `docs/agent-rules/code-critic.md`
