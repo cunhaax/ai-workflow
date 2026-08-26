@@ -121,7 +121,8 @@ plugins/ai-workflow/
 ├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository, license)
 ├── .mcp.json                         # Bundled MCP servers (playwright, context7) — starts on plugin enable
 ├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
-└── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
+└── skills/                           # Reusable knowledge: feature, task-lifecycle (internal, no
+    │                                  #   slash command), plan-draft, plan-critic, code-critic,
     │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
     └── init-workflow/templates/      # THE scaffold source a fresh project's /init-workflow reads
 docs/

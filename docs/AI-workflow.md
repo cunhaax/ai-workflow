@@ -90,11 +90,20 @@ same way any consumer would.
   from the parent conversation); the body says what context to gather, what
   to output, what not to touch.
 - **Slash commands** are the skills invoked directly (`/plan-draft`,
-  `/code-critic`, …) for ad-hoc use, skipping orchestration. `/feature` is
-  the exception — its skill *is* the full orchestrated workflow.
+  `/code-critic`, …) for ad-hoc use, skipping orchestration. `/feature`'s
+  own skill is itself an orchestrated workflow — it clarifies a request,
+  decides whether it is one task or several, and applies `task-lifecycle`
+  either inline (as itself) or by delegating to a sub-agent that preloads
+  it.
 
-One copy of the knowledge backs both a sub-agent (via preload) and its
-matching slash command — nothing is duplicated, nothing can drift.
+One copy of the knowledge usually backs both a sub-agent (via preload) and
+its matching slash command — nothing is duplicated, nothing can drift.
+`task-lifecycle` (`plugins/ai-workflow/skills/task-lifecycle/SKILL.md`) is
+the one skill in this plugin with **no** slash command of its own: it
+holds the single-task/single-PR lifecycle (plan → critique → implement →
+test → code-review → QA → PR) as shared knowledge between `/feature`'s
+inline path and a delegated sub-agent's preload, and is not meant for
+direct invocation.
 
 **Where project-specific content lives.** The skills are project-agnostic:
 they name the project's commands, app URL, and default branch *by role*
@@ -294,18 +303,30 @@ their issue.
 
 ### `plugins/ai-workflow/skills/feature/SKILL.md` — `/feature`
 
-The full lifecycle the **main** agent runs for non-trivial work: **plan →
-critique → implement → test → code-review → QA → PR**. The gates worth
-naming: the session must start on a human-created feature branch (agents
-may not create one — Rule 3); plan mode is entered before any planning;
-plan-critic may be skipped only for trivial changes **and** only when the
-user explicitly asks; `[AC-<slug>-n]` acceptance tests (slug-namespaced so
-tags stay unique across the whole suite, not just within one plan) are
-written before implementation and may not be weakened to pass; no push or PR
-until code-critic passes with no FAIL items, escalated to Opus on security-surface
-diffs; QA runs only for changes with a UI and/or API surface; the PR body carries the
-pipeline's conclusions (plan summary, AC → test table, review outcome, QA
-dispositions, test evidence).
+The entry point for non-trivial work, run by the **main** agent. Clarifies
+the request, states plainly when it is treating the request as a single
+task — giving the human a beat to object before writing anything — then
+applies `task-lifecycle` inline: **plan → critique → implement → test →
+code-review → QA → PR**. The gates worth naming, carried by
+`task-lifecycle` itself: the session must start on a human-created branch
+(agents may not create one — Rule 3); plan mode is entered before any
+planning; plan-critic may be skipped only for trivial changes **and** only
+when the user explicitly asks; `[AC-<slug>-n]` acceptance tests
+(slug-namespaced so tags stay unique across the whole suite, not just
+within one plan) are written before implementation and may not be weakened
+to pass; no push or PR until code-critic passes with no FAIL items,
+escalated to Opus on security-surface diffs; QA runs only for changes with
+a UI and/or API surface; the PR body carries the pipeline's conclusions
+(plan summary, AC → test table, review outcome, QA dispositions, test
+evidence).
+
+### `plugins/ai-workflow/skills/task-lifecycle/SKILL.md` — internal, no slash command
+
+Holds the single-task/single-PR lifecycle above as shared knowledge between
+`/feature`'s inline path and a delegated sub-agent's preload used for
+orchestrating a request that spans several tasks. See *The Three Layers*
+for why this is the one skill in the plugin with no slash command of its
+own.
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 
