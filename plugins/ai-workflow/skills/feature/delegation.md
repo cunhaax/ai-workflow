@@ -172,8 +172,11 @@ two tasks' distinct questions into one answer.
 **A `TASK-RESULT` that doesn't parse — unknown status, a missing required
 field, an out-of-enum value — is treated as `BLOCKED` / `DEAD`, the raw
 text shown to the human, never interpreted charitably.** A task that
-produces no result block at all for 15 minutes is reported as *possibly
-stalled*; at 30 minutes it is marked `BLOCKED` / `DEAD` and its
+produces no result block and no tool activity for 15 minutes is reported
+as *in a long-running step — last activity `<T>`* (the same label the
+ripple handling below uses, for the same reason: distinguishing a task
+that's merely busy from one that's actually gone quiet); at 30 minutes
+with still no activity, it is marked `BLOCKED` / `DEAD` and its
 branch/worktree reported. Never wait forever, never kill a task yourself.
 
 **If `SendMessage` itself is unavailable or fails when resuming a task**
@@ -206,12 +209,11 @@ human:
 2. `SendMessage` `HOLD` to every **running** task in the set; do not
    launch any **pending** task in the set.
 3. **Wait for a `HELD` acknowledgement from each**, up to 15 minutes (the
-   same liveness tier as `task-lifecycle`'s C2 rule 4 — a `HOLD` sent
-   mid-way through a long nested pass like `code-critic` on `opus` or a
-   full test suite routinely takes several minutes to acknowledge, since
-   `SendMessage` queues to the task's next turn boundary rather than
-   interrupting it). **Use the same two-tier label `task-lifecycle`'s
-   C2 rule 5 defines — do not collapse it to one:** a task with no
+   same liveness tier used above — a `HOLD` sent mid-way through a long
+   nested pass like `code-critic` on `opus` or a full test suite routinely
+   takes several minutes to acknowledge, since `SendMessage` queues to the
+   task's next turn boundary rather than interrupting it). **Use the same
+   two-tier label as above — do not collapse it to one:** a task with no
    activity signal yet within the window is listed as *"in a long-running
    step — last activity `<T>`"*, not as unresponsive; only a task that has
    also gone quiet for the full liveness window (no tool activity at all,

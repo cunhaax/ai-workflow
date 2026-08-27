@@ -422,13 +422,14 @@ likewise main-agent-only, interactive rather than delegated.
 
 Design choices: of the four review/planning agents, only `planner`
 carries `WebFetch` — external specs enter at exactly one point among
-them. `task-runner` is the one exception, by necessity rather than
-oversight: it carries no `tools:` allowlist at all (see its own file for
-why), so it inherits the full tool set including `WebFetch`. That does
-not change whose *job* it is to fetch external docs — `task-runner`'s own
-prose rule still says never to, delegating to `planner` exactly as the
-main agent does — but it is a weaker, prose-only guarantee where every
-other agent's is structural. The plan-stage critics run on the stronger
+them. `task-runner` sits outside that invariant entirely rather than
+being a fifth exception to it: it carries no `tools:` allowlist at all
+(see its own file for why), so it inherits the full tool set including
+`WebFetch`. That does not change whose *job* it is to fetch external
+docs — `task-runner`'s own prose rule still says never to, delegating to
+`planner` exactly as the main agent does — but it is a weaker,
+prose-only guarantee where every review/planning agent's is structural.
+The plan-stage critics run on the stronger
 model tier (a
 bad plan poisons everything downstream), while `code-critic` runs a tier
 lower by default and is escalated to Opus by `/feature` on security-surface

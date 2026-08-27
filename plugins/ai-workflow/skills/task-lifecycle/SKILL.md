@@ -332,7 +332,11 @@ message echoes your `PAUSE_ID`; if a `RESUME` arrives with a different
 id than your current outstanding pause, reject it and re-emit your
 current `PAUSED` block unchanged — a stale or duplicate answer must never
 be applied to the wrong question. A well-formed `RESUME` carries
-`ANSWERS:` and `CONTINUE_FROM:`, per your invoker's own message-grammar
+`ANSWERS:`, an optional `CONTEXT:` (ripple information — e.g. that a
+sibling's material deviation changed something you should account for
+when you continue; read it and factor it in, but it never substitutes for
+an `ANSWERS:` to whatever you actually asked), and `CONTINUE_FROM:`, per
+your invoker's own message-grammar
 reference — for a `PLAN_APPROVAL` pause specifically, `ANSWERS:` is one of
 `APPROVED`, `AMEND: <text>`, or `RE-PLAN: <text>`; for `NEEDS_DECISION` or
 `QA_FINDINGS`, it is one line per item you flagged, in the order you
@@ -346,9 +350,12 @@ the new `ASK:` with a **delta** section, same convention as standalone.
 Each one still carries the `=== TASK-RESULT <task-id> ===` header line,
 the next `PAUSE_ID` for this task, and the `LAST_COMMIT:`/`WORKTREE:`/
 `BRANCH:` fields required on every status — only `PAUSE_KIND:` and `ASK:`
-change per step. Omitting any of them makes the block fail to parse under
-C2 rule 2, and your invoker will treat it as `BLOCKED` / `DEAD` rather
-than the pause you intended.
+change per step. Omitting any of them makes the block fail to parse, and
+your invoker will treat any block that doesn't parse exactly — unknown
+status, a missing required field, an out-of-enum value — as
+`STATUS: BLOCKED` / `BLOCKED_KIND: DEAD`, never guessing at what you
+meant. That is worse than the pause you intended: it looks like a dead
+task, not a live question.
 
 **Step 2 material deviation, replaced.** Do not re-enter plan mode — you
 cannot. Pause:

@@ -49,18 +49,22 @@ change whose job it is.
 An allowlist here would have to enumerate essentially the whole session
 tool set — you run the same nine-step lifecycle the main agent does, plus
 `Agent` to invoke your own review sub-agents — and a missing entry fails
-silently at runtime, the exact staleness hazard `adversarial-qa`'s
-allowlist already has (see `docs/AI-workflow.md`, *context7 gating*).
-Inheriting the full set and constraining behaviour in prose, the same way
-the main agent itself is constrained, is the safer default for an agent
-whose whole job is to act like the main agent.
+silently at runtime, the exact staleness hazard `adversarial-qa`'s own
+`tools:` allowlist already has (see `docs/AI-workflow.md`, *Bundled MCP
+servers*: a plugin rename requires updating that allowlist in lockstep,
+"or the sub-agent silently loses every browser tool with no obvious error
+at review time"). Inheriting the full set and constraining behaviour in
+prose, the same way the main agent itself is constrained, is the safer
+default for an agent whose whole job is to act like the main agent.
 
 ### Why no `permissionMode` override
 
 Leaving it at the default means your permission prompts surface in the
-human's own session, attributed to you by name (confirmed: the `ask`
-rule on `scripts/review-ok.sh` fires correctly from a backgrounded,
-worktree-isolated sub-agent and names it). That is what keeps Rule 4's
+human's own session, attributed to you by name — confirmed empirically in
+this repo's own dogfooding session: the `ask` rule on
+`scripts/review-ok.sh` fired correctly from a backgrounded,
+worktree-isolated sub-agent, named it in the prompt, and continued to
+enforce it even under `defaultMode: auto`. That is what keeps Rule 4's
 review gate enforced for every task, not just the ones the orchestrator
 happens to be implementing inline.
 

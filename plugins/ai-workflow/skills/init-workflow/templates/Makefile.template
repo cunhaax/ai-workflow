@@ -22,6 +22,12 @@
 # `flock $(LOCKFILE) sh -c '...'` (from util-linux, also blocks by default)
 # — plain `lockf` is not a standard shell command there.
 
+# Assumes a git repository — this guard only matters for /feature's
+# multi-task mode, which requires one (it works entirely through git
+# worktrees and branches). Outside a git repo the shell call below
+# returns empty and LOCKFILE degrades to plain "/make.lock" — not
+# guarded against, since that case can't arise in the workflow this
+# file exists for.
 LOCKFILE := $(shell git rev-parse --git-common-dir)/make.lock
 
 .PHONY: test run stop
