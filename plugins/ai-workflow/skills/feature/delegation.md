@@ -171,11 +171,12 @@ two tasks' distinct questions into one answer.
 
 **A `TASK-RESULT` that doesn't parse — unknown status, a missing required
 field, an out-of-enum value — is treated as `BLOCKED` / `DEAD`, the raw
-text shown to the human, never interpreted charitably.** A task that
-produces no result block and no tool activity for 15 minutes is reported
-as *in a long-running step — last activity `<T>`* (the same label the
-ripple handling below uses, for the same reason: distinguishing a task
-that's merely busy from one that's actually gone quiet); at 30 minutes
+text shown to the human, never interpreted charitably.** Use the same
+two-tier distinction the ripple handling below defines: a task that has
+produced no result block for 15 minutes but still shows tool activity is
+reported as *in a long-running step — last activity `<T>`*, not as a
+problem; only a task with no result block **and** no tool activity at all
+for the full 15 minutes is escalated, and if that persists to 30 minutes
 with still no activity, it is marked `BLOCKED` / `DEAD` and its
 branch/worktree reported. Never wait forever, never kill a task yourself.
 
