@@ -1,277 +1,176 @@
 ---
 name: feature
 description: >
-  Runs the full feature workflow: plan, critique, implement, review, QA. Use
-  this when starting a new feature. Guides you through each phase with explicit
-  gates between steps.
+  Runs the full feature workflow. A single-task request goes straight
+  through plan, critique, implement, review, QA. A request spanning
+  several PRs is clarified, decomposed, tracked, and orchestrated as
+  multiple isolated tasks running in parallel, with every approval
+  relayed back to the human and an integration check at the end. Use
+  this when starting new feature work of any size.
 ---
 
 # /feature — AI-Assisted Development Lifecycle
 
-Activate this skill for non-trivial features or changes to run the full
-structured development workflow: plan → critique → implement → test →
-code-review → QA → PR.
+Activate this skill for non-trivial features or changes.
 
----
+See `feature/decomposition.md` for the multi-task path's triage criteria,
+decomposition rubric, collision scan, self-critique lenses, and approval
+screen template — this file covers the flow between them.
 
-## Workflow
+## Preconditions — check the branch first
 
-### Step 1 — Draft, critique, and approve the plan
+The workflow assumes the human started this session on a fresh branch: the
+single-task path's code review diffs against the default branch (named in
+`AGENTS.md` → *Commands*) and opens a PR targeting it; the multi-task
+path's tasks diff against and target the feature-integration branch this
+session's own branch must be. Neither works from the default branch
+itself. If the session is on the default branch, STOP and ask the user to
+create a branch — you may not create or switch branches yourself (Rule 3
+in `AGENTS.md`).
 
-**Preconditions — check the branch first.** The workflow assumes the human
-started this session on a fresh feature branch: the code review (Step 4)
-diffs against the default branch (named in `AGENTS.md` → *Commands*) and
-Step 9 opens a PR targeting it, neither of which works from the default
-branch itself. If the session is on the default branch, STOP and ask the
-user to create a feature branch — you may not create or switch branches
-yourself (Rule 3 in `AGENTS.md`).
+## Clarify the request
 
-**Enter plan mode now**, before drafting. Plan mode is a structural
-commitment: while in plan mode the harness blocks edit tools, so the
-workflow cannot skip the approval gate even if the agent is tempted to
-inline the plan and proceed. Stay in plan mode through steps 1a, 1b,
-and 1c. Exit plan mode only in step 1c, after the user approves.
+Enter plan mode now, before drafting anything. Clarify the request with the
+human — question requirements, resolve ambiguity, follow any referenced
+docs or links by delegating the fetch to the `planner` sub-agent in digest
+mode (never fetch directly — regardless of platform).
 
-#### Step 1a — Draft the plan
+## Triage
 
-Invoke the `planner` sub-agent to draft an implementation plan. Pass the
-user's prompt verbatim — including any reference to docs or links. The
-planner will fetch all external specs with its own tools (it has `WebFetch`
-for URLs) and return the plan as markdown text.
+Apply `feature/decomposition.md`'s triage criteria to decide whether this
+is a single task or several. **State which path you're taking, and give
+the human a beat to object, before doing anything else with write
+access** — this is not a formality, it is what stops a misjudged
+classification from silently granting write access (single-task path) or
+imposing decomposition ceremony (multi-task path) nobody asked for.
 
-Do not use tools directly — always delegate to the planner sub-agent,
-regardless of which platform you are running on.
+### Single-task path
 
-#### Step 1b — Critique the plan
+Apply the `task-lifecycle` skill inline, as the main agent — today's plan
+→ critique → implement → test → code-review → QA → PR loop, unchanged.
+Retain the plan text; you will need it later for the `code-critic` and
+`adversarial-qa` sub-agents `task-lifecycle` itself invokes. `task-lifecycle`
+defaults `BASE_BRANCH` to `AGENTS.md` → *Commands* → default branch; if the
+human states this task belongs to a feature-integration branch instead
+(the manual fallback in `feature/decomposition.md`'s per-task run
+instruction, item 8), apply `task-lifecycle` with that `BASE_BRANCH`
+explicitly instead of the default.
 
-Invoke the `plan-critic` sub-agent with the draft plan as input. The critic
-will apply pre-mortem, inversion, load-bearing assumption analysis, and
-consistency checks against ADRs and product docs, and return the critique
-as markdown text.
+### Multi-task path
 
-Skip this step ONLY if the change qualifies as trivial under ALL of:
-- diff is plausibly under ~50 lines of non-test code,
-- touches none of the project's sensitive areas (the *Sensitive Areas*
-  section in `AGENTS.md` is the canonical list),
-- introduces no new public endpoints, no new persisted fields, no new
-  external dependencies,
-- AND the user explicitly said "skip the critic" (or equivalent) in
-  this session.
+**Preconditions, checked before the approval screen is drawn (so failures
+appear on it) and re-checked before anything is written:**
 
-If any condition fails, run the critic. When in doubt, run it. Do not
-infer "trivial" from your own read of the plan — the user has to ask.
+| | Check | Failure |
+|---|---|---|
+| P0 | Claude Code ≥ v2.1.206 (`claude --version`; undetermined output → treat as this row passing with a note, never a hard failure) | STOP: the floor exists for `SendMessage`'s sub-agent addressing and call-level worktree isolation, both load-bearing for scheduling and relay below |
+| P1 | Not on the repository's default branch (same check as *Preconditions* above, restated here so it appears as a row on the approval screen) | STOP — see *Preconditions* above |
+| P3 | Current branch has an upstream on `origin` (`git rev-parse --abbrev-ref --symbolic-full-name @{u}`) | STOP: give `git push -u origin <branch>` — and note explicitly that this push has nothing to review yet (the branch is identical to the default branch at this point), so `--no-verify` is safe here specifically, not a general license |
+| P4 | `AGENTS.md` → *Task Tracking* has no remaining `[TODO:` | STOP: name the unfilled fields; point at `/init-workflow` |
+| P5 | `scripts/check-hook-status.sh` reports `ACTIVE` | STOP: the review gate must be enforced before any task pushes |
+| P8 | `gh api repos/{owner}/{repo}` → `allow_merge_commit` is true, AND `gh api repos/{owner}/{repo}/branches/<integration>/protection` → `required_linear_history` is not set (run only after P3 confirms the branch exists on the remote — a 404 before that point is ambiguous between "unprotected" and "branch doesn't exist yet"; once the branch exists, 404 = unprotected/fine, 403 = unknown/warn, not fine) | STOP: a squash-only repository breaks the ancestry check the dependency model relies on; default-branch protection is not checked here and can still affect the final PR later |
+| P2 | `worktree.baseRef` resolves to `"head"` (report which of `~/.claude/settings.json` / `.claude/settings.json` / `.claude/settings.local.json` supplied it; if the user-global file, warn the blast radius is every repository, not just this one) | **WARN** — "execution will be unavailable until this is set; the breakdown and tickets still proceed" |
+| P6 | `.claude/worktrees/` is gitignored | **WARN**, same reasoning as P2 |
+| P7 | If `.gitignore` mentions `.env*`, a `.env` exists, and no `.worktreeinclude` exists | WARN — task worktrees are fresh checkouts and won't have it |
+| P9 | A concurrency guard is detected (`AGENTS.md` → *Commands* points at `make` targets, or an equivalent the human confirms) — checked only when the breakdown has 2+ tasks and at least one has a UI/API surface | WARN — name the risk (concurrent tasks may collide on a shared dev server or database) and point at `/init-workflow`'s concurrency-guard question; not a hard stop, since a project may have its own equally valid answer that doesn't look like the scaffolded template |
 
-#### Step 1c — Present plan and critique for approval
+**P2 and P6 are re-checked immediately before the first task launches and
+are hard STOPs at that point** — a task launched without `"head"`
+resolution would silently branch from the wrong ref, defeating the
+dependency model with no visible error. See `feature/delegation.md`.
 
-Present BOTH the plan and the critique to the user for approval, using
-whatever mechanism the harness provides for exiting plan mode.
+None of these run on the single-task path — an unconfigured tracker or an
+unset `worktree.baseRef` must never block a plain single-task request.
 
-**Lead with the approval screen**: the plan's **Approval Summary** first,
-immediately followed by the critique's **Confidence** verdict and its top
-findings (any suggested amendments the user is likely to want). This is
-what the user reads on a phone. The full plan and the full critique follow
-below, clearly separated — make clear which sections are the plan and which
-are the critique; do not interleave them. The user reads the approval
-screen (and drills into the detail only where needed) and decides whether
-to approve as-is, amend the plan based on critique findings, or request a
-re-plan.
+**Decompose, scan, self-critique, present.** Follow
+`feature/decomposition.md` exactly: decompose into tasks, run the bounded
+collision scan, apply the three self-critique lenses, then present the
+approval screen it specifies — including the precondition results above.
+Nothing is written until the human approves. **Exit plan mode here, on
+approval** — the same point standalone `task-lifecycle` exits it on plan
+approval; everything before this point (clarify, triage, decompose, scan,
+self-critique) happens inside plan mode, same as drafting a single-task
+plan does today.
 
-Do not proceed until the plan is approved. On a substantive change (new
-scope, a different approach, or reworked requirements), re-enter plan mode
-and re-invoke the `planner` sub-agent to revise the plan — do not re-plan
-yourself — then re-run the `plan-critic` and re-present for approval. When
-re-presenting a revised plan, lead with a short **delta** section — what
-changed relative to the previously presented version — so the user re-reads
-only the changes, not the whole plan again.
+**File tracker items.** Once approved, execute the tracker commands shown
+on the approval screen exactly as shown: parent/epic first (if the
+tracker has one), then one item per task, then dependency links, then each
+task's initial status. If any command fails, STOP per Rule 2 with the
+exact command and output, and report precisely which items were created —
+never retry with a different form. If `AGENTS.md` → *Task Tracking* →
+`Tracker` is `none`, follow `feature/decomposition.md`'s durable-record
+fallback instead.
 
-If the user approves the plan conditional on adopting specific critique
-amendments ("approved, but also address point 2"), you may fold those
-specific amendments into the plan text yourself before implementing — that
-is transcribing an accepted decision, not fresh planning, so it does not
-need another planner round. The `code-critic` and `adversarial-qa` sub-agents receive
-only the plan text — an amendment that lives only in the conversation is
-invisible to them.
+**Concurrency cap.** Ask for it on the approval screen (not before —
+nothing in this skill executes until approval), default **2**. This is a
+per-feature judgment call, not a stable project fact, so it has no
+`AGENTS.md` knob. **If the dependency graph's critical path equals the
+task count** (a mostly-linear breakdown), say so explicitly: effective
+concurrency is 1 regardless of the cap, and this skill's value for such a
+feature is the tracking, relay, and closure below — not parallelism.
 
-After approval, retain the plan text — you will pass it to the
-`code-critic` and `adversarial-qa` sub-agents later.
+**Schedule and launch.** See `feature/delegation.md` for the full detail:
+launching a `task-runner` sub-agent per ready task (up to the cap), the
+four-call readiness sequence, and why both `name` and call-level
+`isolation` are required on every launch.
 
-### Step 2 — Implement
+**Relay every pause.** A task sub-agent cannot enter plan mode — every
+plan approval, `NEEDS_DECISION`, QA finding, and material deviation it
+raises comes back to you as a `TASK-RESULT` pause, and you relay it to the
+human and resume the task with the answer. See `feature/delegation.md`
+for the exact protocol, including the ripple handling a material
+deviation triggers (holding affected siblings, *and waiting for their
+acknowledgement*, before presenting the deviation) and how a
+sibling-caused conflict on an already-open task PR gets resolved and
+re-reviewed rather than silently merged.
 
-**Acceptance tests first.** Before implementing, write the end-to-end tests
-from the plan's Test Strategy — at minimum the `[AC-<slug>-n]`-tagged ones. They
-encode the approved contract, so drift from the plan surfaces as a failing
-test during implementation instead of a surprise at review. Tests derived
-from the plan may not be weakened, loosened, or rewritten to make them pass
-— if one turns out to be wrong, treat it as a plan deviation (below): flag
-it, don't silently adjust it.
+**Closure.** Once every task has merged into the feature-integration
+branch: run the project's tests, one `code-critic` pass over the whole
+integration diff, `adversarial-qa` narrowed to cross-task seams if there's
+a UI/API surface, then the final integration-branch → default-branch PR
+and a rollup for the human. Full procedure, including the exact
+`worktree.baseRef` exit reminder text, in `feature/delegation.md`.
 
-Then implement the approved plan in small logical steps until the suite is
-green. Run the test suite once a coherent unit of work is complete (e.g.,
-after finishing a module or a meaningful set of related changes) — not after
-every individual step.
-
-**Look up current library/API docs instead of relying on training-time
-memory for version-sensitive details.** Before writing code against an
-external library or framework — especially anything that could have
-changed since training (recent APIs, config shape, breaking changes) — use
-the bundled `context7` MCP server — resolve the library ID, then query its
-docs — to pull current docs rather than guessing. Skip it for stdlib/language-core usage you're
-already confident about. This is a quality aid, not a gate like the
-canonical commands in Rule 1 — if the lookup errors or the library isn't
-found, note it in your summary and proceed on your best existing
-knowledge rather than stopping the implementation step over it.
-
-If you discover something during implementation that changes what needs to be built,
-stop and assess the impact:
-
-- **Minor** (an implied edge case, a small clarification): note the deviation
-  and inform the user with a brief note before continuing.
-- **Material** (scope change, different approach, new requirements): stop,
-  re-enter plan mode, update the plan, and present it for re-approval
-  before continuing.
-
-### Step 3 — Run all tests
-
-All tests must pass before proceeding. Run the project's run-all-tests
-command (`AGENTS.md` → *Commands*).
-
-### Step 4 — Code review
-
-Commit your work first — the review must cover the committed state, because
-`scripts/review-ok.sh` (Step 6) records the reviewed commit SHA and the pre-push
-hook compares against it.
-
-Invoke the `code-critic` sub-agent to review all changes against project
-standards. Pass the approved plan text, and include the summary output of the
-most recent full test-suite run (Step 3). The reviewer is not allowed to run
-the test suite itself — it verifies coverage statically and needs a record
-that the committed tests ran and passed on the reviewed state. That summary
-comes from you, the implementer, so it is a record, not independent proof
-(see *Deterministic enforcement* in the AI Workflow plugin's own
-documentation) — this workflow's job ends at a well-vetted PR; whether your
-project's own CI provides independent evidence on top of that is outside
-this workflow's scope.
-
-**Escalate the model on the security surface.** The `code-critic` runs on
-Sonnet by default (see its wrapper). If the diff touches the security surface
-— the *Sensitive Areas* section in `AGENTS.md` is the canonical list — invoke
-the `code-critic` with its model overridden to `opus` for that review: Opus is
-the stronger bug-finder, and this surface is where a missed finding is most
-expensive. Sonnet stays the default everywhere else. (This is the model-tier
-counterpart to the second-reviewer-pass recommendation in Step 9.)
-
-### Step 5 — Relay NEEDS_DECISION items
-
-If the reviewer flags any `NEEDS_DECISION` items, **stop and present ALL of them
-to the user**. Wait for answers before proceeding.
-
-### Step 6 — Fix FAIL items
-
-If the reviewer found critical issues (`FAIL`), fix them and re-invoke the
-`code-critic`. Repeat until no critical issues remain.
-
-Do not push or open a PR until the `code-critic` has passed with no FAIL
-items (see *Rules — non-negotiable* in AGENTS.md). Re-run the reviewer after
-any later change, including fixes prompted by Step 8 QA findings.
-
-**Record the pass.** After a pass with no FAIL items on the committed state
-(see Step 4 — the review always covers a commit), run
-`scripts/review-ok.sh` — it records the reviewed HEAD, and the pre-push hook
-(`githooks/pre-push`) blocks pushing any other commit. Any commit made after
-the review makes the marker stale by design: re-run the reviewer, then
-`scripts/review-ok.sh` again on the new HEAD. Never run it without a passing
-review of the current HEAD.
-
-### Step 7 — Exploratory QA
-
-Run this step only when the change has a **UI and/or API surface**: the diff
-touches templates/views, static assets, a controller path that renders a
-view, fragment, or client-driven (e.g. HTMX/AJAX) response, or exposes/changes
-a REST (or other network-callable) endpoint. For changes with neither surface
-(pure internal service/repository logic, migrations, build/config work), skip
-this step and state in your summary that QA was skipped and why. When in
-doubt, run it.
-
-Invoke the `adversarial-qa` sub-agent for an adversarial probe of the feature
-through whichever surface(s) it exposes. Its role is to catch things the plan
-and the committed tests did not anticipate — NOT to re-verify the plan's
-Requirements (those are locked down by the committed end-to-end tests written
-during implementation). Pass the approved plan text so the agent understands
-the feature, not as a checklist.
-
-### Step 8 — Relay QA findings
-
-If the QA agent surfaces any findings, present them to the user before opening
-a PR and wait for direction on each (fix now, defer, or ignore).
-
-For each finding the user chooses to **defer**, file a GitHub issue labeled
-`known-issue` (`gh issue create --label known-issue …`) describing the
-behaviour, where it lives, the QA pass that found it, and sign it with model
-attribution. QA evidence under `.qa-evidence/` is session-local
-(gitignored), so the issue body must stand alone: include reproduction steps
-and describe in words what the evidence showed. The QA skill checks that
-label on every pass, so deferred findings are reported as known instead of
-being re-triaged each time. Do not file issues for findings the user chooses
-to ignore outright.
-
-### Step 9 — Open PR
-
-Only open a PR after the code review has passed and every QA finding has
-been dispositioned (fixed / deferred / ignored) — or QA was skipped because
-there is no UI or API surface.
-
-The PR body is where the human review starts — it must carry the pipeline's
-conclusions so the reviewer does not have to reconstruct them from the diff
-or a session transcript:
-
-- **Plan summary** — the requirements and approach in a few sentences, plus a
-  link to the source spec if there was one.
-- **Acceptance criteria → test table** — one row per `AC-<slug>-n` from the
-  plan's Approval Summary: the criterion, and the committed test(s) tagged
-  `[AC-<slug>-n]` that prove it. This is the reviewer's traceability skim —
-  a criterion without a test row must not reach the PR (the code-critic
-  enforces this earlier).
-- **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
-  that was raised, and the decision the user made on each.
-- **QA outcome** — findings with their dispositions (fixed / deferred with
-  issue number / ignored), or "skipped: no UI or API surface". Describe each finding
-  in words — `.qa-evidence/` is gitignored and session-local, so its paths
-  are dead links to anyone reading the PR; the durable record for a deferred
-  finding is its `known-issue` issue.
-- **Test evidence** — one line: the test count and result from the final
-  full test-suite run.
-
-If the branch touches the security surface (the *Sensitive Areas* list in
-`AGENTS.md`), say so explicitly in the PR body, and give that surface a
-second, independent look
-before merging by re-running the `code-critic` sub-agent in a fresh context.
-A single reviewer pass is the last line of defense there; the project's own
-review is the no-cost way to get a second.
-
-<!-- SKILL NAMING NOTE (Claude Code): the review skill is named `code-critic`
-     precisely so it does NOT shadow Claude Code's bundled `code-review` skill
-     (project skills shadow bundled skills completely). The bundled
-     `/code-review` — including `/code-review ultra`, the billed cloud review —
-     therefore stays reachable as an optional, user-launched deep pass on an
-     especially high-stakes change. It is not a standard step. Do not rename
-     the skill back to `code-review` unless you want the shadowing. -->
+**Cancellation and mid-flight re-scope.** Prefer asking a running task to
+wind down cleanly over hard-killing it — a hard-killed task cannot be
+resumed. Full procedure in `feature/delegation.md`.
 
 ---
 
 ## Important Rules
 
-- NEVER skip the planner step for new features. Implementation without an approved
-  plan leads to rework.
-- NEVER skip the plan-critic step unless the trivial-change criteria in
-  Step 1b are ALL met AND the user explicitly opted out. The default is
-  always to run the critic.
-- NEVER fetch external links or docs directly — always delegate to the planner
-  sub-agent, regardless of platform.
-- NEVER enter plan mode from within a sub-agent — only the main agent presents
-  plans for review.
-- NEVER present work to the user before the `code-critic` sub-agent has reviewed
-  it.
-- If a sub-agent flags `NEEDS_DECISION`, you MUST relay ALL flagged items to the
-  user and wait. Do not make these decisions yourself.
-- Sub-agents are read-only for review purposes — only the main agent implements
-  changes.
+- NEVER decide this is a single task without stating so and giving the
+  human a chance to object first. Silent self-classification is exactly
+  the gap that lets a mis-triaged request slip past planning and review —
+  and on the single-task path specifically, it is what would let this
+  skill write and commit code without ever having stated it was doing so.
+- On the single-task path, this skill may write files and commit **only**
+  after that confirmation beat. On the multi-task path it writes **no
+  repository files and makes no commits, ever** — its only repo-mutating
+  git commands are `git fetch` and `git merge --ff-only` on the branch
+  it is already on (a fast-forward, not a branch switch — no Rule 3
+  exception needed). Its other write actions are tracker commands, the
+  final `gh pr create`, and `scripts/review-ok.sh` once at closure — never
+  `git worktree`, `git branch`, `git checkout <branch>`, or `git push`.
+- NEVER fetch external links or docs directly — always delegate to the
+  `planner` sub-agent, regardless of platform.
+- NEVER present work to the user before `task-lifecycle`'s `code-critic`
+  step has reviewed it.
+- NEVER decompose a multi-task request without presenting the full
+  approval screen first — no tracker item exists before that approval.
+- NEVER act unilaterally on a collision flag — it is advisory input to the
+  human's decision, never a verdict this skill enforces by reordering,
+  merging, or dropping tasks.
+- NEVER launch a task whose prerequisite has not actually merged into the
+  feature-integration branch (verified via `gh`/`git`, never a sub-agent's
+  own say-so).
+- NEVER answer a task's `NEEDS_DECISION`, QA disposition, or plan-approval
+  question on the human's behalf — relay every one of them.
+- NEVER hard-kill a task that could instead be asked to wind down — a
+  hard-killed sub-agent cannot be resumed.
+- NEVER create, switch to, or remove a branch or worktree yourself (Rule 3
+  in `AGENTS.md`) — the human creates the feature-integration branch, the
+  same as they already create a task branch today.
+- Everything `task-lifecycle` itself requires (planner-first, plan-critic
+  by default, relaying `NEEDS_DECISION`, code-critic before presenting
+  work) applies here unchanged — see that skill's own Important Rules.

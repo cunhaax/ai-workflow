@@ -13,6 +13,12 @@ what actually ships.
 - **`/feature` — one command, the whole lifecycle.** Plan → critique →
   implement → test → code-review → QA → PR. You don't orchestrate the
   steps yourself; the workflow does, end to end.
+- **Scales to a multi-PR feature, same command.** A request spanning
+  several PRs gets clarified, decomposed into dependency-ordered tasks,
+  tracked in your own tracker, and run as isolated tasks in parallel —
+  with every approval still relayed back to you and an integration check
+  before the final PR. See *Multi-task features* in
+  [`docs/AI-workflow.md`](docs/AI-workflow.md).
 - **It stops and asks instead of guessing.** When a critic raises a
   `NEEDS_DECISION`, or QA turns up something the plan didn't anticipate, the
   loop halts and hands you the decision — fix now, defer with a filed
@@ -40,6 +46,12 @@ what actually ships.
    /plugin install ai-workflow@ai-workflow
    ```
 
+   The single-task workflow below works on any Claude Code version this
+   plugin supports. `/feature`'s **multi-task** mode additionally requires
+   Claude Code ≥ v2.1.206 (needed for `SendMessage`'s sub-agent addressing
+   and call-level worktree isolation) — `/feature` checks this itself and
+   tells you if your version is too old before it does anything else.
+
 2. **Scaffold and adapt it to your project:**
 
    ```
@@ -50,6 +62,15 @@ what actually ships.
    review and planning guidance at your existing docs (or seeds new ones),
    and validates the setup. Every write is proposed and confirmed — re-run
    it any time as a doctor.
+
+   It scaffolds from `plugins/ai-workflow/skills/init-workflow/templates/`:
+   `AGENTS.md`/`CLAUDE.md`, `.claude/settings.json`, the pre-push review
+   gate (`githooks/pre-push`, `scripts/review-ok.sh`,
+   `scripts/check-hook-status.sh`), `docs/adr/`, `docs/product-context/`,
+   `docs/agent-rules/{code-critic,plan-critic}.md`, and — only if you opt
+   into `/feature`'s multi-task mode — a `Makefile` concurrency guard. Each
+   file's own destination gates its own scaffolding; nothing here overwrites
+   a file your project already owns.
 
 3. **Enable the review gate (once per clone):**
 
@@ -65,7 +86,11 @@ what actually ships.
 
    Start on a fresh branch you create yourself — the agents won't create
    or switch branches, and the workflow diffs against and opens a PR
-   against your default branch.
+   against your default branch. For a request that spans several PRs,
+   start on a **feature-integration branch** instead — same idea, one
+   level up: each task diffs against and PRs into that branch, and
+   `/feature` opens one final PR from it to your default branch once
+   everything's merged and verified together.
 
 ## Reviewing a small change yourself
 

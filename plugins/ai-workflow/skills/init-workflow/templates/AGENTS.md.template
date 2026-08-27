@@ -34,7 +34,12 @@ responsibility.
    assumes the **human** starts the session on a fresh feature branch — the
    code review diffs against the default branch and the PR targets it, neither
    of which works from the default branch itself. If you start on the default
-   branch, STOP and ask before planning.
+   branch, STOP and ask before planning. (A worktree the harness itself
+   provisions for an isolated sub-agent — e.g. a `task-runner` launched by
+   `/feature`'s multi-task mode — is not you running `git worktree add`, and
+   a sub-agent that simply starts inside one has not switched branches; this
+   rule still means you yourself may never create, switch to, or remove a
+   worktree or branch.)
 
 4. **Get reviewed before pushing.** Never `git push` or open a PR without a
    recorded passing review of the current commit — no unresolved critical
@@ -113,6 +118,21 @@ can match a diff against them.] -->
 
 - [TODO: sensitive area 1 — concrete file/package/pattern]
 - [TODO: sensitive area 2]
+
+## Task Tracking
+
+<!-- Optional. Only /feature's multi-task mode reads this section; a single-task
+     /feature run never touches it. Leave the TODOs in place if you don't use a
+     tracker — /feature will then say so and ask, rather than guessing. -->
+
+- Tracker: [TODO: e.g. `GitHub issues`, `Trello`, `Jira`, or `none`]
+- Create a task: [TODO: exact command or tool call, with `<title>`/`<body>` placeholders]
+- Create the parent/epic item: [TODO: … or `none — this tracker has no parent concept`]
+- Link a task to its parent: [TODO: …]
+- Record a dependency between tasks: [TODO: …]
+- Status vocabulary: [TODO: e.g. `todo → in-progress → in-review → done`, plus `blocked`]
+- Set a task's status: [TODO: exact command, with placeholders]
+- Close the parent/epic: [TODO: …]
 
 ## Review & Planning Guidance
 

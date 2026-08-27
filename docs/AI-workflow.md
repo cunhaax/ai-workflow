@@ -6,9 +6,13 @@ This repo structures AI-assisted development as a real dev team: a **planner**,
 a **plan critic**, a **code critic**, and **QA**, each in its own context
 window, backed by one shared copy of the standards they apply — plus
 deterministic gates below the LLM layer so the load-bearing rules don't rely
-on anyone re-verifying them by hand. Implementation itself is *not*
-delegated — the main agent plays the developer; sub-agents plan, critique,
-and review.
+on anyone re-verifying them by hand. For a single task, implementation is
+*not* delegated — the main agent plays the developer; sub-agents plan,
+critique, and review. `/feature`'s multi-task mode is the one exception:
+each task is implemented by its own `task-runner` sub-agent, isolated in
+its own worktree — but within that sub-agent's own tree, the same
+principle holds one level down: *it* is the main agent of its tree, and
+the four review/planning agents it invokes stay read-only underneath it.
 
 Distributed as a single Claude Code plugin from `plugins/ai-workflow/` in
 this repo's source — deliberately **Claude-native** (sub-agents, skills, the
@@ -22,6 +26,12 @@ are Claude-specific.
 > for `[` and `TODO`). The skills and sub-agents themselves are
 > project-agnostic and need no editing. See `README.md` for installing and
 > adapting.
+
+`/feature`'s single-task workflow has no version requirement beyond
+whatever this plugin already needs. Its **multi-task** mode requires
+Claude Code ≥ v2.1.206 (`SendMessage`'s sub-agent addressing, call-level
+worktree isolation) — `/feature` itself checks this before doing anything
+else on that path.
 
 ## Repository Structure
 
@@ -45,6 +55,8 @@ project-root/
 │   │   └── plan-critic.md                 #   risk lenses — these two conditionally, see below
 │   └── product-context/                   # Product vision, strategy, requirements
 ├── .gitignore                             # /init-workflow creates/appends this
+├── Makefile                                # Optional: concurrency guard for /feature's
+│                                            #   multi-task mode — only if opted into
 └── src/<module>/AGENTS.md                 # Optional, NOT scaffolded — add these yourself
 ```
 
@@ -58,10 +70,14 @@ has its own `AGENTS.md` still gets the review gate (and vice versa).
 install already created it; the three gate files (`githooks/pre-push`,
 `scripts/review-ok.sh`, `scripts/check-hook-status.sh`) are each checked for
 their own identity before being scaffolded, never silently overwritten.
-`docs/agent-rules/code-critic.md`/`plan-critic.md` are the one exception:
+`docs/agent-rules/code-critic.md`/`plan-critic.md` are one exception:
 `/init-workflow` asks first whether the project already has equivalent docs
 elsewhere and points `AGENTS.md` there instead of writing these two, if so
-— see that skill's own Step 4 for the full logic.
+— see that skill's own Step 4 for the full logic. `Makefile` is the other:
+`/init-workflow` only scaffolds it if the project opts into `/feature`'s
+multi-task mode *and* accepts the concurrency-guard offer during that
+interview (Step 3) — most projects will never get this file, and that is
+the intended default, not a gap.
 
 The plugin itself (`plugins/ai-workflow/agents/`, `plugins/ai-workflow/skills/`)
 is **not** vendored into the project — it lives wherever Claude Code resolves
@@ -90,11 +106,20 @@ same way any consumer would.
   from the parent conversation); the body says what context to gather, what
   to output, what not to touch.
 - **Slash commands** are the skills invoked directly (`/plan-draft`,
-  `/code-critic`, …) for ad-hoc use, skipping orchestration. `/feature` is
-  the exception — its skill *is* the full orchestrated workflow.
+  `/code-critic`, …) for ad-hoc use, skipping orchestration. `/feature`'s
+  own skill is itself an orchestrated workflow — it clarifies a request,
+  decides whether it is one task or several, and applies `task-lifecycle`
+  either inline (as itself) or by delegating to a sub-agent that preloads
+  it.
 
-One copy of the knowledge backs both a sub-agent (via preload) and its
-matching slash command — nothing is duplicated, nothing can drift.
+One copy of the knowledge usually backs both a sub-agent (via preload) and
+its matching slash command — nothing is duplicated, nothing can drift.
+`task-lifecycle` (`plugins/ai-workflow/skills/task-lifecycle/SKILL.md`) is
+the one skill in this plugin with **no** slash command of its own: it
+holds the single-task/single-PR lifecycle (plan → critique → implement →
+test → code-review → QA → PR) as shared knowledge between `/feature`'s
+inline path and a delegated sub-agent's preload, and is not meant for
+direct invocation.
 
 **Where project-specific content lives.** The skills are project-agnostic:
 they name the project's commands, app URL, and default branch *by role*
@@ -150,6 +175,13 @@ Brief description of the project, its purpose, and how it fits into the broader 
 - Product vision, strategy, requirements: `docs/product-context/`
 - Architecture Decision Records: `docs/adr/`
 - Sub-agents and skills: supplied by the installed AI workflow plugin
+
+## Task Tracking
+Optional — only read by `/feature`'s multi-task mode. Leave the `[TODO: …]`
+placeholders in place if this project has no tracker.
+- Tracker: `[TODO: e.g. GitHub issues, Trello, Jira, or none]`
+- Create a task: `[TODO: exact command or tool call]`
+- (six more entries — see `AGENTS.md.template` for the full set of eight)
 
 ## Review & Planning Guidance
 - Code review guidance: `docs/agent-rules/code-critic.md`
@@ -294,18 +326,30 @@ their issue.
 
 ### `plugins/ai-workflow/skills/feature/SKILL.md` — `/feature`
 
-The full lifecycle the **main** agent runs for non-trivial work: **plan →
-critique → implement → test → code-review → QA → PR**. The gates worth
-naming: the session must start on a human-created feature branch (agents
-may not create one — Rule 3); plan mode is entered before any planning;
-plan-critic may be skipped only for trivial changes **and** only when the
-user explicitly asks; `[AC-<slug>-n]` acceptance tests (slug-namespaced so
-tags stay unique across the whole suite, not just within one plan) are
-written before implementation and may not be weakened to pass; no push or PR
-until code-critic passes with no FAIL items, escalated to Opus on security-surface
-diffs; QA runs only for changes with a UI and/or API surface; the PR body carries the
-pipeline's conclusions (plan summary, AC → test table, review outcome, QA
-dispositions, test evidence).
+The entry point for non-trivial work, run by the **main** agent. Clarifies
+the request, states plainly when it is treating the request as a single
+task — giving the human a beat to object before writing anything — then
+applies `task-lifecycle` inline: **plan → critique → implement → test →
+code-review → QA → PR**. The gates worth naming, carried by
+`task-lifecycle` itself: the session must start on a human-created branch
+(agents may not create one — Rule 3); plan mode is entered before any
+planning; plan-critic may be skipped only for trivial changes **and** only
+when the user explicitly asks; `[AC-<slug>-n]` acceptance tests
+(slug-namespaced so tags stay unique across the whole suite, not just
+within one plan) are written before implementation and may not be weakened
+to pass; no push or PR until code-critic passes with no FAIL items,
+escalated to Opus on security-surface diffs; QA runs only for changes with
+a UI and/or API surface; the PR body carries the pipeline's conclusions
+(plan summary, AC → test table, review outcome, QA dispositions, test
+evidence).
+
+### `plugins/ai-workflow/skills/task-lifecycle/SKILL.md` — internal, no slash command
+
+Holds the single-task/single-PR lifecycle above as shared knowledge between
+`/feature`'s inline path and a delegated sub-agent's preload used for
+orchestrating a request that spans several tasks. See *The Three Layers*
+for why this is the one skill in the plugin with no slash command of its
+own.
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 
@@ -363,14 +407,30 @@ interactively via `claude --agent <name>`.
   running app through whichever surface(s) it exposes — via Playwright MCP
   tools for UI, `curl`/Bash for API — and surface what the plan and tests
   missed.
+- **`task-runner`** — the one sub-agent that *implements*. Applies
+  `task-lifecycle` in delegated mode inside an isolated worktree, running
+  as one task from a `/feature` multi-task breakdown — invoking the four
+  agents above itself, the same way the main agent does for a single-task
+  request. See *Multi-task features* below.
 
-There is no `feature` sub-agent — `feature` is a main-agent skill that
-orchestrates the four above; `init-workflow`, `workflow-retro`, and
-`workflow-inspect` are likewise main-agent-only, interactive rather than
-delegated.
+`feature` and `task-runner` are the two agents in this plugin that write
+code; every other sub-agent is read-only for review purposes. `feature`
+itself has no sub-agent of its own for the single-task case — it is a
+main-agent skill that orchestrates the four review/planning agents
+directly; `init-workflow`, `workflow-retro`, and `workflow-inspect` are
+likewise main-agent-only, interactive rather than delegated.
 
-Design choices: only `planner` carries `WebFetch` (external specs enter at
-exactly one point); the plan-stage critics run on the stronger model tier (a
+Design choices: of the four review/planning agents, only `planner`
+carries `WebFetch` — external specs enter at exactly one point among
+them. `task-runner` sits outside that invariant entirely rather than
+being a fifth exception to it: it carries no `tools:` allowlist at all
+(see its own file for why), so it inherits the full tool set including
+`WebFetch`. That does not change whose *job* it is to fetch external
+docs — `task-runner`'s own prose rule still says never to, delegating to
+`planner` exactly as the main agent does — but it is a weaker,
+prose-only guarantee where every review/planning agent's is structural.
+The plan-stage critics run on the stronger
+model tier (a
 bad plan poisons everything downstream), while `code-critic` runs a tier
 lower by default and is escalated to Opus by `/feature` on security-surface
 diffs. Each agent lists exactly the one skill it applies.
@@ -466,6 +526,97 @@ changes.
 (`/ai-workflow:feature`) or exposed bare (`/feature`) — this hasn't been
 exercised end-to-end yet. This guide uses the bare form as shorthand either
 way.*
+
+## Multi-task features
+
+A request spanning several PRs runs through the same `/feature` command as
+a single task — it clarifies, then triages: an already-well-scoped ask
+still goes straight through `task-lifecycle` inline, unchanged. A request
+naming several independently reviewable deliverables gets decomposed
+instead, and each resulting task runs as its own `task-runner` sub-agent:
+
+```mermaid
+flowchart TB
+    User([User])
+    Main{{"/feature<br/>orchestrator"}}
+    T1[["task-runner<br/>(task A)"]]
+    T2[["task-runner<br/>(task B, depends on A)"]]
+    Tracker[(Project tracker)]
+    Integration([Feature-integration branch])
+    Default([Default branch])
+
+    User -- "1. multi-PR request" --> Main
+    Main -- "2. clarify + decompose +<br/>approval screen" --> User
+    User -- "3. approve breakdown" --> Main
+    Main -- "4. file tickets" --> Tracker
+
+    Main -- "5. launch (worktree,<br/>base = Integration)" --> T1
+    T1 -- "6. pause: plan approval,<br/>NEEDS_DECISION, QA findings" ---> Main
+    Main -- "↻ relay to human,<br/>resume with answer" ----> User
+    T1 -- "7. PR" --> Integration
+
+    Main -- "8. launch only after A<br/>merges into Integration" --> T2
+    T2 -- "9. PR" --> Integration
+
+    Main -- "10. closure: tests +<br/>code-critic + final PR" --> Default
+
+    classDef hub fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff;
+    classDef agent fill:#059669,stroke:#065f46,color:#ffffff;
+    classDef actor fill:#f59e0b,stroke:#b45309,color:#1f2937;
+    classDef ctx fill:#e5e7eb,stroke:#9ca3af,color:#1f2937;
+
+    class Main hub;
+    class T1,T2 agent;
+    class User actor;
+    class Tracker,Integration,Default ctx;
+```
+
+Each `task-runner` is the main agent of its own tree — it invokes
+`planner`/`plan-critic`/`code-critic`/`adversarial-qa` itself, exactly the
+way the main agent does for a single-task request, and it *implements*
+its task (the one exception to "sub-agents are read-only" in this
+plugin). It cannot enter plan mode itself (confirmed: the tool isn't
+available to a worktree-isolated sub-agent), so every point where it
+would present something to a human instead ends its turn with a result
+block the orchestrator relays.
+
+**Load-bearing mechanics, all confirmed against this repo before shipping:**
+- Each task's worktree branches from the feature-integration branch, not
+  the project's default branch — via the documented `worktree.baseRef:
+  "head"` setting, which is why the human always starts the session
+  already on that branch. This is a **project-wide** setting (it affects
+  every worktree-isolated agent in the project, not just `/feature`'s
+  tasks) — an explicit, `/init-workflow`-offered opt-in, never shipped in
+  the scaffolding template, with an exit reminder at feature closure so it
+  doesn't silently outlive the feature that needed it.
+- Task PRs merge into the integration branch with a regular merge, never
+  squash (checked up front — a squash-only repository can't support the
+  dependency model's ancestry check). The final integration-branch → 
+  default-branch PR may squash freely, since nothing branches off it
+  afterward.
+- A dependent task launches only once its prerequisite's PR has actually
+  merged, verified via `gh`/`git`, never a sub-agent's own say-so.
+- Concurrent tasks needing a shared dev server or database are **not**
+  this plugin's problem to solve at the orchestration level — that's the
+  project's own canonical-commands job (Rule 1). `/init-workflow` offers
+  to scaffold a `Makefile`-based lock guard for exactly this, with an
+  explicit warning if declined, since the alternative is agents silently
+  colliding and burning tokens diagnosing what's actually just a race.
+
+**Requirements this mode has that the single-task path doesn't:** Claude
+Code ≥ v2.1.206 (`SendMessage`'s sub-agent addressing, needed for the
+relay above, and call-level worktree isolation — checked by `/feature`
+itself before doing anything else on this path); an `AGENTS.md` → *Task
+Tracking* section, filled in via `/init-workflow`; and the
+`worktree.baseRef` opt-in above.
+
+**Deliberately out of scope:** automated merging (the human always
+merges every PR, including the final one); resuming a partially-executed
+multi-task feature in a brand-new session (the tracker plus git/`gh` hold
+enough state to reconstruct by hand, but nothing automates it);
+`/workflow-retro`/`/workflow-inspect` coverage for a multi-task run (both
+stay shaped for a single feature branch — a multi-task run's evaluation
+data is a known gap, not yet solved).
 
 ## Installing and Updating the Plugin
 

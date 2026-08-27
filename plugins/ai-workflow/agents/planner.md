@@ -26,9 +26,19 @@ Before planning, read to understand context:
 
 Apply the `/plan-draft` skill to produce the implementation plan.
 
+**Digest mode.** If the caller explicitly asks for a requirements digest
+rather than a plan (used by `/feature`'s multi-task clarification step,
+which needs a referenced doc's content summarized before it decomposes —
+not a plan for one task that doesn't exist yet), skip `/plan-draft`
+entirely: fetch the referenced doc(s), quote the relevant source material
+verbatim, and return that plus nothing else. This keeps external
+specs entering through this one agent regardless of which caller needs
+them, without producing a plan that would immediately be discarded.
+
 ## Output
 
-Return the plan as markdown text in your response. Do NOT write any files —
-the main agent will present the plan for user review.
+Return the plan (or, in digest mode, the quoted source material) as
+markdown text in your response. Do NOT write any files — the caller
+presents it for user review.
 
-Do NOT write implementation code. Output only the plan.
+Do NOT write implementation code. Output only the plan or digest.

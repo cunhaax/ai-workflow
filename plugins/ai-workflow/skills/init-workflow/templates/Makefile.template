@@ -1,0 +1,42 @@
+# Concurrency guard for /feature's multi-task mode.
+#
+# Multiple agents can be running this project's test/run/stop commands at
+# once — one per task, each in its own git worktree, potentially against a
+# shared dev server or database. These targets wrap the project's own
+# commands in a file lock so concurrent invocations serialize instead of
+# colliding. This is glue, not a build system: it does not replace whatever
+# the project already uses to build/test/run — it wraps it.
+#
+# The lock file MUST live outside any one worktree, or it guards nothing:
+# each task's `make test` runs from inside its own `.claude/worktrees/<task>/`
+# checkout, so a lock path relative to that checkout (e.g. plain `.make.lock`)
+# resolves to a different file per task and never actually serializes across
+# them. `git rev-parse --git-common-dir` resolves to the one `.git` directory
+# every worktree of this repository shares, which is what makes the lock
+# actually shared. Because it lives outside the working tree, it never shows
+# up as an untracked file and needs no .gitignore entry.
+#
+# Platform note: this template uses `lockf`, which ships by default on
+# macOS/BSD and blocks (waits) until the lock is free — the behavior these
+# targets need. On Linux, replace `lockf $(LOCKFILE) sh -c '...'` with
+# `flock $(LOCKFILE) sh -c '...'` (from util-linux, also blocks by default)
+# — plain `lockf` is not a standard shell command there.
+
+# Assumes a git repository — this guard only matters for /feature's
+# multi-task mode, which requires one (it works entirely through git
+# worktrees and branches). Outside a git repo the shell call below
+# returns empty and LOCKFILE degrades to plain "/make.lock" — not
+# guarded against, since that case can't arise in the workflow this
+# file exists for.
+LOCKFILE := $(shell git rev-parse --git-common-dir)/make.lock
+
+.PHONY: test run stop
+
+test:
+	lockf $(LOCKFILE) sh -c '[TEST_CMD]'
+
+run:
+	lockf $(LOCKFILE) sh -c '[RUN_CMD]'
+
+stop:
+	lockf $(LOCKFILE) sh -c '[STOP_CMD]'

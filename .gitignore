@@ -6,3 +6,11 @@
 
 # Local workflow-evaluation records written by /workflow-retro
 .workflow-log/
+
+# Per-clone Claude Code settings overrides (e.g. worktree.baseRef for
+# dogfooding /feature's multi-task mode) — must never be committed, since
+# .claude/settings.json here is a symlink shipped to every downstream project
+.claude/settings.local.json
+
+# Worktrees /feature's multi-task mode creates for delegated tasks
+.claude/worktrees/

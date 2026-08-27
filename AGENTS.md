@@ -34,7 +34,12 @@ responsibility.
    assumes the **human** starts the session on a fresh feature branch — the
    code review diffs against the default branch and the PR targets it, neither
    of which works from the default branch itself. If you start on the default
-   branch, STOP and ask before planning.
+   branch, STOP and ask before planning. (A worktree the harness itself
+   provisions for an isolated sub-agent — e.g. a `task-runner` launched by
+   `/feature`'s multi-task mode — is not you running `git worktree add`, and
+   a sub-agent that simply starts inside one has not switched branches; this
+   rule still means you yourself may never create, switch to, or remove a
+   worktree or branch.)
 
 4. **Get reviewed before pushing.** Never `git push` or open a PR without a
    recorded passing review of the current commit — no unresolved critical
@@ -120,8 +125,11 @@ kept small and reviewed by hand.
 plugins/ai-workflow/
 ├── .claude-plugin/plugin.json        # Plugin metadata (name, version, author, homepage, repository, license)
 ├── .mcp.json                         # Bundled MCP servers (playwright, context7) — starts on plugin enable
-├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
-└── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
+├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic,
+│                                     #   adversarial-qa, task-runner — the delegated implementer for
+│                                     #   /feature's multi-task mode)
+└── skills/                           # Reusable knowledge: feature, task-lifecycle (internal, no
+    │                                  #   slash command), plan-draft, plan-critic, code-critic,
     │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
     └── init-workflow/templates/      # THE scaffold source a fresh project's /init-workflow reads
 docs/
@@ -180,6 +188,22 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
   `docs/AI-workflow.md`) — renaming this plugin requires updating
   `adversarial-qa.md`'s `tools:` allowlist in the same change, or it
   silently stops matching real tools.
+
+## Task Tracking
+
+- Tracker: GitHub issues (this repo).
+- Create a task: `gh issue create --title "<title>" --body "<body>"`.
+- Create the parent/epic item: `gh issue create --title "<feature title>" --body "<task list as GitHub checklist items, one per task issue>"`.
+- Link a task to its parent: include `Part of #<parent-issue-number>` in the
+  task issue's body, and add the task as a checklist item in the parent's body.
+- Record a dependency between tasks: include `Blocked by #<prerequisite-issue-number>`
+  in the dependent task issue's body.
+- Status vocabulary: labels `status:planning` → `status:in-progress` →
+  `status:in-review`, issue closed on merge; `status:blocked` reachable from
+  any state.
+- Set a task's status: `gh issue edit <n> --add-label "status:X" --remove-label "status:Y"`.
+- Close the parent/epic: `gh issue close <parent-issue-number>` once every
+  linked task issue is closed.
 
 ## Review & Planning Guidance
 
