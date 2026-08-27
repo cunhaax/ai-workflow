@@ -242,7 +242,12 @@ write the section, replacing the placeholders.
 
 ## Step 3 — Fill the remaining AGENTS.md sections
 
-For each still-open section, draft from evidence and confirm before writing:
+For each still-open section, draft from evidence and confirm before
+writing. Two of the bullets below (Worktree base ref, Concurrency guard)
+write outside `AGENTS.md` entirely — a settings file and, optionally, a
+`Makefile` — but stay in this same confirmation round since they only
+apply, and only make sense to ask, once Task Tracking's own answer is
+known:
 
 - **Project Overview**: draft one paragraph from the project's README and
   manifest (purpose, stack, key dependencies). Replace `[PROJECT_NAME]`
@@ -270,7 +275,69 @@ For each still-open section, draft from evidence and confirm before writing:
   `[TODO:]` bullets in place; this is not a gap to report in Step 6, it is
   a deliberate choice. On "multi-task": interview all eight bullets, fill
   them, and continue to the next question below.
-- **Concurrency guard** (asked only if the previous answer was
+- **Worktree base ref** (asked only if the Task Tracking answer above was
+  "multi-task"): *"`/feature`'s multi-task mode needs `worktree.baseRef` set
+  to `"head"` so task worktrees branch from the feature-integration branch
+  instead of this project's default branch. This is a project-wide
+  setting — it changes the base ref for every worktree-isolated agent in
+  this project, not just `/feature`'s tasks. Add
+  `{"worktree": {"baseRef": "head"}}` to `.claude/settings.local.json`?"*
+
+  **Target `.claude/settings.local.json`, never `.claude/settings.json`.**
+  Two independent reasons, not one: (a) this setting's blast radius is
+  per-clone, not per-team — a teammate who never touches `/feature`'s
+  multi-task mode shouldn't have their own worktree-isolated agents
+  silently re-based just because someone else opted in, so it belongs
+  with the "per-clone settings override" `.gitignore` already calls this
+  file out for above; (b) `.claude/settings.json` can be — and, in this
+  plugin's own repo, *is* — a symlink into a shared template (see this
+  repo's own *Architecture* section in `AGENTS.md` — a project this skill
+  scaffolds normally has a plain file there instead, but this skill's own
+  instructions must hold for both). Writing "preserve everything else,
+  just add one key" through a symlink writes into whatever it points at.
+  **Before writing, check whether
+  `.claude/settings.local.json` is itself a symlink or otherwise not a
+  plain, normal-shaped JSON file (object at the root, `worktree` absent or
+  itself an object) — if so, do not write, flag it as an unresolved item
+  the same way Step 1 flags a malformed `.claude/settings.json`, and say
+  why.** `.claude/settings.local.json` is not scaffolded by Step 1 at all,
+  so unlike the merge into `.claude/settings.json`, this step creates the
+  file fresh if it doesn't exist yet, or merges into it if it does
+  (preserving whatever the file already holds — a developer's own local
+  permission overrides, for instance).
+
+  Before asking at all, check the **effective, resolved** value — not just
+  whether any of the three files mentions the key. Precedence is
+  lowest-to-highest: `~/.claude/settings.json` (user) →
+  `.claude/settings.json` (project) → `.claude/settings.local.json`
+  (project-local) — the later one wins if more than one sets it. Read all
+  three paths directly (each may not exist; treat a missing file as not
+  setting it) and take the value from the highest-precedence file that
+  sets it at all, not the first one you happen to check. If that effective
+  value is already `"head"`, skip the question — it's already satisfied.
+  If it resolves to something else (a project deliberately pinning a
+  different base ref), do not silently overwrite it — surface the
+  conflict and let the human decide, the same don't-guess-a-fix stance
+  Step 1 takes on a malformed settings shape.
+
+  **On decline, name the consequence plainly**: multi-task execution stays
+  unavailable until this is set — the breakdown and tracker items
+  `/feature` produces still work, only launching tasks does not. **On
+  accept or decline, record which** — Step 5 item 10 reports a resolved
+  setting informationally, a decline as a standing one-line risk (not
+  re-printing the full warning every run), and only a truly
+  never-addressed case re-offers this question; a decline is not silently
+  treated the same as never having been asked, in intent — **known
+  limitation, same as Step 1's**: this skill has no memory of a prior
+  decline across separate runs (Step 1 already states this for its own
+  scaffolding proposals), so in practice a decline and a never-addressed
+  case are indistinguishable to a later doctor run unless the human says
+  which it was. Confirming the answer again each time is the workaround
+  until this needs solving properly, exactly as Step 1 already accepts for
+  itself. **Never add this to `settings.json.template`** — it must stay an
+  explicit, per-project opt-in, never a default every scaffolded project
+  receives regardless of whether it uses multi-task mode.
+- **Concurrency guard** (asked only if the Task Tracking answer above was
   "multi-task"): *"Would you like a `Makefile` that wraps your test/run/stop
   commands with a file lock (`lockf`/`flock`), so concurrent `/feature`
   tasks can't collide on your dev server, database, or other shared
@@ -288,7 +355,7 @@ For each still-open section, draft from evidence and confirm before writing:
   means you are responsible for ensuring your project's own commands are
   safe to run concurrently from different worktrees."* Record the
   decision; it is not re-asked as a fresh interview question on a later
-  run (Step 5 items 9–10 keep it visible instead — see below).
+  run (Step 5 item 10 keeps it visible instead — see below).
 
 ## Step 4 — Seed review and planning guidance
 
@@ -419,18 +486,27 @@ confirmation, report what you cannot fix:
    multi-task path specifically (never for the single-task path, which has
    no such requirement) — this is a WARN item, not a hard failure, since an
    undetermined version shouldn't block the rest of the report.
-10. **Concurrency guard.** Report `worktree.baseRef`'s resolution
-    **informationally on every run when Task Tracking (item 8) is
-    configured** — naming which settings file supplied it and, if it's the
-    user-global `~/.claude/settings.json`, warning the blast radius is
-    every repository, not just this one — and as a named gap when unset.
-    Separately, report whether a concurrency guard was set up (a
-    `Makefile` with `test`/`run`/`stop` targets, or `AGENTS.md` →
-    *Commands* pointing at `make` targets) — present, absent-and-declined
-    (state the standing risk in one line, don't re-print the full warning
-    every run), or never addressed (offer the Step 3 interview question
-    now). None of this is checked when Task Tracking is not configured —
-    a `/feature`-single-task-only project has no reason to see it.
+10. **Worktree base ref and concurrency guard.** Report `worktree.baseRef`'s
+    resolution **informationally on every run when Task Tracking (item 8)
+    is configured** — naming which of the three settings files supplied it
+    and, if it's the user-global `~/.claude/settings.json`, warning the
+    blast radius is every repository, not just this one. If it does not
+    resolve to `"head"`, distinguish the same three states the sibling
+    concurrency-guard check uses: **declined** (recorded at Step 3 —
+    state the standing risk in one line, don't re-print the full
+    consequence every run), **never addressed** (offer the Step 3
+    interview question now, same confirm-then-write to
+    `.claude/settings.local.json` it would have made during first-run,
+    including its symlink/malformed-file guard), or **resolved to a
+    different value on purpose** (a project pinning its own base ref —
+    report it, do not offer to override it). Separately, report whether
+    a concurrency guard was set up (a `Makefile` with `test`/`run`/`stop`
+    targets, or `AGENTS.md` → *Commands* pointing at `make` targets) —
+    present, absent-and-declined (state the standing risk in one line,
+    don't re-print the full warning every run), or never addressed (offer
+    the Step 3 interview question now). None of this is checked when Task
+    Tracking is not configured — a `/feature`-single-task-only project has
+    no reason to see it.
 
 ## Step 6 — Report
 
