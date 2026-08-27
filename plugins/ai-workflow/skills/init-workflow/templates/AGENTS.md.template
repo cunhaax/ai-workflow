@@ -35,9 +35,9 @@ responsibility.
    code review diffs against the default branch and the PR targets it, neither
    of which works from the default branch itself. If you start on the default
    branch, STOP and ask before planning. (A worktree the harness itself
-   provisions for an isolated sub-agent — e.g. `/feature`'s multi-task mode,
-   if this project uses it — is not you running `git worktree add`, and a
-   sub-agent that simply starts inside one has not switched branches; this
+   provisions for an isolated sub-agent — e.g. a `task-runner` launched by
+   `/feature`'s multi-task mode — is not you running `git worktree add`, and
+   a sub-agent that simply starts inside one has not switched branches; this
    rule still means you yourself may never create, switch to, or remove a
    worktree or branch.)
 

@@ -49,7 +49,12 @@ imposing decomposition ceremony (multi-task path) nobody asked for.
 Apply the `task-lifecycle` skill inline, as the main agent — today's plan
 → critique → implement → test → code-review → QA → PR loop, unchanged.
 Retain the plan text; you will need it later for the `code-critic` and
-`adversarial-qa` sub-agents `task-lifecycle` itself invokes.
+`adversarial-qa` sub-agents `task-lifecycle` itself invokes. `task-lifecycle`
+defaults `BASE_BRANCH` to `AGENTS.md` → *Commands* → default branch; if the
+human states this task belongs to a feature-integration branch instead
+(the manual fallback in `feature/decomposition.md`'s per-task run
+instruction, item 8), apply `task-lifecycle` with that `BASE_BRANCH`
+explicitly instead of the default.
 
 ### Multi-task path
 
@@ -58,6 +63,7 @@ appear on it) and re-checked before anything is written:**
 
 | | Check | Failure |
 |---|---|---|
+| P1 | Not on the repository's default branch (same check as *Preconditions* above, restated here so it appears as a row on the approval screen) | STOP — see *Preconditions* above |
 | P0 | Claude Code ≥ v2.1.206 (`claude --version`; undetermined output → treat as this row passing with a note, never a hard failure) | STOP: the floor exists for `SendMessage`'s sub-agent addressing and call-level worktree isolation, both load-bearing for scheduling and relay below |
 | P3 | Current branch has an upstream on `origin` (`git rev-parse --abbrev-ref --symbolic-full-name @{u}`) | STOP: give `git push -u origin <branch>` — and note explicitly that this push has nothing to review yet (the branch is identical to the default branch at this point), so `--no-verify` is safe here specifically, not a general license |
 | P4 | `AGENTS.md` → *Task Tracking* has no remaining `[TODO:` | STOP: name the unfilled fields; point at `/init-workflow` |
@@ -80,7 +86,11 @@ unset `worktree.baseRef` must never block a plain single-task request.
 `feature/decomposition.md` exactly: decompose into tasks, run the bounded
 collision scan, apply the three self-critique lenses, then present the
 approval screen it specifies — including the precondition results above.
-Nothing is written until the human approves.
+Nothing is written until the human approves. **Exit plan mode here, on
+approval** — the same point standalone `task-lifecycle` exits it on plan
+approval; everything before this point (clarify, triage, decompose, scan,
+self-critique) happens inside plan mode, same as drafting a single-task
+plan does today.
 
 **File tracker items.** Once approved, execute the tracker commands shown
 on the approval screen exactly as shown: parent/epic first (if the

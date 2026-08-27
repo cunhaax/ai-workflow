@@ -186,7 +186,16 @@ to the user**. Wait for answers before proceeding.
 ### Step 6 — Fix FAIL items
 
 If the reviewer found critical issues (`FAIL`), fix them and re-invoke the
-`code-critic`. Repeat until no critical issues remain.
+`code-critic`. Repeat until no critical issues remain — **bounded at 3
+fix→re-review cycles.** If the third re-review still has FAIL items, that
+stops being a normal fix loop: in standalone use, present the persistent
+findings to the human the same way Step 5 relays `NEEDS_DECISION` (this
+is exactly the situation that check exists for — a reviewer that can't be
+satisfied by another mechanical fix needs a human judgment call); in
+delegated mode, pause with `PAUSE_KIND: NEEDS_DECISION` carrying the
+persistent findings, rather than looping unattended. An unbounded loop
+with no human in it is exactly the failure mode this bound exists to
+prevent.
 
 Do not push or open a PR until the `code-critic` has passed with no FAIL
 items (see *Rules — non-negotiable* in AGENTS.md). Re-run the reviewer after
@@ -323,30 +332,47 @@ message echoes your `PAUSE_ID`; if a `RESUME` arrives with a different
 id than your current outstanding pause, reject it and re-emit your
 current `PAUSED` block unchanged — a stale or duplicate answer must never
 be applied to the wrong question. A well-formed `RESUME` carries
-`ANSWERS:` (one of `APPROVED`, `AMEND: <text>`, or `RE-PLAN: <text>`) and
-`CONTINUE_FROM:`. On `AMEND`, fold the named amendments in yourself (same
+`ANSWERS:` and `CONTINUE_FROM:`, per your invoker's own message-grammar
+reference — for a `PLAN_APPROVAL` pause specifically, `ANSWERS:` is one of
+`APPROVED`, `AMEND: <text>`, or `RE-PLAN: <text>`; for `NEEDS_DECISION` or
+`QA_FINDINGS`, it is one line per item you flagged, in the order you
+flagged them; for `MATERIAL_DEVIATION`, it is the human's decision on the
+proposed re-scope. On `AMEND`, fold the named amendments in yourself (same
 transcription-not-planning rule as standalone) and proceed. On
 `RE-PLAN`, re-invoke `planner` and `plan-critic` and pause again — lead
 the new `ASK:` with a **delta** section, same convention as standalone.
+
+**Every pause below is a full `TASK-RESULT` block, not an abbreviation.**
+Each one still carries the `=== TASK-RESULT <task-id> ===` header line,
+the next `PAUSE_ID` for this task, and the `LAST_COMMIT:`/`WORKTREE:`/
+`BRANCH:` fields required on every status — only `PAUSE_KIND:` and `ASK:`
+change per step. Omitting any of them makes the block fail to parse under
+C2 rule 2, and your invoker will treat it as `BLOCKED` / `DEAD` rather
+than the pause you intended.
 
 **Step 2 material deviation, replaced.** Do not re-enter plan mode — you
 cannot. Pause:
 
 ```
+=== TASK-RESULT <task-id> ===
 STATUS: PAUSED
+PAUSE_ID: <next integer for this task>
 PAUSE_KIND: MATERIAL_DEVIATION
 ASK: <what changed, what it invalidates — including, explicitly, anything
       it might invalidate for sibling tasks you cannot see; say so>
 RESUME_AT: <the step you stopped at>
+LAST_COMMIT: <full SHA, or "none">
+WORKTREE: <absolute path>
+BRANCH: <your branch name>
 ```
 
 Minor deviations are still just noted in your final `COMPLETE` result, not
 paused on.
 
-**Step 5, replaced.** Pause with `PAUSE_KIND: NEEDS_DECISION`, every
+**Step 5, replaced.** Same shape, `PAUSE_KIND: NEEDS_DECISION`, every
 flagged item in `ASK:`.
 
-**Step 8, replaced.** Pause with `PAUSE_KIND: QA_FINDINGS`, every finding
+**Step 8, replaced.** Same shape, `PAUSE_KIND: QA_FINDINGS`, every finding
 in `ASK:`, asking for one disposition (fix / defer / ignore) per finding.
 Filing `known-issue` GitHub issues for deferred findings stays your job,
 same as standalone.
@@ -380,9 +406,9 @@ are not done; that is a `PAUSED` or `BLOCKED`, never a `COMPLETE`.
 **Responding to your invoker between your own turns.** `/feature` may
 `SendMessage` you one of:
 - `HOLD` — finish your current tool call, make no further edits, commits,
-  or pushes, and reply immediately with `STATUS: HELD`, `HOLD_REF:` (the
-  deviating sibling's id from the message), `STOPPED_AT:` (the step you
-  stopped at), plus the required `LAST_COMMIT:`/`WORKTREE:`/`BRANCH:`.
+  or pushes, and reply immediately with `STATUS: HELD`, `HOLD_REF:` (copy
+  the `HOLD` message's own `SIBLING:` field verbatim), `STOPPED_AT:` (the
+  step you stopped at), plus the required `LAST_COMMIT:`/`WORKTREE:`/`BRANCH:`.
   This does **not** consume or replace any `PAUSE_ID` you were separately
   waiting on for a real question — if you were already `PAUSED`, that
   pause stays live and still needs its own `RESUME` once the hold is

@@ -67,6 +67,14 @@ diverged — a human committed to it directly, or force-pushed), STOP and
 report. Never `git merge` (an unasked-for merge commit) and never
 `git reset --hard`.
 
+**Out-of-order merges.** If the human merges a dependent task's PR before
+its prerequisite's — step 1's ancestry check can only confirm what
+actually happened, not enforce an order — the dependent's own readiness
+check still passes (its own PR merged), but do not treat the *prerequisite*
+as satisfied merely because a task that depends on it is now merged.
+Report the out-of-order merge on the next status update, with its impact,
+and continue verifying the prerequisite's own readiness independently.
+
 ## Merge strategy and its precondition
 
 Task PRs merge into the feature-integration branch with `gh pr merge <n>
@@ -98,6 +106,61 @@ The final feature-integration → default-branch PR (Step 8) may use
 `--squash` — nothing branches off it afterwards, so the ancestry concern
 doesn't apply there.
 
+## Message grammars (orchestrator → task, via `SendMessage`)
+
+Five messages, each with the exact fields the receiving `task-runner`
+expects (see `task-lifecycle`'s *Delegated mode* section for the
+receiver side of each):
+
+```
+=== RESUME <task-id> ===
+PAUSE_ID: <the id from the pause block being answered — echoed exactly>
+ANSWERS: <the human's decision, in the shape the PAUSE_KIND calls for:
+          APPROVED | AMEND: <text> | RE-PLAN: <text> for PLAN_APPROVAL;
+          one line per item for NEEDS_DECISION / QA_FINDINGS
+          (fix / defer / ignore, per finding) / MATERIAL_DEVIATION>
+CONTEXT: <ripple info, if any — e.g. what a sibling's deviation changed>
+CONTINUE_FROM: <the step named in the pause's RESUME_AT>
+```
+
+```
+=== HOLD <task-id> ===
+SIBLING: <the deviating task's id>
+REASON: <why this task is affected — a depends-on edge or a
+         collision-scan path overlap>
+ACTION: finish your current tool call, make no further edits, commits, or
+        pushes, and reply immediately with a TASK-RESULT HELD block,
+        setting HOLD_REF to this message's SIBLING value.
+```
+
+```
+=== RELEASE <task-id> ===
+```
+
+No other fields — a `HELD` task accepts this unconditionally, since it
+carries no `PAUSE_ID` to match against (see the `HELD`/`PAUSE_ID` note
+above).
+
+```
+=== RESOLVE-CONFLICT <task-id> ===
+SIBLING: <the merged sibling's task-id and PR url>
+PATHS: <the conflicting paths, from gh's mergeStateStatus/mergeable data>
+ACTION: merge the feature-integration branch into your own branch in your
+        own worktree, resolve, re-run the project's test command, re-run
+        code-critic, re-run scripts/review-ok.sh, and report COMPLETE
+        again with the new REVIEWED_SHA. Raise NEEDS_DECISION instead of
+        deciding if resolution changes behaviour beyond mechanical
+        reconciliation.
+```
+
+```
+=== WIND-DOWN <task-id> ===
+REASON: cancelled | re-scoped
+ACTION: commit or clearly report uncommitted work, push nothing further,
+        and reply with TASK-RESULT BLOCKED / BLOCKED_KIND: WOUND_DOWN,
+        naming what is done versus not.
+```
+
 ## Relay protocol
 
 On a `TASK-RESULT` with `STATUS: PAUSED`: present `ASK:` verbatim to the
@@ -113,6 +176,24 @@ produces no result block at all for 15 minutes is reported as *possibly
 stalled*; at 30 minutes it is marked `BLOCKED` / `DEAD` and its
 branch/worktree reported. Never wait forever, never kill a task yourself.
 
+**If `SendMessage` itself is unavailable or fails when resuming a task**
+(confirmed working in this repo, but flagged as a harness behavior that
+could differ elsewhere): STOP and report it, then offer the human an
+explicit, degraded fallback rather than silently giving up or silently
+restarting — re-launch the task as a **fresh** `task-runner`, re-briefed
+with: the original task scope, the human's answers to whatever it was
+paused on (verbatim), and a note that a previous attempt reached a named
+step with branch `<x>` and last commit `<sha>`. This loses conversational
+context; it does not lose committed work, since the branch and its
+commits are untouched. Never choose this path without telling the human
+first.
+
+**A pause arriving from a task the human already asked to wind down or
+cancel:** acknowledge it, but do not present it to the human as a live
+question awaiting an answer — the task's fate is already decided.
+Instead fold it into the cancellation report (below): note what the task
+was asking when it was told to stop, alongside its final state.
+
 ## Ripple handling (material deviation)
 
 On `PAUSE_KIND: MATERIAL_DEVIATION`, before presenting anything to the
@@ -125,18 +206,26 @@ human:
 2. `SendMessage` `HOLD` to every **running** task in the set; do not
    launch any **pending** task in the set.
 3. **Wait for a `HELD` acknowledgement from each**, up to 15 minutes (the
-   same liveness tier as above — a `HOLD` sent mid-way through a long
-   nested pass like `code-critic` on `opus` or a full test suite routinely
-   takes several minutes to acknowledge, since `SendMessage` queues to the
-   task's next turn boundary rather than interrupting it; a shorter
-   timeout would flag the *normal* case as unresponsive). A task that
-   hasn't returned `HELD` by the timeout is listed on the screen as
-   *unresponsive — may still be committing*, named, with its last known
-   commit — the screen is presented at the timeout regardless, not
+   same liveness tier as `task-lifecycle`'s C2 rule 4 — a `HOLD` sent
+   mid-way through a long nested pass like `code-critic` on `opus` or a
+   full test suite routinely takes several minutes to acknowledge, since
+   `SendMessage` queues to the task's next turn boundary rather than
+   interrupting it). **Use the same two-tier label `task-lifecycle`'s
+   C2 rule 5 defines — do not collapse it to one:** a task with no
+   activity signal yet within the window is listed as *"in a long-running
+   step — last activity `<T>`"*, not as unresponsive; only a task that has
+   also gone quiet for the full liveness window (no tool activity at all,
+   not just no `HELD`) is named *unresponsive — may still be committing*,
+   with its last known commit. Collapsing these to one label is exactly
+   the failure mode this design exists to avoid: a `HOLD` sent during a
+   normal long step would otherwise read as the *same* alarm as a task
+   that has actually gone silent, training the human to ignore the
+   signal. The screen is presented at the timeout regardless, not
    deferred indefinitely. This wait is what makes "every affected sibling
    is already held" a checked fact rather than a hope.
 4. Present one combined screen: the deviation, the impact set with a
-   reason and a state (`held` / `unresponsive`) per entry, and the
+   reason and a state (`held` / `in a long-running step` / `unresponsive`)
+   per entry, and the
    options — accept and re-scope the affected tasks, reject, or
    re-decompose the remainder.
 5. Only then `SendMessage` `RESUME` (for a paused task) or `RELEASE` (for

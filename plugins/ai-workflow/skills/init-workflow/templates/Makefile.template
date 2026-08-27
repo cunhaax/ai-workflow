@@ -7,12 +7,22 @@
 # colliding. This is glue, not a build system: it does not replace whatever
 # the project already uses to build/test/run — it wraps it.
 #
+# The lock file MUST live outside any one worktree, or it guards nothing:
+# each task's `make test` runs from inside its own `.claude/worktrees/<task>/`
+# checkout, so a lock path relative to that checkout (e.g. plain `.make.lock`)
+# resolves to a different file per task and never actually serializes across
+# them. `git rev-parse --git-common-dir` resolves to the one `.git` directory
+# every worktree of this repository shares, which is what makes the lock
+# actually shared. Because it lives outside the working tree, it never shows
+# up as an untracked file and needs no .gitignore entry.
+#
 # Platform note: this template uses `lockf`, which ships by default on
-# macOS/BSD. On Linux, replace `lockf -t 0` with `flock` (from
-# util-linux) — e.g. `flock $(LOCKFILE) -c '[TEST_CMD]'` — since `lockf`
-# is not a standard shell command there.
+# macOS/BSD and blocks (waits) until the lock is free — the behavior these
+# targets need. On Linux, replace `lockf $(LOCKFILE) sh -c '...'` with
+# `flock $(LOCKFILE) sh -c '...'` (from util-linux, also blocks by default)
+# — plain `lockf` is not a standard shell command there.
 
-LOCKFILE := .make.lock
+LOCKFILE := $(shell git rev-parse --git-common-dir)/make.lock
 
 .PHONY: test run stop
 

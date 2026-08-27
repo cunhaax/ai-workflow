@@ -70,10 +70,14 @@ has its own `AGENTS.md` still gets the review gate (and vice versa).
 install already created it; the three gate files (`githooks/pre-push`,
 `scripts/review-ok.sh`, `scripts/check-hook-status.sh`) are each checked for
 their own identity before being scaffolded, never silently overwritten.
-`docs/agent-rules/code-critic.md`/`plan-critic.md` are the one exception:
+`docs/agent-rules/code-critic.md`/`plan-critic.md` are one exception:
 `/init-workflow` asks first whether the project already has equivalent docs
 elsewhere and points `AGENTS.md` there instead of writing these two, if so
-— see that skill's own Step 4 for the full logic.
+— see that skill's own Step 4 for the full logic. `Makefile` is the other:
+`/init-workflow` only scaffolds it if the project opts into `/feature`'s
+multi-task mode *and* accepts the concurrency-guard offer during that
+interview (Step 3) — most projects will never get this file, and that is
+the intended default, not a gap.
 
 The plugin itself (`plugins/ai-workflow/agents/`, `plugins/ai-workflow/skills/`)
 is **not** vendored into the project — it lives wherever Claude Code resolves
@@ -177,7 +181,7 @@ Optional — only read by `/feature`'s multi-task mode. Leave the `[TODO: …]`
 placeholders in place if this project has no tracker.
 - Tracker: `[TODO: e.g. GitHub issues, Trello, Jira, or none]`
 - Create a task: `[TODO: exact command or tool call]`
-- (five more entries — see `AGENTS.md.template` for the full set)
+- (six more entries — see `AGENTS.md.template` for the full set of eight)
 
 ## Review & Planning Guidance
 - Code review guidance: `docs/agent-rules/code-critic.md`
@@ -416,8 +420,16 @@ main-agent skill that orchestrates the four review/planning agents
 directly; `init-workflow`, `workflow-retro`, and `workflow-inspect` are
 likewise main-agent-only, interactive rather than delegated.
 
-Design choices: only `planner` carries `WebFetch` (external specs enter at
-exactly one point); the plan-stage critics run on the stronger model tier (a
+Design choices: of the four review/planning agents, only `planner`
+carries `WebFetch` — external specs enter at exactly one point among
+them. `task-runner` is the one exception, by necessity rather than
+oversight: it carries no `tools:` allowlist at all (see its own file for
+why), so it inherits the full tool set including `WebFetch`. That does
+not change whose *job* it is to fetch external docs — `task-runner`'s own
+prose rule still says never to, delegating to `planner` exactly as the
+main agent does — but it is a weaker, prose-only guarantee where every
+other agent's is structural. The plan-stage critics run on the stronger
+model tier (a
 bad plan poisons everything downstream), while `code-critic` runs a tier
 lower by default and is escalated to Opus by `/feature` on security-surface
 diffs. Each agent lists exactly the one skill it applies.

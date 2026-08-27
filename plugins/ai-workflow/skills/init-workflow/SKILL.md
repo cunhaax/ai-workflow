@@ -268,7 +268,7 @@ For each still-open section, draft from evidence and confirm before writing:
   mode (one request coordinated across several PRs), or only its
   single-task path?"* On "only single-task": leave the section's
   `[TODO:]` bullets in place; this is not a gap to report in Step 6, it is
-  a deliberate choice. On "multi-task": interview the seven bullets, fill
+  a deliberate choice. On "multi-task": interview all eight bullets, fill
   them, and continue to the next question below.
 - **Concurrency guard** (asked only if the previous answer was
   "multi-task"): *"Would you like a `Makefile` that wraps your test/run/stop
@@ -376,8 +376,11 @@ confirmation, report what you cannot fix:
      reconciling it to the human (see Step 1's note on why chaining isn't
      offered).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
-4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, and
-   `.workflow-log/`.
+4. `.gitignore` covers `.review-passed`, `.qa-evidence/`,
+   `.workflow-log/`, and — if Task Tracking (item 8) is configured —
+   `.claude/worktrees/` and `.claude/settings.local.json`. The last two are
+   only checked when multi-task mode is in play; a `/feature`-single-task-only
+   project has no reason to see them flagged.
 5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh`
    and the `deny` rules for the push-bypass flags.
 6. `AGENTS.md` → *Commands* exists as a section and has no unfilled

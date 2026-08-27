@@ -102,9 +102,16 @@ worktree, nothing):
    unattended for every task.
 7. The merge-strategy expectation for task PRs, and who merges them (the
    human, always).
-8. Per-task run instruction: for each task, create a branch off the
-   feature-integration branch, run `/feature` on it, and tell it the base
-   branch is the feature-integration branch.
+8. How execution runs: `/feature` launches each ready task itself as an
+   isolated sub-agent (up to the concurrency cap below), respecting
+   dependencies — see `feature/delegation.md`. **Fallback, only if P2 or
+   P6 are still unresolved** (`worktree.baseRef` not set to `"head"`, or
+   `.claude/worktrees/` not gitignored): tell the human plainly that
+   automatic execution is unavailable until that's fixed, and offer the
+   manual alternative instead — create a branch off the
+   feature-integration branch per task, run `/feature` on it, and tell it
+   `BASE_BRANCH: <the feature-integration branch>` (see `feature/SKILL.md`'s
+   single-task path for how it's consumed there).
 9. What the human will be asked for later — plan approvals, `NEEDS_DECISION`s,
    QA dispositions, per task. This is not fire-and-forget.
 10. The concurrency cap this run will use (default 2, changeable here) —

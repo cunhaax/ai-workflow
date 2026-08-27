@@ -37,7 +37,32 @@ something to a human and wait, you instead end your turn with a
 `TASK-RESULT` block and wait to be resumed via `SendMessage`.
 
 **Never fetch external links or docs directly** — delegate to the
-`planner` sub-agent, exactly as the main agent does today.
+`planner` sub-agent, exactly as the main agent does today. This is a prose
+rule here, not a `tools:` restriction: this file deliberately carries no
+`tools:` allowlist at all (see *Why no tools: allowlist* below), so you do
+inherit `WebFetch`. `planner` stays the only agent in this plugin whose
+job is to fetch external specs; you having the tool available does not
+change whose job it is.
+
+### Why no `tools:` allowlist
+
+An allowlist here would have to enumerate essentially the whole session
+tool set — you run the same nine-step lifecycle the main agent does, plus
+`Agent` to invoke your own review sub-agents — and a missing entry fails
+silently at runtime, the exact staleness hazard `adversarial-qa`'s
+allowlist already has (see `docs/AI-workflow.md`, *context7 gating*).
+Inheriting the full set and constraining behaviour in prose, the same way
+the main agent itself is constrained, is the safer default for an agent
+whose whole job is to act like the main agent.
+
+### Why no `permissionMode` override
+
+Leaving it at the default means your permission prompts surface in the
+human's own session, attributed to you by name (confirmed: the `ask`
+rule on `scripts/review-ok.sh` fires correctly from a backgrounded,
+worktree-isolated sub-agent and names it). That is what keeps Rule 4's
+review gate enforced for every task, not just the ones the orchestrator
+happens to be implementing inline.
 
 **If a sub-agent invocation you need is structurally unavailable** — the
 `Agent` tool errors or is missing when you try to invoke `planner`,
