@@ -294,7 +294,9 @@ known:
   not a plain, normal-shaped JSON file (object at the root, `worktree`
   absent or itself an object) — if so, do not write, flag it as an
   unresolved item the same way Step 1 flags a malformed
-  `.claude/settings.json`, and say why.** (In this plugin's own repo that
+  `.claude/settings.json`, say why, and hand the human the exact JSON
+  `{"worktree": {"baseRef": "head"}}` plus which file it belongs in, to
+  apply by hand.** (In this plugin's own repo that
   file *is* a symlink into a shared template — see *Architecture* in
   `AGENTS.md` — and writing "just add one key" through it would edit the
   template every scaffolded project receives; a project this skill
@@ -325,14 +327,19 @@ known:
   skip: it works on that one machine but is absent from fresh clones,
   teammates, and worktree-manager workspaces, so ask the question anyway,
   say which file currently supplies it and why the tracked file is
-  different, and leave the existing value in place. If it resolves to something else (a project deliberately pinning a
-  different base ref), do not silently overwrite it — surface the
-  conflict and let the human decide, the same don't-guess-a-fix stance
-  Step 1 takes on a malformed settings shape.
+  different, and leave the existing value in place. If it resolves to
+  something else (a project deliberately pinning a different base ref, or
+  one developer's stale local override), do not silently overwrite it —
+  surface the conflict and let the human decide, the same
+  don't-guess-a-fix stance Step 1 takes on a malformed settings shape.
 
   **On decline, name the consequence plainly**: multi-task execution stays
   unavailable until this is set — the breakdown and tracker items
-  `/feature` produces still work, only launching tasks does not. **On
+  `/feature` produces still work, only launching tasks does not. (If
+  `"head"` already resolves from a local or user-global file, the
+  consequence is narrower: multi-task keeps working on this machine but
+  breaks for teammates, fresh clones, and worktree-manager workspaces —
+  say that instead.) **On
   accept or decline, record which** — Step 5 item 10 reports a resolved
   setting informationally, a decline as a standing one-line risk (not
   re-printing the full warning every run), and only a truly
@@ -510,7 +517,9 @@ confirmation, report what you cannot fix:
     consequence every run), **never addressed** (offer the Step 3
     interview question now, same confirm-then-write to
     `.claude/settings.json` it would have made during first-run,
-    including its symlink/malformed-file guard), or **resolved to a
+    including all of its guards: symlink/malformed file, don't-create-if-
+    absent, and the commit-on-the-default-branch note — doctor mode often
+    runs mid-feature), or **resolved to a
     different value on purpose** (a project pinning its own base ref —
     report it, do not offer to override it). Separately, report whether
     a concurrency guard was set up (a `Makefile` with `test`/`run`/`stop`
