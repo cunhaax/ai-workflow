@@ -288,7 +288,7 @@ Once every task has merged:
    tracker has no parent concept).
 9. **Rollup** to the human: what shipped, every task's PR, every
    deferred/known issue, the closure verdict, anything left on disk from
-   a cancelled task — and the `worktree.baseRef` exit reminder below.
+   a cancelled task — and the `worktree.baseRef` reminder below.
 
 **`worktree.baseRef` reminder.** State plainly, every time closure
 runs: *"`worktree.baseRef: head` is still set, in `<the file it came

@@ -178,10 +178,13 @@ update still reads as `ACTIVE`; that gap is accepted for now, not solved
 here.
 
 Also append `.review-passed`, `.qa-evidence/`, `.workflow-log/`,
-and `.claude/worktrees/` to `.gitignore` if not already present (create
-the file if it doesn't exist) — these are what the workflow writes
-locally, plus the path `/feature`'s multi-task mode needs kept out of
-version control (task worktrees), and Step 5 checks for all of them.
+`.claude/worktrees/`, and `.claude/settings.local.json` to `.gitignore` if
+not already present (create the file if it doesn't exist) — these are
+what the workflow writes locally, plus the path `/feature`'s multi-task
+mode needs kept out of version control (task worktrees), plus Claude
+Code's own per-developer settings file (it writes local permission
+allowances there, which must never be committed into a shared repo), and
+Step 5 checks for all of them.
 
 Known limitation: this step has no memory of a prior decline. A file the
 user chose not to scaffold (e.g. a deleted `docs/product-context/README.md`
@@ -285,20 +288,23 @@ known:
   **Target `.claude/settings.json`** — the tracked project file, so every
   worktree, clone, and worktree-manager workspace (task worktrees, Orca,
   and so on) carries the setting automatically, with no dependence on
-  gitignored files being copied into fresh checkouts. This is the same
-  file Step 1 already merges the `ask`/`deny` rules into, so the same
-  merge discipline applies: preserve everything else, add only the one
-  key. **Before writing, check whether `.claude/settings.json` is a
-  symlink or otherwise not a plain, normal-shaped JSON file (object at the
-  root, `worktree` absent or itself an object) — if so, do not write, flag
-  it as an unresolved item the same way Step 1 flags a malformed
+  gitignored files being copied into fresh checkouts. Merge, don't
+  overwrite: preserve everything else, add only the one key. **Before
+  writing, check whether `.claude/settings.json` is a symlink or otherwise
+  not a plain, normal-shaped JSON file (object at the root, `worktree`
+  absent or itself an object) — if so, do not write, flag it as an
+  unresolved item the same way Step 1 flags a malformed
   `.claude/settings.json`, and say why.** (In this plugin's own repo that
   file *is* a symlink into a shared template — see *Architecture* in
   `AGENTS.md` — and writing "just add one key" through it would edit the
   template every scaffolded project receives; a project this skill
   scaffolds normally has a plain file there instead, but these
-  instructions must hold for both.) If the file doesn't exist yet, create
-  it with just this key.
+  instructions must hold for both.) **If the file doesn't exist at all,
+  do not create it here**: by this point Step 1 has either scaffolded it or
+  the human declined that, and creating it now would produce a
+  settings file without the `ask`/`deny` review-gate rules. Report that
+  the write was skipped and why; Step 5 item 5 already reports the
+  missing rules.
 
   **Committing it is the human's step, and it belongs on the default
   branch** — say so when reporting the write. Committed on a
@@ -313,8 +319,13 @@ known:
   three paths directly (each may not exist; treat a missing file as not
   setting it) and take the value from the highest-precedence file that
   sets it at all, not the first one you happen to check. If that effective
-  value is already `"head"`, skip the question — it's already satisfied.
-  If it resolves to something else (a project deliberately pinning a
+  value is `"head"` **and `.claude/settings.json` itself sets it**, skip
+  the question — it's already satisfied. If `"head"` comes only from
+  `.claude/settings.local.json` or `~/.claude/settings.json`, do **not**
+  skip: it works on that one machine but is absent from fresh clones,
+  teammates, and worktree-manager workspaces, so ask the question anyway,
+  say which file currently supplies it and why the tracked file is
+  different, and leave the existing value in place. If it resolves to something else (a project deliberately pinning a
   different base ref), do not silently overwrite it — surface the
   conflict and let the human decide, the same don't-guess-a-fix stance
   Step 1 takes on a malformed settings shape.
@@ -443,10 +454,10 @@ confirmation, report what you cannot fix:
      offered).
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`,
-   `.workflow-log/`, and — if Task Tracking (item 8) is configured —
-   `.claude/worktrees/`. That last one is only checked when multi-task mode
-   is in play; a `/feature`-single-task-only project has no reason to see
-   it flagged.
+   `.workflow-log/`, `.claude/settings.local.json`, and — if Task Tracking
+   (item 8) is configured — `.claude/worktrees/`. That last one is only
+   checked when multi-task mode is in play; a
+   `/feature`-single-task-only project has no reason to see it flagged.
 5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh`
    and the `deny` rules for the push-bypass flags.
 6. `AGENTS.md` → *Commands* exists as a section and has no unfilled
@@ -489,7 +500,10 @@ confirmation, report what you cannot fix:
     resolution **informationally on every run when Task Tracking (item 8)
     is configured** — naming which of the three settings files supplied it
     and, if it's the user-global `~/.claude/settings.json`, warning the
-    blast radius is every repository, not just this one. If it does not
+    blast radius is every repository, not just this one. If `"head"` comes
+    only from `.claude/settings.local.json` or `~/.claude/settings.json`
+    (not the tracked `.claude/settings.json`), report it as working on
+    this machine only and offer the Step 3 tracked write. If it does not
     resolve to `"head"`, distinguish the same three states the sibling
     concurrency-guard check uses: **declined** (recorded at Step 3 —
     state the standing risk in one line, don't re-print the full

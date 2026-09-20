@@ -129,7 +129,7 @@ branch: run the project's tests, one `code-critic` pass over the whole
 integration diff, `adversarial-qa` narrowed to cross-task seams if there's
 a UI/API surface, then the final integration-branch → default-branch PR
 and a rollup for the human. Full procedure, including the exact
-`worktree.baseRef` exit reminder text, in `feature/delegation.md`.
+`worktree.baseRef` reminder text, in `feature/delegation.md`.
 
 **Cancellation and mid-flight re-scope.** Prefer asking a running task to
 wind down cleanly over hard-killing it — a hard-killed task cannot be
