@@ -295,8 +295,10 @@ known:
   absent or itself an object) — if so, do not write, flag it as an
   unresolved item the same way Step 1 flags a malformed
   `.claude/settings.json`, say why, and hand the human the exact JSON
-  `{"worktree": {"baseRef": "head"}}` plus which file it belongs in, to
-  apply by hand.** (In this plugin's own repo that
+  `{"worktree": {"baseRef": "head"}}` to apply by hand — and, if the
+  file is a symlink, say explicitly that its target is a shared file, so
+  the human decides where the setting should actually live.** (In this
+  plugin's own repo that
   file *is* a symlink into a shared template — see *Architecture* in
   `AGENTS.md` — and writing "just add one key" through it would edit the
   template every scaffolded project receives; a project this skill
@@ -324,8 +326,10 @@ known:
   value is `"head"` **and `.claude/settings.json` itself sets it**, skip
   the question — it's already satisfied. If `"head"` comes only from
   `.claude/settings.local.json` or `~/.claude/settings.json`, do **not**
-  skip: it works on that one machine but is absent from fresh clones,
-  teammates, and worktree-manager workspaces, so ask the question anyway,
+  skip: a local file is absent from fresh clones, teammates, and
+  worktree-manager workspaces, and a user-global file covers every
+  checkout on this machine but not teammates or other machines, so ask
+  the question anyway,
   say which file currently supplies it and why the tracked file is
   different, and leave the existing value in place. If it resolves to
   something else (a project deliberately pinning a different base ref, or
@@ -337,9 +341,9 @@ known:
   unavailable until this is set — the breakdown and tracker items
   `/feature` produces still work, only launching tasks does not. (If
   `"head"` already resolves from a local or user-global file, the
-  consequence is narrower: multi-task keeps working on this machine but
-  breaks for teammates, fresh clones, and worktree-manager workspaces —
-  say that instead.) **On
+  consequence is narrower: multi-task keeps working where that file
+  applies but breaks for teammates and fresh clones — and, for a local
+  file, worktree-manager workspaces too — say that instead.) **On
   accept or decline, record which** — Step 5 item 10 reports a resolved
   setting informationally, a decline as a standing one-line risk (not
   re-printing the full warning every run), and only a truly
@@ -509,19 +513,21 @@ confirmation, report what you cannot fix:
     and, if it's the user-global `~/.claude/settings.json`, warning the
     blast radius is every repository, not just this one. If `"head"` comes
     only from `.claude/settings.local.json` or `~/.claude/settings.json`
-    (not the tracked `.claude/settings.json`), report it as working on
-    this machine only and offer the Step 3 tracked write. If it does not
+    (not the tracked `.claude/settings.json`), report that the tracked
+    file doesn't carry it and offer the Step 3 tracked write. If it does not
     resolve to `"head"`, distinguish the same three states the sibling
     concurrency-guard check uses: **declined** (recorded at Step 3 —
     state the standing risk in one line, don't re-print the full
     consequence every run), **never addressed** (offer the Step 3
     interview question now, same confirm-then-write to
     `.claude/settings.json` it would have made during first-run,
-    including all of its guards: symlink/malformed file, don't-create-if-
-    absent, and the commit-on-the-default-branch note — doctor mode often
-    runs mid-feature), or **resolved to a
-    different value on purpose** (a project pinning its own base ref —
-    report it, do not offer to override it). Separately, report whether
+    including its guards — symlink/malformed file, don't-create-if-absent,
+    and the commit-on-the-default-branch note (doctor mode often runs
+    mid-feature) — plus the rest of Step 3's write rules), or **resolved
+    to a different value** (a project deliberately pinning its own base
+    ref, or a stale local override — report it and which file supplied it,
+    and do not offer to override it without the human's say-so).
+    Separately, report whether
     a concurrency guard was set up (a `Makefile` with `test`/`run`/`stop`
     targets, or `AGENTS.md` → *Commands* pointing at `make` targets) —
     present, absent-and-declined (state the standing risk in one line,
