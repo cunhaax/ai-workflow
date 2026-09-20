@@ -178,12 +178,10 @@ update still reads as `ACTIVE`; that gap is accepted for now, not solved
 here.
 
 Also append `.review-passed`, `.qa-evidence/`, `.workflow-log/`,
-`.claude/worktrees/`, and `.claude/settings.local.json` to `.gitignore` if
-not already present (create the file if it doesn't exist) — these are
-what the workflow writes locally, plus the two paths `/feature`'s
-multi-task mode needs kept out of version control (task worktrees, and
-the per-clone settings override used to enable it), and Step 5 checks for
-all of them.
+and `.claude/worktrees/` to `.gitignore` if not already present (create
+the file if it doesn't exist) — these are what the workflow writes
+locally, plus the path `/feature`'s multi-task mode needs kept out of
+version control (task worktrees), and Step 5 checks for all of them.
 
 Known limitation: this step has no memory of a prior decline. A file the
 user chose not to scaffold (e.g. a deleted `docs/product-context/README.md`
@@ -279,32 +277,33 @@ known:
   "multi-task"): *"`/feature`'s multi-task mode needs `worktree.baseRef` set
   to `"head"` so task worktrees branch from the feature-integration branch
   instead of this project's default branch. This is a project-wide
-  setting — it changes the base ref for every worktree-isolated agent in
-  this project, not just `/feature`'s tasks. Add
-  `{"worktree": {"baseRef": "head"}}` to `.claude/settings.local.json`?"*
+  setting, committed with the rest of `.claude/settings.json`: it applies
+  to every teammate and changes the base ref for every worktree-isolated
+  agent in this project, not just `/feature`'s tasks. Add
+  `{"worktree": {"baseRef": "head"}}` to `.claude/settings.json`?"*
 
-  **Target `.claude/settings.local.json`, never `.claude/settings.json`.**
-  Two independent reasons, not one: (a) this setting's blast radius is
-  per-clone, not per-team — a teammate who never touches `/feature`'s
-  multi-task mode shouldn't have their own worktree-isolated agents
-  silently re-based just because someone else opted in, so it belongs
-  with the "per-clone settings override" `.gitignore` already calls this
-  file out for above; (b) `.claude/settings.json` can be — and, in this
-  plugin's own repo, *is* — a symlink into a shared template (see this
-  repo's own *Architecture* section in `AGENTS.md` — a project this skill
-  scaffolds normally has a plain file there instead, but this skill's own
-  instructions must hold for both). Writing "preserve everything else,
-  just add one key" through a symlink writes into whatever it points at.
-  **Before writing, check whether
-  `.claude/settings.local.json` is itself a symlink or otherwise not a
-  plain, normal-shaped JSON file (object at the root, `worktree` absent or
-  itself an object) — if so, do not write, flag it as an unresolved item
-  the same way Step 1 flags a malformed `.claude/settings.json`, and say
-  why.** `.claude/settings.local.json` is not scaffolded by Step 1 at all,
-  so unlike the merge into `.claude/settings.json`, this step creates the
-  file fresh if it doesn't exist yet, or merges into it if it does
-  (preserving whatever the file already holds — a developer's own local
-  permission overrides, for instance).
+  **Target `.claude/settings.json`** — the tracked project file, so every
+  worktree, clone, and worktree-manager workspace (task worktrees, Orca,
+  and so on) carries the setting automatically, with no dependence on
+  gitignored files being copied into fresh checkouts. This is the same
+  file Step 1 already merges the `ask`/`deny` rules into, so the same
+  merge discipline applies: preserve everything else, add only the one
+  key. **Before writing, check whether `.claude/settings.json` is a
+  symlink or otherwise not a plain, normal-shaped JSON file (object at the
+  root, `worktree` absent or itself an object) — if so, do not write, flag
+  it as an unresolved item the same way Step 1 flags a malformed
+  `.claude/settings.json`, and say why.** (In this plugin's own repo that
+  file *is* a symlink into a shared template — see *Architecture* in
+  `AGENTS.md` — and writing "just add one key" through it would edit the
+  template every scaffolded project receives; a project this skill
+  scaffolds normally has a plain file there instead, but these
+  instructions must hold for both.) If the file doesn't exist yet, create
+  it with just this key.
+
+  **Committing it is the human's step, and it belongs on the default
+  branch** — say so when reporting the write. Committed on a
+  feature-integration branch, the setting would ride into that feature's
+  final PR instead of landing as its own deliberate change.
 
   Before asking at all, check the **effective, resolved** value — not just
   whether any of the three files mentions the key. Precedence is
@@ -445,9 +444,9 @@ confirmation, report what you cannot fix:
 3. `CLAUDE.md` exists and contains `@AGENTS.md`.
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`,
    `.workflow-log/`, and — if Task Tracking (item 8) is configured —
-   `.claude/worktrees/` and `.claude/settings.local.json`. The last two are
-   only checked when multi-task mode is in play; a `/feature`-single-task-only
-   project has no reason to see them flagged.
+   `.claude/worktrees/`. That last one is only checked when multi-task mode
+   is in play; a `/feature`-single-task-only project has no reason to see
+   it flagged.
 5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh`
    and the `deny` rules for the push-bypass flags.
 6. `AGENTS.md` → *Commands* exists as a section and has no unfilled
@@ -496,7 +495,7 @@ confirmation, report what you cannot fix:
     state the standing risk in one line, don't re-print the full
     consequence every run), **never addressed** (offer the Step 3
     interview question now, same confirm-then-write to
-    `.claude/settings.local.json` it would have made during first-run,
+    `.claude/settings.json` it would have made during first-run,
     including its symlink/malformed-file guard), or **resolved to a
     different value on purpose** (a project pinning its own base ref —
     report it, do not offer to override it). Separately, report whether

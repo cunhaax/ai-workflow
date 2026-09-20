@@ -290,12 +290,14 @@ Once every task has merged:
    deferred/known issue, the closure verdict, anything left on disk from
    a cancelled task — and the `worktree.baseRef` exit reminder below.
 
-**`worktree.baseRef` exit reminder.** State plainly, every time closure
+**`worktree.baseRef` reminder.** State plainly, every time closure
 runs: *"`worktree.baseRef: head` is still set, in `<the file it came
 from>`. This affects every worktree-isolated agent in this project, not
-just `/feature`'s tasks. To remove it, delete the `worktree` key from that
-file."* A setting turned on for one feature should not silently outlive
-it unremarked.
+just `/feature`'s tasks, and stays in effect for later work. Keep it if
+you'll run more multi-task features; otherwise delete the `worktree` key
+from that file — a committed change if the file is tracked."* A standing
+project-wide setting should not go unremarked at the end of the feature
+that needed it.
 
 ## Cancellation and mid-flight re-scope
 

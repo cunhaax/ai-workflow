@@ -586,9 +586,13 @@ block the orchestrator relays.
   "head"` setting, which is why the human always starts the session
   already on that branch. This is a **project-wide** setting (it affects
   every worktree-isolated agent in the project, not just `/feature`'s
-  tasks) — an explicit, `/init-workflow`-offered opt-in, never shipped in
-  the scaffolding template, with an exit reminder at feature closure so it
-  doesn't silently outlive the feature that needed it.
+  tasks) — an explicit, `/init-workflow`-offered opt-in, never shipped as
+  a default in the scaffolding template. When accepted, it is merged into
+  the project's tracked `.claude/settings.json` (committed by the human,
+  on the default branch), so every worktree and worktree-manager
+  workspace carries it with no dependence on gitignored files being
+  copied — and it applies to every teammate too. Closure restates it as a
+  standing setting, with how to remove it.
 - Task PRs merge into the integration branch with a regular merge, never
   squash (checked up front — a squash-only repository can't support the
   dependency model's ancestry check). The final integration-branch → 
