@@ -201,9 +201,11 @@ the feature, not as a checklist. Also pass the project's open deferred QA
 findings — even an empty list ("none open"), never omit it: run
 `AGENTS.md` → *Task Tracking* → *List open deferred QA findings* if that
 bullet holds a real command or tool call (not a `[TODO:]` placeholder and
-not `none`), otherwise `gh issue list --label known-issue --state open`.
-You fetch and hand it over rather than leaving the sub-agent to do it,
-since it has no tracker tools beyond `Bash`.
+not `none`), otherwise `gh issue list --label known-issue --state open`. If
+the bullet names a real command or tool call you cannot run, do not fall
+back to `gh` — that would silently query the wrong tracker; STOP per Rule 2
+and report it instead. You fetch and hand it over rather than leaving the
+sub-agent to do it, since it has no tracker tools beyond `Bash`.
 
 ### Step 8 — Relay QA findings
 
@@ -214,7 +216,9 @@ For each finding the user chooses to **defer**, file a task tagged
 `known-issue` — using `AGENTS.md` → *Task Tracking* → *File a deferred QA
 finding* if that bullet holds a real command or tool call (not a `[TODO:]`
 placeholder and not `none`), otherwise `gh issue create --label known-issue
-…` — describing the behaviour, where it
+…`. If the bullet names a real command or tool call you cannot run, do not
+fall back to `gh` — STOP per Rule 2 and report it instead of filing into the
+wrong tracker. Describe the behaviour, where it
 lives, the QA pass that found it, and sign it with model attribution. QA
 evidence under `.qa-evidence/` is session-local (gitignored), so the task
 body must stand alone: include reproduction steps and describe in words what

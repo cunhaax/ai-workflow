@@ -249,7 +249,10 @@ Deferred QA findings live as tracker tasks tagged **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
 triage state. They use the project's tracker as configured in `AGENTS.md` →
 *Task Tracking*'s two QA-finding bullets, or GitHub issues via `gh` when
-that section, or those specific bullets, are absent or left as `none`.
+that section, or those specific bullets, are absent, left as a `[TODO:]`
+placeholder, or set to `none`. A bullet naming a real command or tool call
+an agent can't run is never silently replaced by `gh` — that would query the
+wrong tracker — it's reported as a blocker instead.
 
 ### Your first fitness test: the layer rule
 
@@ -292,7 +295,7 @@ tasks so deferred findings are reported as known, not re-triaged;
 STOPs on blockers rather than substituting `curl`/SQL for browser exploration
 on a UI surface. Evidence lands in `.qa-evidence/` (gitignored,
 session-local), which is why deferred findings must be fully described in
-their issue.
+their task.
 
 ### `plugins/ai-workflow/skills/feature/SKILL.md` — `/feature`
 

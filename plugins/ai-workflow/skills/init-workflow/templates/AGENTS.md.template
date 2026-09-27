@@ -119,10 +119,14 @@ can match a diff against them.] -->
 <!-- Optional. Tells an agent how to file and update tickets in this project's
      tracker: when you ask it to (e.g. "split this feature into tasks and file
      them"), and when /feature or /adversarial-qa defers a QA finding ("File a
-     deferred QA finding" / "List open deferred QA findings" below). Any
-     bullet left as a `[TODO:]` placeholder or set to `none` falls back to
-     GitHub issues labeled `known-issue`, via `gh` — you don't need to delete
-     the whole section just to skip one bullet. -->
+     deferred QA finding" / "List open deferred QA findings" below). Only
+     those two QA-finding bullets have a defined fallback: left as a
+     `[TODO:]` placeholder or set to `none`, they fall back to GitHub issues
+     labeled `known-issue`, via `gh` — you don't need to delete the whole
+     section just to skip them. The other bullets have no such fallback;
+     `none` on one of them (where the template allows it, e.g. no parent/epic
+     concept) means the tracker genuinely has nothing to do there, not
+     "use gh instead". -->
 
 - Tracker: [TODO: e.g. `GitHub issues`, `Trello`, `Jira`]
 - Create a task: [TODO: exact command or tool call, with `<title>`/`<body>` placeholders]

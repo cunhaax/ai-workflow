@@ -255,13 +255,14 @@ For each still-open section, draft from evidence and confirm before writing:
 - **Task Tracking** (optional): ask whether the project uses an issue
   tracker (GitHub issues, Jira, Trello, …) that agents should file and
   update tickets in. If yes, fill every bullet — the exact command or tool
-  call where the bullet asks for one, or `none` where the tracker lacks
-  the concept or you'd rather always use `gh` for it (this applies per
-  bullet, most usefully to the two QA-finding bullets: a project can use
-  its own tracker for tasks and still fall back to `gh` for deferred QA
-  findings specifically) — and confirm before writing. If no, delete the
-  whole section (this is the only way to say "no tracker at all"; every
-  bullet then falls back to its `gh` default) — it is not a gap to report.
+  call where the bullet asks for one, or `none` where the tracker lacks the
+  concept (only the two QA-finding bullets treat a `[TODO:]` or `none` as
+  "fall back to `gh`"; a project can use its own tracker for tasks and still
+  fall back to `gh` for deferred QA findings specifically, by leaving just
+  those two as `none`) — and confirm before writing. If no, delete the
+  whole section (this is the only way to say "no tracker at all"; the two
+  QA-finding bullets then fall back to GitHub issues via `gh`, and the rest
+  simply don't apply) — it is not a gap to report.
 
 ## Step 4 — Seed review and planning guidance
 

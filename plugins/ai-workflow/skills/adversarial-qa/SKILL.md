@@ -92,7 +92,7 @@ silently query the wrong tracker. Instead, report it under *Blockers* as
    goes in the *Known issues* section of the report (cite its task id), NOT in
    Findings — the developer has already triaged it once and should not have
    to re-triage it on every QA pass. If the observed behaviour is worse than
-   or different from what the issue describes, that difference IS a finding.
+   or different from what the task describes, that difference IS a finding.
 
 ---
 
