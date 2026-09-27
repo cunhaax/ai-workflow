@@ -252,7 +252,10 @@ triage state. They use the project's tracker as configured in `AGENTS.md` →
 that section, or those specific bullets, are absent, left as a `[TODO:]`
 placeholder, or set to `none`. A bullet naming a real command or tool call
 an agent can't run is never silently replaced by `gh` — that would query the
-wrong tracker — it's reported as a blocker instead.
+wrong tracker. `/feature` stops the whole lifecycle at that point (Rule 2 —
+it is mid-pipeline, about to relay findings and open a PR); a standalone
+`/adversarial-qa` pass reports it under *Blockers* and continues, since the
+rest of the exploration still has value without the known-issues check.
 
 ### Your first fitness test: the layer rule
 
