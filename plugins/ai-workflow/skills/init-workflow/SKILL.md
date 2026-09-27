@@ -200,7 +200,9 @@ flow for the first time, whose named or default files may not exist
 either); Step 5 item 7 decides separately, in whichever mode you end up in,
 whether a still-missing file gets reported. Otherwise (no section at all)
 check `docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
-directly. Classify each placeholder / `[TODO: …]` as filled or open.
+directly. Classify each placeholder / `[TODO: …]` as filled or open,
+**except** those under `## Task Tracking` — that section is optional, so
+its placeholders never count toward the mode.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
@@ -250,6 +252,11 @@ For each still-open section, draft from evidence and confirm before writing:
   user has no time now, leave the TODO in place and say so in the report.
 - **Rule 5** (project hygiene rule): ask whether one applies (e.g. reset a
   dev database at session end); fill it or delete the placeholder.
+- **Task Tracking** (optional): ask whether the project uses an issue
+  tracker (GitHub issues, Jira, Trello, …) that agents should file and
+  update tickets in. If yes, fill all eight bullets with the exact command
+  or tool call for each, and confirm before writing. If no, delete the
+  section — it is not a gap to report.
 
 ## Step 4 — Seed review and planning guidance
 

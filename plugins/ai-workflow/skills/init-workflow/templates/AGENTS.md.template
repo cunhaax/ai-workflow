@@ -114,6 +114,22 @@ can match a diff against them.] -->
 - [TODO: sensitive area 1 — concrete file/package/pattern]
 - [TODO: sensitive area 2]
 
+## Task Tracking
+
+<!-- Optional. Tells an agent how to file and update tickets in this project's
+     tracker when you ask it to (e.g. "split this feature into tasks and file
+     them"). Nothing in the workflow requires it — delete this section if you
+     don't use a tracker. -->
+
+- Tracker: [TODO: e.g. `GitHub issues`, `Trello`, `Jira`, or `none`]
+- Create a task: [TODO: exact command or tool call, with `<title>`/`<body>` placeholders]
+- Create the parent/epic item: [TODO: … or `none — this tracker has no parent concept`]
+- Link a task to its parent: [TODO: …]
+- Record a dependency between tasks: [TODO: …]
+- Status vocabulary: [TODO: e.g. `todo → in-progress → in-review → done`, plus `blocked`]
+- Set a task's status: [TODO: exact command, with placeholders]
+- Close the parent/epic: [TODO: …]
+
 ## Review & Planning Guidance
 
 - Code review guidance: `docs/agent-rules/code-critic.md`
