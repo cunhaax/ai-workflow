@@ -248,7 +248,8 @@ your own CI — whatever fits your project) is on you, not this plugin:
 Deferred QA findings live as tracker tasks tagged **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
 triage state. They use the project's tracker as configured in `AGENTS.md` →
-*Task Tracking*, or GitHub issues via `gh` when that section is absent.
+*Task Tracking*'s two QA-finding bullets, or GitHub issues via `gh` when
+that section, or those specific bullets, are absent or left as `none`.
 
 ### Your first fitness test: the layer rule
 

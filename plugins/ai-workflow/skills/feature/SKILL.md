@@ -198,11 +198,12 @@ and the committed tests did not anticipate — NOT to re-verify the plan's
 Requirements (those are locked down by the committed end-to-end tests written
 during implementation). Pass the approved plan text so the agent understands
 the feature, not as a checklist. Also pass the project's open deferred QA
-findings: list them with `AGENTS.md` → *Task Tracking* → *List open deferred
-QA findings* if that section is filled in, otherwise
-`gh issue list --label known-issue --state open`. The sub-agent can only run
-shell commands, so you fetch the list and hand it over rather than leaving it
-to call a tracker tool it doesn't have.
+findings — even an empty list ("none open"), never omit it: run
+`AGENTS.md` → *Task Tracking* → *List open deferred QA findings* if that
+bullet holds a real command or tool call (not a `[TODO:]` placeholder and
+not `none`), otherwise `gh issue list --label known-issue --state open`.
+You fetch and hand it over rather than leaving the sub-agent to do it,
+since it has no tracker tools beyond `Bash`.
 
 ### Step 8 — Relay QA findings
 
@@ -211,8 +212,9 @@ a PR and wait for direction on each (fix now, defer, or ignore).
 
 For each finding the user chooses to **defer**, file a task tagged
 `known-issue` — using `AGENTS.md` → *Task Tracking* → *File a deferred QA
-finding* if that section is filled in, otherwise
-`gh issue create --label known-issue …` — describing the behaviour, where it
+finding* if that bullet holds a real command or tool call (not a `[TODO:]`
+placeholder and not `none`), otherwise `gh issue create --label known-issue
+…` — describing the behaviour, where it
 lives, the QA pass that found it, and sign it with model attribution. QA
 evidence under `.qa-evidence/` is session-local (gitignored), so the task
 body must stand alone: include reproduction steps and describe in words what
@@ -240,7 +242,7 @@ or a session transcript:
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
   that was raised, and the decision the user made on each.
 - **QA outcome** — findings with their dispositions (fixed / deferred with
-  issue number / ignored), or "skipped: no UI or API surface". Describe each finding
+  task id / ignored), or "skipped: no UI or API surface". Describe each finding
   in words — `.qa-evidence/` is gitignored and session-local, so its paths
   are dead links to anyone reading the PR; the durable record for a deferred
   finding is its `known-issue` task.

@@ -138,7 +138,7 @@ aggregates across files, so keep the headings and field labels verbatim):
 - code-critic FAIL items, one line each: <what, and the fix>
 - NEEDS_DECISION items, one line each: <what, and the user's decision>
 - QA findings, one line each: <what, and its disposition (fixed / deferred
-  #issue / ignored)>
+  <task id> / ignored)>
 
 ## Judgment
 

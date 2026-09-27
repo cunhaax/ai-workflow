@@ -118,9 +118,11 @@ can match a diff against them.] -->
 
 <!-- Optional. Tells an agent how to file and update tickets in this project's
      tracker: when you ask it to (e.g. "split this feature into tasks and file
-     them"), and when /feature defers a QA finding (the last two bullets). If
-     you delete this section, deferred QA findings fall back to GitHub issues
-     labeled `known-issue`, via `gh`. -->
+     them"), and when /feature or /adversarial-qa defers a QA finding ("File a
+     deferred QA finding" / "List open deferred QA findings" below). Any
+     bullet left as a `[TODO:]` placeholder or set to `none` falls back to
+     GitHub issues labeled `known-issue`, via `gh` — you don't need to delete
+     the whole section just to skip one bullet. -->
 
 - Tracker: [TODO: e.g. `GitHub issues`, `Trello`, `Jira`]
 - Create a task: [TODO: exact command or tool call, with `<title>`/`<body>` placeholders]
@@ -130,8 +132,8 @@ can match a diff against them.] -->
 - Status vocabulary: [TODO: e.g. `todo → in-progress → in-review → done`, plus `blocked`]
 - Set a task's status: [TODO: exact command, with placeholders]
 - Close the parent/epic: [TODO: …]
-- File a deferred QA finding: [TODO: exact command or tool call that creates a task tagged `known-issue`, e.g. `gh issue create --label known-issue --title <title> --body <body>`]
-- List open deferred QA findings: [TODO: exact command or tool call that lists open `known-issue` tasks, e.g. `gh issue list --label known-issue --state open`]
+- File a deferred QA finding: [TODO: exact command or tool call that creates a task tagged `known-issue`, e.g. `gh issue create --label known-issue --title <title> --body <body>`, or `none` to always use `gh`]
+- List open deferred QA findings: [TODO: exact command or tool call that lists open `known-issue` tasks, e.g. `gh issue list --label known-issue --state open`, or `none` to always use `gh`]
 
 ## Review & Planning Guidance
 
