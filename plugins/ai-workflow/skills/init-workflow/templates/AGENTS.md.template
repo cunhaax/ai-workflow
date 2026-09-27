@@ -121,7 +121,7 @@ can match a diff against them.] -->
      them"). Nothing in the workflow requires it — delete this section if you
      don't use a tracker. -->
 
-- Tracker: [TODO: e.g. `GitHub issues`, `Trello`, `Jira`, or `none`]
+- Tracker: [TODO: e.g. `GitHub issues`, `Trello`, `Jira`]
 - Create a task: [TODO: exact command or tool call, with `<title>`/`<body>` placeholders]
 - Create the parent/epic item: [TODO: … or `none — this tracker has no parent concept`]
 - Link a task to its parent: [TODO: …]
