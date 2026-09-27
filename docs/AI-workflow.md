@@ -245,9 +245,10 @@ your own CI — whatever fits your project) is on you, not this plugin:
   matter of reviewer attention. <!-- [TODO: add a secret scanner and a
   dependency audit for your stack to the all-checks command.] -->
 
-Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
+Deferred QA findings live as tracker tasks tagged **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
-triage state.
+triage state. They use the project's tracker as configured in `AGENTS.md` →
+*Task Tracking*, or GitHub issues via `gh` when that section is absent.
 
 ### Your first fitness test: the layer rule
 
@@ -286,7 +287,7 @@ Committed end-to-end tests encode the plan's Requirements deterministically
 API, or both), then drives a UI surface via Playwright MCP and an API surface
 via `curl`/Bash, probing past the happy path on each and surfacing anything
 that looks wrong even outside the feature's plan. Checks open `known-issue`
-GitHub issues so deferred findings are reported as known, not re-triaged;
+tasks so deferred findings are reported as known, not re-triaged;
 STOPs on blockers rather than substituting `curl`/SQL for browser exploration
 on a UI surface. Evidence lands in `.qa-evidence/` (gitignored,
 session-local), which is why deferred findings must be fully described in

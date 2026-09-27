@@ -18,6 +18,12 @@ Requirements deterministically. Your job is to go beyond them.
 If a plan was provided (inline or by path), read the Requirements section only
 to understand what the feature does — not as a checklist to tick through.
 
+If the caller passed a list of open deferred QA findings, use it as-is in
+step 5 below. Otherwise (an ad hoc `/adversarial-qa` run) get it yourself:
+`AGENTS.md` → *Task Tracking* → *List open deferred QA findings* if that
+section is filled in with a command you can run, otherwise
+`gh issue list --label known-issue --state open`.
+
 ---
 
 ## What to do
@@ -75,10 +81,10 @@ to understand what the feature does — not as a checklist to tick through.
    deciding a bug is "probably expected". Report it and let the developer
    decide.
 
-5. Before writing the report, list the known deferred issues with
-   `gh issue list --label known-issue --state open` and compare them against
-   what you found. A finding that matches an open `known-issue` goes in the
-   *Known issues* section of the report (cite the issue number), NOT in
+5. Before writing the report, compare your findings against the known
+   deferred issues gathered above. A finding that matches an open
+   `known-issue` goes in the *Known issues* section of the report (cite its
+   id), NOT in
    Findings — the developer has already triaged it once and should not have
    to re-triage it on every QA pass. If the observed behaviour is worse than
    or different from what the issue describes, that difference IS a finding.

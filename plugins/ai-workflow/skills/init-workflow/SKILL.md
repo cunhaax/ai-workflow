@@ -257,7 +257,8 @@ For each still-open section, draft from evidence and confirm before writing:
   update tickets in. If yes, fill every bullet — the exact command or tool
   call where the bullet asks for one, or `none` where the tracker lacks
   the concept — and confirm before writing. If no, delete the section
-  (this is the only way to say "no tracker") — it is not a gap to report.
+  (this is the only way to say "no tracker"; deferred QA findings then fall
+  back to GitHub issues via `gh`) — it is not a gap to report.
 
 ## Step 4 — Seed review and planning guidance
 
