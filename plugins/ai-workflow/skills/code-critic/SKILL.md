@@ -65,6 +65,16 @@ before reviewing. Use it as follows:
 - **Contract** section (if present): cross-check the diff's routes, form
   fields/params, response shapes, error rendering, and schema changes
   against it. An undiscussed deviation from the approved Contract is `FAIL`.
+- **Types anywhere in the plan** (Contract, Approach, Requirements — even
+  when Contract is "None"): types (nullable vs non-null, optional vs
+  required) are part of the contract, not just names and presence.
+  Explicitly diff every parameter/field type the plan states against the
+  diff's actual signature; do not infer the type from the inputs the tests
+  use. A non-nullable parameter standing in for a plan-specified nullable
+  one is `FAIL` even if every test passes, since a real caller carrying the
+  untested value (e.g. an actual `null`) cannot satisfy the signature. The
+  reverse (nullable/optional where the plan says non-null/required) is
+  `FAIL` too, unless the review input documents an approved deviation.
 - **Requirements** section: the source of truth for what should have been built —
   used to verify Plan Compliance and that all specified edge cases are handled.
 - **Approach** section: the agreed implementation strategy — used to verify the
@@ -160,6 +170,10 @@ the committed tests cover the plan, so that responsibility lives here.
   not `test_order_2`.
 - Use the Given-When-Then pattern.
 - Never test implementation details — test behaviour.
+- The same disconfirmation stance applies to the tests themselves: check
+  what a test's assertion actually compares, not what its name or comment
+  claims — a test that would pass regardless of correctness (e.g. an
+  expression compared to itself) proves nothing.
 - Tests that encode the plan's Test Strategy (the `[AC-<slug>-n]`-tagged ones
   especially) are the contract, not implementation detail: a diff that
   weakens, loosens, or deletes one so the suite passes is `FAIL` unless the
@@ -317,6 +331,8 @@ is `FAIL`._
   strategy were broken
 - [ ] Diff matches the plan's Contract section — routes, fields, response
   shapes, error rendering, schema _(skip if Contract is "None")_
+- [ ] Every parameter/field type the plan states anywhere (nullable vs
+  non-null, optional vs required) matches the diff's actual signature
 - [ ] All requirements from the Requirements section are addressed
 - [ ] Files touched in the diff match the plan's Files manifest — no undiscussed
   files (a file in the diff but not in the manifest is an undiscussed change)
@@ -357,6 +373,8 @@ is `FAIL`._
 - [ ] Test names describe the scenario being tested
 - [ ] Tests follow the Given-When-Then pattern
 - [ ] No tests that only verify implementation details
+- [ ] No tautological assertions — each test's assertion compares independent
+  expressions and could fail if the behaviour were broken
 
 ### Project-Specific
 - [ ] Every applicable item from the project's review guidance (via
