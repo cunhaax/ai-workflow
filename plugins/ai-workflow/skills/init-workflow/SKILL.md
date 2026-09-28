@@ -200,11 +200,15 @@ flow for the first time, whose named or default files may not exist
 either); Step 5 item 7 decides separately, in whichever mode you end up in,
 whether a still-missing file gets reported. Otherwise (no section at all)
 check `docs/agent-rules/code-critic.md` and `docs/agent-rules/plan-critic.md`
-directly. Classify each placeholder / `[TODO: …]` as filled or open.
+directly. Classify each placeholder / `[TODO: …]` as filled or open,
+**except** those under `## Task Tracking` — that section is optional, so
+its placeholders never count toward the mode.
 
 - Mostly open → **first-run mode**: continue with Steps 2–4, then validate.
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
-  open or drifted.
+  open or drifted (plus Step 5 item 8's two informational Task Tracking
+  notes — its absent-section offer and its QA-finding-bullet fallback
+  note — which are neither, by design).
 
 ## Step 2 — Detect the commands, propose, confirm
 
@@ -250,6 +254,17 @@ For each still-open section, draft from evidence and confirm before writing:
   user has no time now, leave the TODO in place and say so in the report.
 - **Rule 5** (project hygiene rule): ask whether one applies (e.g. reset a
   dev database at session end); fill it or delete the placeholder.
+- **Task Tracking** (optional): ask whether the project uses an issue
+  tracker (GitHub issues, Jira, Trello, …) that agents should file and
+  update tickets in. If yes, fill every bullet — the exact command or tool
+  call where the bullet asks for one, or `none` where the tracker lacks the
+  concept (only the two QA-finding bullets treat a `[TODO:]` or `none` as
+  "fall back to `gh`"; a project can use its own tracker for tasks and still
+  fall back to `gh` for deferred QA findings specifically, by leaving just
+  those two as `none`) — and confirm before writing. If no, delete the
+  whole section (this is the only way to say "no tracker at all"; the two
+  QA-finding bullets then fall back to GitHub issues via `gh`, and the rest
+  simply don't apply) — it is not a gap to report.
 
 ## Step 4 — Seed review and planning guidance
 
@@ -358,6 +373,29 @@ confirmation, report what you cannot fix:
    which doesn't exist runs that skill on base standards/lenses alone (it
    does *not* fall back further to the default path) — either gap should
    be surfaced, not left to fail silently on the next review.
+8. **Task Tracking** — informational only, never a validation failure; an
+   absent section is a legitimate choice, not a gap. If `AGENTS.md` has no
+   `## Task Tracking` section at all **and Step 3 did not already ask about
+   it this run** (the guard that stops this item from immediately
+   re-asking a question the user just answered "no" to in Step 3 of the
+   same session — without it, a doctor-mode project that has never seen
+   the question, and a first-run project that just declined it minutes
+   ago, would be indistinguishable), note that it's available and offer to
+   run Step 3's Task Tracking interview now, same confirm-then-write. If
+   the section exists, validate it like any other: no remaining `[TODO:]`
+   means configured; open TODOs are a deferral to report like any other
+   section's — **except** on the two QA-finding bullets specifically,
+   where a `[TODO:]` is, per the template's own comment, an intentional
+   way to skip just those two and fall back to `gh`; treat it the same as
+   `none` there — the documented fallback — and note it informationally,
+   not as a deferral (Step 1 and Step 6 both carry this exception too, so
+   neither reports nor re-offers it as one). Known limitation, same as
+   Step 1's decline-memory one: this skill has no memory of a prior
+   decline across separate runs, so a project that deliberately deleted
+   the section in an earlier session (the documented way to say "no
+   tracker") looks identical to one that was never offered it, and gets
+   re-offered here every run. Confirming "no" again is the workaround
+   until this needs solving properly.
 
 ## Step 6 — Report
 
@@ -367,12 +405,17 @@ existed and was left fully untouched (plain-content skips, or a
 pre-existing gate script correctly identified as already this gate's),
 any declined append or unresolved hook/settings conflict from Step 1 or
 Step 5 item 2, what was deliberately deferred (the open TODOs and what
-they disable), the doctor checklist results, and the suggested next
-action — typically committing the setup changes, then starting the first
-feature on a fresh branch with
+they disable, other than Step 5 item 8's QA-finding-bullet fallback note,
+which is not a deferral), the doctor checklist results, and the suggested
+next action — typically committing the setup changes, then starting the
+first feature on a fresh branch with
 `/feature`. For each item still open — including deferrals found in doctor
-mode — offer to run the relevant step (2–4) for just that item now, so
-deferred TODOs are re-offered on every run rather than silently carried
-forward. Do not commit or push yourself unless the user asks — setup
+mode, but **excluding** Step 5 item 8's two informational notes (its
+absent-section offer, already made — and, if accepted, already acted
+on — inside Step 5 itself, and its QA-finding-bullet fallback note, which
+is not a deferral) — offer to run the relevant step (2–4) for just that
+item now, so deferred TODOs are re-offered on every run rather than
+silently carried forward. Do not
+commit or push yourself unless the user asks — setup
 changes deserve the user's own review. (If asked to push, Rule 4 in
 `AGENTS.md` applies as always: code-critic pass, then `scripts/review-ok.sh`.)

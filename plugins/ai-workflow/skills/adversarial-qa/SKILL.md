@@ -18,6 +18,17 @@ Requirements deterministically. Your job is to go beyond them.
 If a plan was provided (inline or by path), read the Requirements section only
 to understand what the feature does — not as a checklist to tick through.
 
+If the caller passed a list of open deferred QA findings (even an empty
+one — "none open" is a value, not an omission), use it as-is in step 5
+below. Otherwise (an ad hoc `/adversarial-qa` run) get it yourself: run
+`AGENTS.md` → *Task Tracking* → *List open deferred QA findings* if that
+bullet holds a real command or tool call (not a `[TODO:]` placeholder and
+not `none`), otherwise `gh issue list --label known-issue --state open`.
+If the bullet holds a real command but you cannot execute it (e.g. it names
+an MCP tool call you don't have), do **not** fall back to `gh` — that would
+silently query the wrong tracker. Instead, report it under *Blockers* as
+"known issues not checked: <reason>" and continue the rest of the pass.
+
 ---
 
 ## What to do
@@ -75,13 +86,13 @@ to understand what the feature does — not as a checklist to tick through.
    deciding a bug is "probably expected". Report it and let the developer
    decide.
 
-5. Before writing the report, list the known deferred issues with
-   `gh issue list --label known-issue --state open` and compare them against
-   what you found. A finding that matches an open `known-issue` goes in the
-   *Known issues* section of the report (cite the issue number), NOT in
+5. Before writing the report, compare your findings against the known
+   deferred issues gathered above (skip this if you reported a *Blockers*
+   entry for them instead). A finding that matches an open `known-issue`
+   goes in the *Known issues* section of the report (cite its task id), NOT in
    Findings — the developer has already triaged it once and should not have
    to re-triage it on every QA pass. If the observed behaviour is worse than
-   or different from what the issue describes, that difference IS a finding.
+   or different from what the task describes, that difference IS a finding.
 
 ---
 
@@ -110,7 +121,7 @@ file there, with a one-sentence description of what it shows.
 - [Short description] — [evidence path] — [severity: bug / concern / nit]
 
 ### Known issues (already deferred — no action needed)
-- [#issue-number] [title] — [still present / not observed on this pass]
+- [task id] [title] — [still present / not observed on this pass]
 
 ### Blockers (if any)
 [Anything that prevented you from exploring — server won't start, Playwright

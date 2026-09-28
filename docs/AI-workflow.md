@@ -245,9 +245,17 @@ your own CI — whatever fits your project) is on you, not this plugin:
   matter of reviewer attention. <!-- [TODO: add a secret scanner and a
   dependency audit for your stack to the all-checks command.] -->
 
-Deferred QA findings live as GitHub issues labeled **`known-issue`** — not in
+Deferred QA findings live as tracker tasks tagged **`known-issue`** — not in
 the repo, not in session memory — so every agent and session sees the same
-triage state.
+triage state. They use the project's tracker as configured in `AGENTS.md` →
+*Task Tracking*'s two QA-finding bullets, or GitHub issues via `gh` when
+that section, or those specific bullets, are absent, left as a `[TODO:]`
+placeholder, or set to `none`. A bullet naming a real command or tool call
+an agent can't run is never silently replaced by `gh` — that would query the
+wrong tracker. `/feature` stops the whole lifecycle at that point (Rule 2 —
+it is mid-pipeline, about to relay findings and open a PR); a standalone
+`/adversarial-qa` pass reports it under *Blockers* and continues, since the
+rest of the exploration still has value without the known-issues check.
 
 ### Your first fitness test: the layer rule
 
@@ -286,11 +294,11 @@ Committed end-to-end tests encode the plan's Requirements deterministically
 API, or both), then drives a UI surface via Playwright MCP and an API surface
 via `curl`/Bash, probing past the happy path on each and surfacing anything
 that looks wrong even outside the feature's plan. Checks open `known-issue`
-GitHub issues so deferred findings are reported as known, not re-triaged;
+tasks so deferred findings are reported as known, not re-triaged;
 STOPs on blockers rather than substituting `curl`/SQL for browser exploration
 on a UI surface. Evidence lands in `.qa-evidence/` (gitignored,
 session-local), which is why deferred findings must be fully described in
-their issue.
+their task.
 
 ### `plugins/ai-workflow/skills/feature/SKILL.md` — `/feature`
 

@@ -197,22 +197,34 @@ through whichever surface(s) it exposes. Its role is to catch things the plan
 and the committed tests did not anticipate — NOT to re-verify the plan's
 Requirements (those are locked down by the committed end-to-end tests written
 during implementation). Pass the approved plan text so the agent understands
-the feature, not as a checklist.
+the feature, not as a checklist. Also pass the project's open deferred QA
+findings — even an empty list ("none open"), never omit it: run
+`AGENTS.md` → *Task Tracking* → *List open deferred QA findings* if that
+bullet holds a real command or tool call (not a `[TODO:]` placeholder and
+not `none`), otherwise `gh issue list --label known-issue --state open`. If
+the bullet names a real command or tool call you cannot run, do not fall
+back to `gh` — that would silently query the wrong tracker; STOP per Rule 2
+and report it instead. You fetch and hand it over rather than leaving the
+sub-agent to do it, since it has no tracker tools beyond `Bash`.
 
 ### Step 8 — Relay QA findings
 
 If the QA agent surfaces any findings, present them to the user before opening
 a PR and wait for direction on each (fix now, defer, or ignore).
 
-For each finding the user chooses to **defer**, file a GitHub issue labeled
-`known-issue` (`gh issue create --label known-issue …`) describing the
-behaviour, where it lives, the QA pass that found it, and sign it with model
-attribution. QA evidence under `.qa-evidence/` is session-local
-(gitignored), so the issue body must stand alone: include reproduction steps
-and describe in words what the evidence showed. The QA skill checks that
-label on every pass, so deferred findings are reported as known instead of
-being re-triaged each time. Do not file issues for findings the user chooses
-to ignore outright.
+For each finding the user chooses to **defer**, file a task tagged
+`known-issue` — using `AGENTS.md` → *Task Tracking* → *File a deferred QA
+finding* if that bullet holds a real command or tool call (not a `[TODO:]`
+placeholder and not `none`), otherwise `gh issue create --label known-issue
+…`. If the bullet names a real command or tool call you cannot run, do not
+fall back to `gh` — STOP per Rule 2 and report it instead of filing into the
+wrong tracker. Describe the behaviour, where it
+lives, the QA pass that found it, and sign it with model attribution. QA
+evidence under `.qa-evidence/` is session-local (gitignored), so the task
+body must stand alone: include reproduction steps and describe in words what
+the evidence showed. The QA skill checks that tag on every pass, so deferred
+findings are reported as known instead of being re-triaged each time. Do not
+file tasks for findings the user chooses to ignore outright.
 
 ### Step 9 — Open PR
 
@@ -234,10 +246,10 @@ or a session transcript:
 - **Review outcome** — the final code-review verdict, every `NEEDS_DECISION`
   that was raised, and the decision the user made on each.
 - **QA outcome** — findings with their dispositions (fixed / deferred with
-  issue number / ignored), or "skipped: no UI or API surface". Describe each finding
+  task id / ignored), or "skipped: no UI or API surface". Describe each finding
   in words — `.qa-evidence/` is gitignored and session-local, so its paths
   are dead links to anyone reading the PR; the durable record for a deferred
-  finding is its `known-issue` issue.
+  finding is its `known-issue` task.
 - **Test evidence** — one line: the test count and result from the final
   full test-suite run.
 
