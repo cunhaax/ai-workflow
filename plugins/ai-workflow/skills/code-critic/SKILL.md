@@ -73,8 +73,8 @@ before reviewing. Use it as follows:
   use. A non-nullable parameter standing in for a plan-specified nullable
   one is `FAIL` even if every test passes, since a real caller carrying the
   untested value (e.g. an actual `null`) cannot satisfy the signature. The
-  reverse (nullable/optional where the plan says non-null/required) is an
-  undiscussed deviation too.
+  reverse (nullable/optional where the plan says non-null/required) is
+  `FAIL` too, unless the review input documents an approved deviation.
 - **Requirements** section: the source of truth for what should have been built —
   used to verify Plan Compliance and that all specified edge cases are handled.
 - **Approach** section: the agreed implementation strategy — used to verify the
