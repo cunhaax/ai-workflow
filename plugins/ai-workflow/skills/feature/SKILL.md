@@ -9,7 +9,7 @@ description: >
 # /feature
 
 Pipeline: plan → critique → implement → test → code-review → QA → PR.
-Run every step in order. `AGENTS.md` is the source for commands, default
+Run steps in order, skipping only where a step says so. `AGENTS.md` is the source for commands, default
 branch, sensitive areas, and task tracking.
 
 ## Input
@@ -51,10 +51,11 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Do not proceed without approval
 - Substantive change (new scope, different approach, reworked requirements):
   re-enter plan mode → call `planner` again (never re-plan yourself) → re-run
-  `plan-critic` → re-present with a **delta** section first
+  `plan-critic` → re-present with a **delta** section first (what changed
+  vs. the previously presented version)
 - Approval conditional on critique amendments: fold them into the plan text
-  yourself. Sub-agents only see plan text, so conversation-only amendments
-  are invisible to them
+  yourself (transcription, not re-planning). Sub-agents only see plan text,
+  so conversation-only amendments are invisible to them
 - Keep the approved plan text for steps 4 and 7
 
 ### 2. Implement
@@ -101,7 +102,7 @@ Deviation from plan:
 - On a pass with no FAIL on the committed HEAD → run `scripts/review-ok.sh`
   - Any later commit makes the record stale: re-review, re-run the script
   - Never run it without a passing review of the current HEAD
-- No push or PR before this
+- No push or PR until a passing review of HEAD is recorded
 
 ### 7. QA
 
@@ -114,7 +115,8 @@ QA was skipped and why. When in doubt, run it.
    "none open"):
    - `AGENTS.md` → *Task Tracking* → *List open deferred QA findings* holds a
      real command/tool call → run it
-   - holds `[TODO:]` or `none` → `gh issue list --label known-issue --state open`
+   - section/bullet absent, `[TODO:]`, or `none` →
+     `gh issue list --label known-issue --state open`
    - holds a real command you cannot run → STOP per Rule 2; never fall back
      to `gh`
 2. Call `adversarial-qa` with: approved plan text (context, not a checklist)
@@ -128,7 +130,8 @@ QA was skipped and why. When in doubt, run it.
 - Defer → file a task tagged `known-issue`:
   - `AGENTS.md` → *Task Tracking* → *File a deferred QA finding* holds a real
     command/tool call → use it
-  - holds `[TODO:]` or `none` → `gh issue create --label known-issue …`
+  - section/bullet absent, `[TODO:]`, or `none` →
+    `gh issue create --label known-issue …`
   - holds a real command you cannot run → STOP per Rule 2; never fall back
     to `gh`
   - Body must stand alone (`.qa-evidence/` is gitignored): behaviour,
@@ -161,7 +164,7 @@ Diff touches a sensitive area:
 ## Output
 
 - Open PR with the body above
-- Summary of skipped steps, plan deviations, and why
+- Summary of skipped steps, plan deviations, `context7` lookup failures, and why
 
 ## Rules
 
