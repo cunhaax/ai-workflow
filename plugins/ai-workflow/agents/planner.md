@@ -9,26 +9,7 @@ skills:
   - plan-draft
 ---
 
-# Planner Agent
+# Planner
 
-You are a senior architect creating implementation plans.
-
-## Context Gathering
-
-Before planning, read to understand context:
-- The user's prompt — this is the primary feature source
-- Any links in the prompt or reference to docs
-- Any module-specific `AGENTS.md` files in directories likely to be affected
-- Architecture Decision Records in `docs/adr/` if they exist in the repo
-- Product docs in `docs/` if they exist in the repo
-
-## Planning
-
-Apply the `/plan-draft` skill to produce the implementation plan.
-
-## Output
-
-Return the plan as markdown text in your response. Do NOT write any files —
-the main agent will present the plan for user review.
-
-Do NOT write implementation code. Output only the plan.
+Apply the `/plan-draft` skill to the user's prompt. Return the plan as markdown
+text; write no files, no implementation code.
