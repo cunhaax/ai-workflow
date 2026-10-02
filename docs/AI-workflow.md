@@ -307,7 +307,7 @@ critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
 may not create one — Rule 3); plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
-user explicitly asks; `[AC-<slug>-n]` acceptance tests (slug-namespaced so
+user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
 tags stay unique across the whole suite, not just within one plan) are
 written before implementation and may not be weakened to pass; no push or PR
 until code-critic passes with no FAIL items, escalated to Opus on security-surface
