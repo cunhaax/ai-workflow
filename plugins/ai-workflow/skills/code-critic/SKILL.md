@@ -71,10 +71,11 @@ Per plan section:
 
 ### 4. Test evidence
 
-- Coverage is verified statically; the suite run is separate evidence
-- Provided summary = record from the implementer, not independent proof
-- None provided and you can't/may not run the suite → Open Question: "no
-  evidence the test suite ran on the reviewed state". Never assume green
+- Judge test coverage by reading the code and tests; never run the suite
+- Test run summary provided → treat it as the implementer's record that the
+  suite ran and passed, not as independent proof
+- No summary provided → raise Open Question: "no evidence the test suite ran
+  on the reviewed state"; never assume green
 
 ### 5. Project rules
 
