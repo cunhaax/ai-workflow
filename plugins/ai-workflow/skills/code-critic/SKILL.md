@@ -11,8 +11,7 @@ description: >
 
 # /code-critic
 
-Review code changes against project standards. Standalone (`/code-critic`) or
-applied by the `code-critic` sub-agent in `/feature`.
+Review code changes against project standards.
 
 Stance: the implementation is a hypothesis under attack. Assume something is
 wrong and try to disconfirm it; don't verify that it "looks reasonable". No
@@ -29,10 +28,10 @@ Attempt*). Apply the same stance to the tests (see *Tests*).
 
 ### 1. Select the diff
 
-- `/feature` flow (work is committed): `git diff <default-branch>...HEAD` or
+- Work committed: `git diff <default-branch>...HEAD` or
   `git log -p <default-branch>..HEAD`; default branch from `AGENTS.md` →
   *Commands*
-- Ad-hoc on uncommitted work: working-tree diff
+- Work uncommitted: working-tree diff
 - Unsure → `git status`, `git log --oneline`
 - You may read any file in the repo; the diff is the unit under review
 
