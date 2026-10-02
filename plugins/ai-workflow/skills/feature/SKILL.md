@@ -61,7 +61,9 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 ### 2. Implement
 
 1. Write end-to-end tests from the plan's Test Strategy first (at minimum
-   the `[AC-<slug>-n]` ones)
+   the `[AC-<slug>-n]` and `[EDGE-<slug>-n]` ones)
+   - Tag each test with the plan ID it proves, exactly as in the plan
+     (`[AC-<slug>-n]` / `[EDGE-<slug>-n]`)
    - Never weaken or rewrite them to pass; a wrong test is a plan deviation
 2. Implement in small steps until green; run the suite after each coherent
    unit of work
@@ -147,9 +149,10 @@ skipped).
 PR body:
 - **Plan summary**: requirements + approach in a few sentences, link to
   source spec if any
-- **Acceptance criteria → test table**: one row per `AC-<slug>-n` from the
-  plan's Approval Summary, with its `[AC-<slug>-n]`-tagged test(s). No row
-  without a test
+- **Plan ID → test table**: one row per `AC-<slug>-n` (plan's Approval
+  Summary) and per `EDGE-<slug>-n` (plan's Edge Cases): the ID, the
+  criterion/edge case, and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged
+  test(s). Every ID has a row with at least one test
 - **Review outcome**: final verdict, each `NEEDS_DECISION` and the user's
   decision
 - **QA outcome**: findings + disposition (fixed / deferred with task id /

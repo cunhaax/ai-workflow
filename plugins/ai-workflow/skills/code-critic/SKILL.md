@@ -206,7 +206,17 @@ Verdicts:
 Items:
 - **Architecture**: respects service boundaries and ADRs · no business logic
   in infrastructure/API layers · no new dependency without justification
-- **Plan compliance** (if plan): everything in step 3
+- **Plan compliance** (if plan), one verdict each:
+  - every `AC-<slug>-n` has a committed `[AC-<slug>-n]` test that would fail
+    if the criterion broke
+  - every `EDGE-<slug>-n` has a committed `[EDGE-<slug>-n]` test that would
+    fail if the handling broke
+  - Contract matches (skip if "None")
+  - plan-stated types match the signatures
+  - Requirements addressed
+  - Approach followed, all plan steps accounted for
+  - Files match the manifest
+  - nothing inside Out of Scope
 - **Code quality**: single responsibility (functions, classes) · specific
   error handling · readable by a new team member · no implicit assumptions
   that should be explicit comments/types

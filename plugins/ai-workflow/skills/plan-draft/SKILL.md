@@ -91,8 +91,8 @@ Fill the template below, following these rules.
      code-critic cross-checks diffs against Approval Summary / Contract /
      Requirements / Approach / Edge Cases / Test Strategy / Files / Out of
      Scope. feature presents the Approval Summary (Step 1c), writes the
-     [AC-<slug>-n] tests first (Step 2), and builds the PR's AC → test table
-     (Step 9). Add/rename/remove a section → update those consumers. -->
+     [AC-<slug>-n] / [EDGE-<slug>-n] tests first (Step 2), and builds the
+     PR's plan ID → test table (Step 9). Add/rename/remove a section → update those consumers. -->
 
 ```markdown
 # Implementation Plan: [Feature Name]

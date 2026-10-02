@@ -312,7 +312,7 @@ tags stay unique across the whole suite, not just within one plan) are
 written before implementation and may not be weakened to pass; no push or PR
 until code-critic passes with no FAIL items, escalated to Opus on security-surface
 diffs; QA runs only for changes with a UI and/or API surface; the PR body carries the
-pipeline's conclusions (plan summary, AC → test table, review outcome, QA
+pipeline's conclusions (plan summary, plan ID → test table, review outcome, QA
 dispositions, test evidence).
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
