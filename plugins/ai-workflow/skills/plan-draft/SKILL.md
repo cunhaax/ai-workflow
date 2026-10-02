@@ -44,8 +44,8 @@ Fill the template below, following these rules.
     does (`proj-123-csv-export`); no ticket → short name alone
   - Unique across the suite: grep the repo for existing `AC-<slug>-` /
     `EDGE-<slug>-` tags; taken → pick another
-  - Fixed after approval: a re-plan keeps it. A rename by the user at
-    approval is final. Everything downstream reads it from the plan
+  - Fixed after approval. Given a prior plan, keep its slug. A rename by the
+    user at approval is final. Everything downstream reads it from the plan
 - Every `AC-<slug>-n` maps to ≥1 Test Strategy entry tagged `[AC-<slug>-n]`;
   none → incomplete plan
 - Sections below must never contradict the summary
