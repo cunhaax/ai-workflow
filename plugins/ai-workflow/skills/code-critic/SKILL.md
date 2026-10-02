@@ -77,23 +77,7 @@ Per plan section:
 - No summary provided → raise Open Question: "no evidence the test suite ran
   on the reviewed state"; never assume green
 
-### 5. Project rules
-
-- Repo-root `AGENTS.md` (not module-level) → *Review & Planning Guidance* →
-  "Code review guidance" entry → read the file it names
-- No such section/entry → `docs/agent-rules/code-critic.md`
-- Entry names a missing file → treat as no file found, and say so
-  specifically (broken pointer)
-- File found:
-  - Apply every constraint alongside the base standards
-  - Stated severity → use as stated (incl. don't-weaken doctrine for
-    build-enforced items)
-  - No stated severity (style guide, `CONTRIBUTING.md`, handbook) → judge
-    with `PASS`/`FAIL`/`NEEDS_DECISION`
-  - PRIVACY anchors in it bind the privacy rules below regardless of format
-- No file found → base standards only; say so in one line in the output
-
-### 6. Apply standards
+### 5. Apply standards
 
 **Single responsibility**
 - Functions do one thing. Branch for a different concern (admin path in a
@@ -186,6 +170,23 @@ plan coverage)
   widening a package glob, unexplained exemption, code moved out of the
   scanned layer) → `FAIL`
 
+### 6. Project rules
+
+- Repo-root `AGENTS.md` (not module-level) → *Review & Planning Guidance* →
+  "Code review guidance" entry → read the file it names
+- No such section/entry → `docs/agent-rules/code-critic.md`
+- Entry names a missing file → treat as no file found, and say so
+  specifically (broken pointer)
+- File found:
+  - Apply every constraint alongside the base standards (step 5)
+  - Stated severity → use as stated (incl. don't-weaken doctrine for
+    build-enforced items)
+  - No stated severity (style guide, `CONTRIBUTING.md`, handbook) → judge
+    with `PASS`/`FAIL`/`NEEDS_DECISION`
+  - PRIVACY anchors in it bind the privacy rules in step 5 regardless of
+    format
+- No file found → base standards only; say so in one line in the output
+
 ### 7. Review Checklist
 
 Evaluate every item; state a verdict for each.
@@ -219,7 +220,7 @@ Items:
   unenumerated scenarios listed, missing ones `FAIL` · scenario-describing
   names · Given-When-Then · no implementation-detail tests · no tautological
   assertions
-- **Project-specific**: every applicable item from step 5 evaluated, or its
+- **Project-specific**: every applicable item from step 6 evaluated, or its
   absence stated in one line
 - **Privacy**: fitness tests not weakened · hand-checked invariants where the
   diff touches them · no indirect serialization into logs, no personal data
