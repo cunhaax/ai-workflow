@@ -34,8 +34,6 @@ Attempt*). Apply the same stance to the tests (see *Tests*).
   *Commands*
 - Ad-hoc on uncommitted work: working-tree diff
 - Unsure → `git status`, `git log --oneline`
-- A review meant to unlock a push must cover committed state (the push gate
-  records a SHA via `scripts/review-ok.sh`): commit first, then review
 - You may read any file in the repo; the diff is the unit under review
 
 ### 2. ADRs
