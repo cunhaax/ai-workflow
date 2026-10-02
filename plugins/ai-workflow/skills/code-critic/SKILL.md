@@ -104,8 +104,7 @@ Per plan section:
 - Functions say what they do (`calculateShippingCost`, not `calc`/`process`)
 - Booleans read as questions (`isValid`, `hasPermission`)
 
-**Tests** (you own quality AND completeness; `/adversarial-qa` doesn't check
-plan coverage)
+**Tests** (you own quality AND completeness)
 - Quality:
   - Every public function with non-trivial behaviour has happy-path and edge
     tests. Exempt: trivial delegators, generated code, plain data classes,
