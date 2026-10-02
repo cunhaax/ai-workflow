@@ -36,10 +36,16 @@ Fill the template below, following these rules.
 - Criterion = user-visible behaviour, not implementation
   ("a visitor submitting an invalid form sees the error next to the field",
   not "add a guard clause")
-- Number `AC-<slug>-n`. `<slug>` = current git branch name, minus one leading
-  type prefix (`worktree-`, `feat-`, `feature-`, `fix-`, `bugfix-`,
-  `hotfix-`, `chore-`, or similar), `/` → `-`, truncated to 30 chars
-  (keeps tags unique across the suite)
+- Number `AC-<slug>-n`. Choose `<slug>` once and record it as `**Slug:**` in
+  the Approval Summary
+  - Format: lowercase `a-z0-9-`, max 30 chars
+  - Content: ticket ID first, only if the prompt, linked spec, or tracker
+    gives one (never invent one), then a short name for what the feature
+    does (`proj-123-csv-export`); no ticket → short name alone
+  - Unique across the suite: grep the repo for existing `AC-<slug>-` /
+    `EDGE-<slug>-` tags; taken → pick another
+  - Fixed after approval: a re-plan keeps it. A rename by the user at
+    approval is final. Everything downstream reads it from the plan
 - Every `AC-<slug>-n` maps to ≥1 Test Strategy entry tagged `[AC-<slug>-n]`;
   none → incomplete plan
 - Sections below must never contradict the summary
@@ -100,7 +106,9 @@ Fill the template below, following these rules.
 ## Approval Summary
 **Goal:** [1–2 sentences — what the user gains]
 
-**Acceptance Criteria** (`<slug>` per rules above):
+**Slug:** [`<slug>` per rules above]
+
+**Acceptance Criteria:**
 - AC-<slug>-1: [one line: given/when/then]
 - AC-<slug>-2: [...]
 
