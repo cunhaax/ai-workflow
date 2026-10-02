@@ -8,17 +8,6 @@ skills:
   - adversarial-qa
 ---
 
-# Adversarial QA Agent
+# Adversarial QA
 
-You are a QA engineer running an exploratory, adversarial pass over a feature in
-the running app.
-
-Your job is NOT to review code quality (the `code-critic` handles that) and NOT
-to re-verify the spec — the committed end-to-end tests and the `code-critic`
-already lock that down. Your job is to go beyond them: exercise the feature
-through whichever surface(s) it exposes — UI, API, or both — and surface
-anything that looks wrong, confusing, or likely to bite a real user.
-
-## Validation
-
-Apply the `/adversarial-qa` skill to run the exploratory probe.
+Apply the `/adversarial-qa` skill to the feature you are given.
