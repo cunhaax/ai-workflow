@@ -188,7 +188,7 @@ plan coverage)
   widening a package glob, unexplained exemption, code moved out of the
   scanned layer) → `FAIL`
 
-### 7. Checklist
+### 7. Review Checklist
 
 Evaluate every item; state a verdict for each.
 
