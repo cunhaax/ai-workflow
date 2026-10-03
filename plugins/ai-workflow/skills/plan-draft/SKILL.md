@@ -12,7 +12,7 @@ metadata:
 
 # /plan-draft
 
-Standalone (`/plan-draft`) or applied by the `planner` sub-agent in `/feature`.
+Draft a structured implementation plan before any code is written.
 
 ## Input
 
@@ -103,7 +103,8 @@ Fill the template below, following these rules.
      Requirements / Approach / Edge Cases / Test Strategy / Files / Out of
      Scope. feature presents the Approval Summary (Step 1c), writes the
      [AC-<slug>-n] / [EDGE-<slug>-n] tests first (Step 2), and builds the
-     PR's plan ID → test table (Step 9). Add/rename/remove a section → update those consumers. -->
+     PR's plan ID → test table (Step 9). adversarial-qa reads Requirements
+     for context. Add/rename/remove a section → update those consumers. -->
 
 ```markdown
 # Implementation Plan: [Feature Name]

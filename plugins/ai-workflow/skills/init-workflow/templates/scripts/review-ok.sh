@@ -1,8 +1,8 @@
 #!/bin/sh
 # Record a passing code review for the current HEAD.
 #
-# The /feature workflow runs the code-critic sub-agent; after it passes with
-# no FAIL items, run this script to write the reviewed commit SHA to
+# The /feature workflow runs the code-critic sub-agent; after a passing review
+# (no unresolved FAIL items), run this script to write the reviewed commit SHA to
 # .review-passed (gitignored, one per worktree). The pre-push hook
 # (githooks/pre-push) refuses to push any commit that does not match it, so any
 # commit made after the review forces a re-review.

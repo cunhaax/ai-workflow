@@ -118,8 +118,9 @@ can match a diff against them.] -->
 
 <!-- Optional. Tells an agent how to file and update tickets in this project's
      tracker: when you ask it to (e.g. "split this feature into tasks and file
-     them"), and when /feature or /adversarial-qa defers a QA finding ("File a
-     deferred QA finding" / "List open deferred QA findings" below). Only
+     them"), when /feature defers a QA finding ("File a deferred QA finding"
+     below), and when /feature or /adversarial-qa lists the open ones ("List
+     open deferred QA findings" below). Only
      those two QA-finding bullets have a defined fallback: left as a
      `[TODO:]` placeholder or set to `none`, they fall back to GitHub issues
      labeled `known-issue`, via `gh` — you don't need to delete the whole

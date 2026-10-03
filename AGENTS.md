@@ -49,10 +49,9 @@ responsibility.
    `plugins/ai-workflow/skills/init-workflow/templates/` is the canonical
    enumeration of what a scaffolded project receives — `/init-workflow`
    reads it directly. The file tree and `.template` → destination mapping in
-   `docs/AI-workflow.md`, and the `init-workflow/templates/` enumeration
-   paragraph in `README.md`, are human-readable mirrors of it, not a second
+   `docs/AI-workflow.md` are human-readable mirrors of it, not a second
    source; adding, removing, or renaming a file under `templates/` must be
-   reflected in all three. The suffix on `AGENTS.md.template`/
+   reflected in both. The suffix on `AGENTS.md.template`/
    `CLAUDE.md.template` is what stops Claude Code from auto-loading them as
    *this repo's own* live guidance — renaming either to drop the suffix
    inside `templates/` (as opposed to on a scaffolded project's destination

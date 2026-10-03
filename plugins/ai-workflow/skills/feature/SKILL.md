@@ -103,7 +103,7 @@ Deviation from plan:
 - Call `code-critic` with:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
-    (step 3); the critic must not run the suite itself
+    (step 3)
 - Every `code-critic` call (including the re-reviews in steps 6 and 8): diff
   touches a sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions

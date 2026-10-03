@@ -14,8 +14,6 @@ metadata:
 
 Find weaknesses in a draft plan before code is written. Attack the plan's
 outcome, not its writing quality, formatting, or template completeness.
-Standalone (`/plan-critic`) or applied by the `plan-critic` sub-agent in
-`/feature`.
 
 ## Input
 
