@@ -4,5 +4,8 @@
 # QA evidence (screenshots) captured by the /adversarial-qa skill
 .qa-evidence/
 
+# Page snapshots and console logs written by the bundled Playwright MCP server
+.playwright-mcp/
+
 # Local workflow-evaluation records written by /workflow-retro
 .workflow-log/
