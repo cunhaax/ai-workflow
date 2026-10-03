@@ -362,10 +362,10 @@ interactively via `claude --agent <name>`.
 - **`planner`** — senior architect. Reads the prompt, linked docs, module
   `AGENTS.md`s, ADRs, product docs; applies `plan-draft`; returns plan text
   only.
-- **`plan-critic`** — adversarial plan reviewer. No write tools (`Read`, `Bash`
-  only; `permissionMode` is ignored for plugin sub-agents, so read-only is
-  enforced by the tool list and the skill); applies `plan-critic`; surfaces
-  concerns without rewriting.
+- **`plan-critic`** — adversarial plan reviewer. Writes no files: it has no
+  dedicated write tool (`Read`, `Bash` only), and since `permissionMode` is
+  ignored for plugin sub-agents, that is enforced by the skill, not the
+  harness; applies `plan-critic`; surfaces concerns without rewriting.
 - **`code-critic`** — strict reviewer. Read-only Bash inspection only (`git
   diff`, `git log`); never runs the test suite or mutates files; applies
   `code-critic`.
