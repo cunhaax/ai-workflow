@@ -114,8 +114,8 @@ aggregates across files, so keep headings and field labels verbatim):
 | 1c approval | yes / n/a | plan revisions before approval: <N> |
 | 2 implement | yes / n/a | deviations: <N> minor, <N> material |
 | 3 tests | yes / n/a | final full run: <N> tests, <pass/fail> |
-| 4–6 code review | yes / n/a | rounds: <N>; FAIL items: <N>; NEEDS_DECISION: <N> |
-| 7–8 QA | yes / skipped / n/a | <why skipped>; findings: <N> |
+| 4–6 code review | yes / n/a | rounds: <N>; FAIL items: <N>; NEEDS_DECISION: <N>; Open Questions: <N> |
+| 7–8 QA | yes / skipped / n/a | <why skipped>; findings: <N>; blockers: <N> |
 | 9 PR | yes / n/a | |
 
 ## Findings
@@ -123,8 +123,10 @@ aggregates across files, so keep headings and field labels verbatim):
 - plan-critic: <N> findings; adopted into plan: <N>; discarded: <N>
 - code-critic FAIL items, one line each: <what, and the fix>
 - NEEDS_DECISION items, one line each: <what, and the user's decision>
+- Open Questions, one line each: <what, and the user's decision>
 - QA findings, one line each: <what, and its disposition (fixed / deferred
   <task id> / ignored)>
+- QA blockers, one line each: <what, and the user's decision>
 
 ## Judgment
 
@@ -153,4 +155,5 @@ pending — run /workflow-inspect before the session transcripts are pruned
 
 ## Output
 
-- `.workflow-log/<branch>.md` (new or updated), with Cost `pending`
+- `.workflow-log/<branch>.md` (new or updated); Cost left as it is, or
+  `pending` if the record is new

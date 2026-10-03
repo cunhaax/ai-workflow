@@ -7,7 +7,7 @@ description: >
   exist (pruned after about 30 days).
 license: MIT
 compatibility: Requires python3 and Claude Code session transcripts under ~/.claude/projects/.
-allowed-tools: Bash(${CLAUDE_SKILL_DIR}/inspect.py *)
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/inspect.py *)
 metadata:
   author: André Cunha
 ---
@@ -32,8 +32,10 @@ the transcript retention window.
   a figure the script didn't print. Script fails or its output carries
   warnings → surface them to the user as-is (`AGENTS.md` Rule 2 applies)
 - **The only mutation is the log file**: replacing the `## Cost` section of
-  the chosen record(s), after the user confirms. Never commit anything;
-  `.workflow-log/` stays local
+  the chosen record(s), after the user confirms. The one other edit allowed
+  is adding session IDs to the record's `Sessions:` line (step 4), also
+  after the user confirms. Never commit anything; `.workflow-log/` stays
+  local
 
 ## Steps
 
