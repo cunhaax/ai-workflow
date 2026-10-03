@@ -21,9 +21,9 @@ Attempt*). Apply the same stance to the tests (see *Tests*).
 
 ## Input
 
-- Diff to review (step 1)
 - Plan text (optional; inline or file path)
 - Test evidence: summary of the latest full test run (optional)
+- The diff is not an input: step 1 selects it
 
 ## Steps
 
