@@ -13,8 +13,8 @@ metadata:
 # /feature
 
 Pipeline: plan → critique → implement → test → code-review → QA → PR.
-Run steps in order, skipping only where a step says so. `AGENTS.md` is the source for commands, default
-branch, sensitive areas, and task tracking.
+Run steps in order, skipping only where a step says so. `AGENTS.md` is the
+source for commands, default branch, sensitive areas, and task tracking.
 
 ## Input
 
@@ -47,26 +47,33 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Never infer "trivial" yourself; when in doubt, run it
 
 **1c. Approve**
-- Present plan and critique separately, in this order:
+- Before presenting, check the plan: it has a `**Slug:**`, numbered
+  `AC-<slug>-n` criteria, and every `AC-<slug>-n` and `EDGE-<slug>-n` has a
+  tagged Test Strategy entry. Anything missing → call `planner` again with
+  the plan and the gap (never fix it yourself); don't present until it passes
+- Present plan and critique separately, in this order, using the harness's
+  mechanism for exiting plan mode (not chat):
   1. plan's **Approval Summary**
   2. critique's **Confidence** verdict + top findings
   3. full plan
   4. full critique
 - Do not proceed without approval
 - Substantive change (new scope, different approach, reworked requirements):
-  re-enter plan mode → call `planner` again with the previous plan and the
-  requested changes (never re-plan yourself) → re-run `plan-critic` →
-  re-present with a **delta** section first (what changed vs. the previously
-  presented version)
-- Approval conditional on critique amendments: fold them into the plan text
-  yourself (transcription, not re-planning). Sub-agents only see plan text,
-  so conversation-only amendments are invisible to them
+  re-enter plan mode → call `planner` again with the original prompt, the
+  previous plan and the requested changes (never re-plan yourself) → re-run
+  `plan-critic` → re-present with a **delta** section first (what changed vs.
+  the previously presented version)
+- Approval conditional on critique amendments, or edits the user makes at
+  approval (including renaming the `**Slug:**`): fold them into the plan
+  text yourself (transcription, not re-planning). Sub-agents only see plan
+  text, so conversation-only amendments are invisible to them
 - Keep the approved plan text for steps 4 and 7
 
 ### 2. Implement
 
-1. Write end-to-end tests from the plan's Test Strategy first (at minimum
-   the `[AC-<slug>-n]` and `[EDGE-<slug>-n]` ones)
+1. Write the plan's Test Strategy tests first (at minimum the
+   `[AC-<slug>-n]` and `[EDGE-<slug>-n]` ones), at the level the Test
+   Strategy states (end-to-end for user-visible behaviour)
    - Tag each test with the plan ID it proves, exactly as in the plan
      (`[AC-<slug>-n]` / `[EDGE-<slug>-n]`)
    - Never weaken or rewrite them to pass; a wrong test is a plan deviation
@@ -80,8 +87,7 @@ Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
   briefly, continue
 - Material (scope, approach, requirements): STOP → re-plan via the step 1c
-  substantive-change path (previous plan + requested changes to `planner`,
-  then `plan-critic`) → get re-approval
+  substantive-change path → get re-approval
 
 ### 3. Test
 
@@ -95,22 +101,29 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3); the critic must not run the suite itself
-- Diff touches a sensitive area → call it with model override `opus`
+- Every `code-critic` call (including the re-reviews in steps 6 and 8): diff
+  touches a sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
 
 ### 5. NEEDS_DECISION and Open Questions
 
 - Any present → STOP, present ALL to the user, wait for direction on each
 - Never decide them yourself
+- An item the user already answered earlier this session and the critic
+  re-raised → don't ask again; carry the earlier answer forward and say so
 
 ### 6. FAIL
 
 - Any FAIL → fix, re-run step 3, commit, re-call `code-critic` with the new
-  test summary (and the `opus` override if a sensitive area is touched);
-  repeat until none
+  test summary; repeat until none
+- Same FAIL after a fix, or you disagree with a FAIL → present it to the
+  user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
+  to satisfy it
 - After any later change (including step 8 fixes): re-run step 3, commit,
   re-call `code-critic` with the new summary
-- On a pass with no FAIL on the committed HEAD → run `scripts/review-ok.sh`
+- After each re-review, apply step 5 to anything new before continuing
+- Record only when the committed HEAD has no FAIL and every step 5 item is
+  answered → run `scripts/review-ok.sh`
   - Any later commit makes the record stale: re-review, re-run the script
   - Never run it without a passing review of the current HEAD
 - No push or PR until a passing review of HEAD is recorded
@@ -137,7 +150,9 @@ QA was skipped and why. When in doubt, run it.
 ### 8. QA findings
 
 - Any Blockers (QA could not fully run) → STOP per Rule 2: report them to
-  the user as-is and wait. Never treat them as "no findings"
+  the user as-is and wait. Never treat them as "no findings". The user
+  chooses: resolve and re-run step 7, or proceed without (full or partial)
+  QA, which the PR records
 - Any findings → present to the user, wait for a decision on each:
   fix now / defer / ignore
 - Defer → file a task tagged `known-issue`:
@@ -154,8 +169,8 @@ QA was skipped and why. When in doubt, run it.
 
 ### 9. PR
 
-Only after: code review passed, every QA finding dispositioned (or QA
-skipped).
+Only after: code review passed, every QA finding dispositioned and every
+Blocker decided (or QA skipped).
 
 PR body:
 - **Plan summary**: requirements + approach in a few sentences, link to
@@ -167,8 +182,9 @@ PR body:
 - **Review outcome**: final verdict, each `NEEDS_DECISION` and Open Question
   and the user's decision
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
-  ignored), any Blockers and the user's decision, or "skipped: no UI or API
-  surface". Describe in words; no `.qa-evidence/` paths
+  ignored), any Blockers and the user's decision (including a partial or
+  skipped QA run and why), or "skipped: no UI or API surface". Describe in
+  words; no `.qa-evidence/` paths
 - **Test evidence**: one line, test count + result of the final full run
 
 Diff touches a sensitive area:
@@ -184,12 +200,14 @@ Diff touches a sensitive area:
 
 - Never skip `planner` for a new feature
 - Never skip `plan-critic` unless all step 1b criteria hold AND the user opted out
-- Never fetch external links/docs directly
+- Never fetch external links/docs from the prompt directly (the `planner`
+  does); `context7` lookups in step 2 are allowed
 - Never enter plan mode from a sub-agent
 - Never present work to the user before `code-critic` has reviewed it
 - Relay ALL `NEEDS_DECISION` items and Open Questions to the user; never
   decide them
-- Sub-agents are read-only; only the main agent implements changes
+- Sub-agents never modify the project's code; only the main agent implements
+  changes (`adversarial-qa` also writes `.qa-evidence/`)
 
 <!-- SKILL NAMING NOTE (Claude Code): the skill is named `code-critic` so it
      does NOT shadow Claude Code's bundled `code-review` skill (project
