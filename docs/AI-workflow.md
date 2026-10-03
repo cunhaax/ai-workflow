@@ -84,7 +84,7 @@ same way any consumer would.
   knowledge — standards, checklists, rules, templates. **No orchestration
   concerns** — which is what lets one file back two consumers at once.
 - **Sub-agents** (`plugins/ai-workflow/agents/<name>.md`) compose a skill with
-  orchestration: frontmatter sets the tools/model/effort/permission the
+  orchestration: frontmatter sets the tools/model/effort the
   agent runs with and **preloads the skill** via `skills:` (Claude Code
   injects the full skill body at startup — sub-agents don't inherit skills
   from the parent conversation); the body says what context to gather, what
