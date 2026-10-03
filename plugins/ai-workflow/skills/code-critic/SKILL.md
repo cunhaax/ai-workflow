@@ -1,7 +1,7 @@
 ---
 name: code-critic
 description: >
-  Reviews committed code changes against project standards and the approved
+  Reviews code changes against project standards and the approved
   plan; returns PASS/FAIL/NEEDS_DECISION per checklist item plus open
   questions. Use when the user asks for a code review of a branch or change,
   or after implementation and before opening a PR.

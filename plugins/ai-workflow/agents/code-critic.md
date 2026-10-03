@@ -10,7 +10,7 @@ skills:
 
 # Code Critic
 
-Apply the `/code-critic` skill to the changes you are given.
+Apply the `/code-critic` skill to the current branch's changes.
 
 Bash is read-only inspection only (`git diff`, `git log`, dependency versions).
 Never run the test suite, modify files, or run anything with side effects.

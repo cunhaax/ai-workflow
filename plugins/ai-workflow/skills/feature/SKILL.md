@@ -104,8 +104,8 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3)
-- Every `code-critic` call (including the re-reviews in steps 6 and 8): diff
-  touches a sensitive area → model override `opus`
+- Every `code-critic` call (including the step 6 re-reviews and step 9's
+  second look): diff touches a sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
 
 ### 5. NEEDS_DECISION and Open Questions
@@ -123,7 +123,9 @@ Deviation from plan:
 - Same FAIL after a fix, or you disagree with a FAIL → present it to the
   user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
   to satisfy it. A FAIL the user explicitly overrides counts as resolved (the
-  critic will keep returning it) and goes in the PR **Review outcome**
+  critic will keep returning it) and goes in the PR **Review outcome**, but
+  only while the code it covers is unchanged: if the critic re-raises it
+  after that code changed → ask again
 - After any later change (including step 8 fixes): re-run step 3, commit,
   re-call `code-critic` with the new summary
 - After each re-review, apply step 5 to anything new before continuing
@@ -194,7 +196,8 @@ PR body:
 
 Diff touches a sensitive area:
 - State it in the PR body
-- Re-run `code-critic` in a fresh context as a second look before merge
+- Re-run `code-critic` in a fresh context as a second look before merge, and
+  apply steps 5–6 to its output
 
 ## Output
 

@@ -37,6 +37,10 @@ section stays `pending`.
   facts, append the new session ID), no duplicate. Never overwrite a `## Cost`
   section that `/workflow-inspect` already filled: the Step 3 template's
   `pending` text is for new records only
+  - Appending a session ID to a record whose Cost is already filled → keep
+    the numbers and add `pending re-inspection — sessions added since the
+    last inspect` as the first line of the section, so `/workflow-inspect`
+    picks the record up again
   - Exception: the file evidently records a *different* feature that reused
     the branch name (its PR is already merged, or its dates are far from this
     session's) → ask the user: replace it, or pick another filename. Never
@@ -123,7 +127,7 @@ aggregates across files, so keep headings and field labels verbatim):
 ## Findings
 
 - plan-critic: <N> findings; adopted into plan: <N>; discarded: <N>
-- code-critic FAIL items, one line each: <what, and the fix>
+- code-critic FAIL items, one line each: <what, and the fix or the user's override>
 - NEEDS_DECISION items, one line each: <what, and the user's decision>
 - Open Questions, one line each: <what, and the user's decision>
 - QA findings, one line each: <what, and its disposition (fixed / deferred
@@ -157,5 +161,6 @@ pending — run /workflow-inspect before the session transcripts are pruned
 
 ## Output
 
-- `.workflow-log/<branch>.md` (new or updated); Cost left as it is, or
-  `pending` if the record is new
+- `.workflow-log/<branch>.md` (new or updated); Cost left as it is (marked
+  `pending re-inspection` if sessions were added), or `pending` if the
+  record is new
