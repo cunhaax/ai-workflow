@@ -1,10 +1,13 @@
 ---
 name: plan-draft
 description: >
-  Planning rules and plan template for drafting implementation plans.
-  Invoked as /plan-draft for an ad-hoc planning session, or used by the
-  planner sub-agent in the /feature workflow. (Named plan-draft so it does
-  not collide with Claude Code's built-in plan-mode /plan command.)
+  Drafts a structured implementation plan (approval summary with acceptance
+  criteria, contract, files, edge cases, test strategy) before any code is
+  written. Use when the user asks for a plan or design for a feature or
+  change, or before starting implementation.
+license: MIT
+metadata:
+  author: André Cunha
 ---
 
 # /plan-draft

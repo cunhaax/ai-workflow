@@ -1,13 +1,13 @@
 ---
 name: workflow-retro
 description: >
-  Records the outcome half of a feature's workflow evaluation at the end of a
-  /feature session: which steps ran or were skipped, cycle counts, what each
-  critic caught and what was adopted, plus a short judgment section. Writes
-  one fixed-schema file per feature branch to .workflow-log/ (gitignored),
-  including the session IDs the companion /workflow-inspect skill needs to
-  append the cost half later. Run manually, optionally, at the end of a
-  feature session.
+  Records a feature's workflow outcome (steps run or skipped, review rounds,
+  what each critic caught, short judgment) as a fixed-schema file in
+  .workflow-log/. Use at the end of a /feature session, after the PR is
+  opened or the feature is abandoned.
+license: MIT
+metadata:
+  author: André Cunha
 ---
 
 # /workflow-retro

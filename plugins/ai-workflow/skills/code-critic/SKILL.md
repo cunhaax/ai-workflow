@@ -1,12 +1,13 @@
 ---
 name: code-critic
 description: >
-  Code review checklist and coding standards, extended per project by
-  whatever file AGENTS.md's Review & Planning Guidance section names
-  (defaulting to docs/agent-rules/code-critic.md). Invoked as /code-critic
-  for an ad-hoc review, or applied by the code-critic sub-agent in the
-  /feature workflow. (Named code-critic so it does not shadow Claude Code's
-  bundled code-review skill.)
+  Reviews committed code changes against project standards and the approved
+  plan; returns PASS/FAIL/NEEDS_DECISION per checklist item plus open
+  questions. Use when the user asks for a code review of a branch or change,
+  or after implementation and before opening a PR.
+license: MIT
+metadata:
+  author: André Cunha
 ---
 
 # /code-critic

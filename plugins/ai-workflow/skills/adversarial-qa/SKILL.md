@@ -1,11 +1,16 @@
 ---
 name: adversarial-qa
 description: >
-  Exploratory, adversarial QA: exercise a feature through whichever surface(s)
-  it exposes — UI, API, or both — and surface issues the plan and committed
-  tests did not anticipate — not a re-verification of the spec. Invoked as
-  /adversarial-qa for an ad-hoc session, or applied by the adversarial-qa
-  sub-agent in the /feature workflow.
+  Exploratory QA of a running feature through its UI (Playwright) and/or API
+  (curl) to find issues the plan and committed tests missed; returns findings
+  with evidence, known issues, and blockers. Use when the user asks to QA,
+  probe, or try to break a feature, after code review passes.
+license: MIT
+compatibility: >
+  Needs a runnable dev server (AGENTS.md Commands) and, for UI surfaces, the
+  plugin's bundled Playwright MCP server; API probing uses curl.
+metadata:
+  author: André Cunha
 ---
 
 # /adversarial-qa
