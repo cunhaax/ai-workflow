@@ -22,7 +22,8 @@ the transcript retention window.
 
 ## Input
 
-- `.workflow-log/` records whose `## Cost` is `pending`
+- `.workflow-log/` records whose `## Cost` is `pending` or `pending
+  re-inspection`
 - `python3`; `inspect.py` in this skill's directory (read-only: parses
   transcripts, prints markdown to stdout)
 
@@ -43,7 +44,9 @@ the transcript retention window.
 
 - Log directory, as in `/workflow-retro`: `.workflow-log/` under the main
   worktree (parent of `git rev-parse --path-format=absolute --git-common-dir`)
-- List records whose `## Cost` is still `pending`
+- List records whose `## Cost` is still `pending` or is marked `pending
+  re-inspection` (sessions were added after the last inspect; Step 5 replaces
+  the whole section, marker included)
   - One → proceed with it
   - Several → ask which (offer "all"; each is one script run)
   - None → report that every record is already inspected, and stop

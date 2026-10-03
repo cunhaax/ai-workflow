@@ -103,8 +103,10 @@ Fill the template below, following these rules.
      Requirements / Approach / Edge Cases / Test Strategy / Files / Out of
      Scope. feature presents the Approval Summary (Step 1c), writes the
      [AC-<slug>-n] / [EDGE-<slug>-n] tests first (Step 2), and builds the
-     PR's plan ID → test table (Step 9). adversarial-qa reads Requirements
-     for context. Add/rename/remove a section → update those consumers. -->
+     PR's plan ID → test table (Step 9), and checks the **Slug:** line, the
+     AC numbering and the tagged Test Strategy entries before presenting the
+     plan (Step 1c). adversarial-qa reads Requirements for context.
+     Add/rename/remove a section → update those consumers. -->
 
 ```markdown
 # Implementation Plan: [Feature Name]
