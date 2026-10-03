@@ -16,14 +16,19 @@ Draft a structured implementation plan before any code is written.
 
 ## Input
 
-- User prompt (primary source), incl. any links/doc references
+- User prompt (primary source)
+- Source contents: the full text of every link/ticket/doc the prompt
+  references, already read by the caller, verbatim and labelled
 - Prior plan and requested changes (optional; on a re-plan)
 
 ## Steps
 
 ### 1. Gather context
 
-- Prompt links/docs → fetch before planning
+- Never fetch anything yourself. Prompt references a source you were not
+  given (including a link inside a given source) → stop and return only
+  `BLOCKED: need <source>`; never infer requirements from the branch name,
+  the diff, or guesses
 - Read: module-specific `AGENTS.md` in likely-affected directories,
   `docs/adr/`, relevant `docs/` product docs
 - Do not ask the user from a sub-agent; ambiguities go in the plan as

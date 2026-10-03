@@ -32,8 +32,20 @@ Preconditions:
 Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 
 **1a. Draft**
-- Call `planner` with the user prompt verbatim
-- Never fetch links/docs or use tools yourself; the planner does it
+- Read every source the prompt references yourself (links, tickets, docs,
+  files), with whatever tool the session has for it: the tracker's tools for
+  a tracker item (`AGENTS.md` → *Task Tracking*), `WebFetch` for a public
+  page, `Read` for a file
+  - A source you can't read (no tool, login wall, error) → STOP per Rule 2
+    and tell the user now; don't call the planner
+- Call `planner` with the user prompt verbatim, then each source's content
+  verbatim, labelled with its link or name (never summarized)
+  - Pass the same sources on every later `planner` call (1c re-plan,
+    pre-check re-call)
+- Planner returns `BLOCKED: need <source>` (a source it wasn't given, e.g. a
+  link inside one) → read it, re-call with the added content; still blocked
+  after 2 rounds → STOP per Rule 2
+- Never write the plan yourself
 - Returns: plan (markdown)
 
 **1b. Critique**
@@ -50,7 +62,8 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Before presenting, check the plan: it has a `**Slug:**`, numbered
   `AC-<slug>-n` criteria, and every `AC-<slug>-n` and `EDGE-<slug>-n` has a
   tagged Test Strategy entry. Anything missing → call `planner` again with
-  the original prompt, the plan and the gap (never fix it yourself), then
+  the original prompt and sources, the plan and the gap (never fix it
+  yourself), then
   re-run `plan-critic` on the revised plan (unless 1b was skipped); don't
   present until it passes. Still failing after 2 attempts → STOP per Rule 2
   and show the user the gap
@@ -62,8 +75,9 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   4. full critique
 - Do not proceed without approval
 - Substantive change (new scope, different approach, reworked requirements):
-  re-enter plan mode → call `planner` again with the original prompt, the
-  previous plan and the requested changes (never re-plan yourself) → re-run
+  re-enter plan mode → call `planner` again with the original prompt and
+  sources, the previous plan and the requested changes (never re-plan
+  yourself) → re-run
   `plan-critic` → re-present with a **delta** section first (what changed vs.
   the previously presented version)
 - Approval conditional on critique amendments, or edits the user makes at
@@ -208,8 +222,8 @@ Diff touches a sensitive area:
 
 - Never skip `planner` for a new feature
 - Never skip `plan-critic` unless all step 1b criteria hold AND the user opted out
-- Never fetch external links/docs from the prompt directly (the `planner`
-  does); `context7` lookups in step 2 are allowed
+- Never leave a source the prompt references unread: read it yourself and
+  pass it to the `planner` verbatim; the planner never fetches
 - Never enter plan mode from a sub-agent
 - Never present work to the user before `code-critic` has reviewed it
 - Relay ALL `NEEDS_DECISION` items and Open Questions to the user; never
