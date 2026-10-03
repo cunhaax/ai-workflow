@@ -103,14 +103,14 @@ Capture only once something is a confirmed finding, never while exploring.
 
 - **UI**: `browser_take_screenshot` (costs more than `browser_snapshot`; use
   it only for a confirmed finding)
-  - Run `mkdir -p .qa-evidence` first, then pass
-    `filename: .qa-evidence/<name>.png`. The path is relative to the repo
-    root, and the call fails if the directory doesn't exist
+  - Pass `filename: .qa-evidence/<name>.png` (relative to the project
+    directory)
   - A request the page made: `browser_network_request` (headers and bodies
     of one request listed by `browser_network_requests`), saved with its
     `filename` parameter under `.qa-evidence/`
 - **API**: the request and response showing the problem: method, URL,
   relevant headers, status code, body
+- Run `mkdir -p .qa-evidence` first (API evidence is written with `Bash`)
 - Save under `.qa-evidence/` at the repo root (gitignored)
 - Every finding cites ≥1 evidence file there + a one-sentence description of
   what it shows
