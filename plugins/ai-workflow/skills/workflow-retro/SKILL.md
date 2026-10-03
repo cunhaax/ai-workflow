@@ -34,7 +34,9 @@ section stays `pending`.
   commit it or move it into repo history
 - **One file per feature branch.** File exists for the current branch (a
   previous retro, or a multi-session feature) → update it (fill gaps, correct
-  facts, append the new session ID), no duplicate
+  facts, append the new session ID), no duplicate. Never overwrite a `## Cost`
+  section that `/workflow-inspect` already filled: the Step 3 template's
+  `pending` text is for new records only
   - Exception: the file evidently records a *different* feature that reused
     the branch name (its PR is already merged, or its dates are far from this
     session's) → ask the user: replace it, or pick another filename. Never
