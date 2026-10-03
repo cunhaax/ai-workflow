@@ -14,6 +14,7 @@ Standalone (`/plan-draft`) or applied by the `planner` sub-agent in `/feature`.
 ## Input
 
 - User prompt (primary source), incl. any links/doc references
+- Prior plan and requested changes (optional; on a re-plan)
 
 ## Steps
 
@@ -44,8 +45,9 @@ Fill the template below, following these rules.
     does (`proj-123-csv-export`); no ticket → short name alone
   - Unique across the suite: grep the repo for existing `AC-<slug>-` /
     `EDGE-<slug>-` tags; taken → pick another
-  - Fixed after approval. Given a prior plan, keep its slug. A rename by the
-    user at approval is final. Everything downstream reads it from the plan
+  - Fixed after approval. Given a prior plan, keep its slug (this wins over
+    the uniqueness grep: the grep may find the feature's own tags). A rename
+    by the user at approval is final. Everything downstream reads it from the plan
 - Every `AC-<slug>-n` maps to ≥1 Test Strategy entry tagged `[AC-<slug>-n]`;
   none → incomplete plan
 - Sections below must never contradict the summary

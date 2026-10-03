@@ -50,9 +50,10 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   4. full critique
 - Do not proceed without approval
 - Substantive change (new scope, different approach, reworked requirements):
-  re-enter plan mode → call `planner` again (never re-plan yourself) → re-run
-  `plan-critic` → re-present with a **delta** section first (what changed
-  vs. the previously presented version)
+  re-enter plan mode → call `planner` again with the previous plan and the
+  requested changes (never re-plan yourself) → re-run `plan-critic` →
+  re-present with a **delta** section first (what changed vs. the previously
+  presented version)
 - Approval conditional on critique amendments: fold them into the plan text
   yourself (transcription, not re-planning). Sub-agents only see plan text,
   so conversation-only amendments are invisible to them
@@ -74,8 +75,9 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
   briefly, continue
-- Material (scope, approach, requirements): STOP → re-enter plan mode →
-  update plan → get re-approval
+- Material (scope, approach, requirements): STOP → re-plan via the step 1c
+  substantive-change path (previous plan + requested changes to `planner`,
+  then `plan-critic`) → get re-approval
 
 ### 3. Test
 
@@ -87,20 +89,23 @@ Deviation from plan:
 - Commit first (`scripts/review-ok.sh` records the reviewed commit SHA)
 - Call `code-critic` with:
   - approved plan text
-  - summary output of the latest full test run (step 3); the critic must
-    not run the suite itself
+  - summary output of the latest full test run on the state being reviewed
+    (step 3); the critic must not run the suite itself
 - Diff touches a sensitive area → call it with model override `opus`
-- Returns: per-item PASS / FAIL / NEEDS_DECISION
+- Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
 
-### 5. NEEDS_DECISION
+### 5. NEEDS_DECISION and Open Questions
 
-- Any present → STOP, present ALL to the user, wait for answers
+- Any present → STOP, present ALL to the user, wait for direction on each
 - Never decide them yourself
 
 ### 6. FAIL
 
-- Any FAIL → fix, commit, re-call `code-critic`; repeat until none
-- Re-run `code-critic` after any later change (including step 8 fixes)
+- Any FAIL → fix, re-run step 3, commit, re-call `code-critic` with the new
+  test summary (and the `opus` override if a sensitive area is touched);
+  repeat until none
+- After any later change (including step 8 fixes): re-run step 3, commit,
+  re-call `code-critic` with the new summary
 - On a pass with no FAIL on the committed HEAD → run `scripts/review-ok.sh`
   - Any later commit makes the record stale: re-review, re-run the script
   - Never run it without a passing review of the current HEAD
@@ -123,10 +128,12 @@ QA was skipped and why. When in doubt, run it.
      to `gh`
 2. Call `adversarial-qa` with: approved plan text (context, not a checklist)
    and the open findings list
-3. Returns: findings
+3. Returns: Findings / Known issues / Blockers
 
 ### 8. QA findings
 
+- Any Blockers (QA could not fully run) → STOP per Rule 2: report them to
+  the user as-is and wait. Never treat them as "no findings"
 - Any findings → present to the user, wait for a decision on each:
   fix now / defer / ignore
 - Defer → file a task tagged `known-issue`:
@@ -153,11 +160,11 @@ PR body:
   Summary) and per `EDGE-<slug>-n` (plan's Edge Cases): the ID, the
   criterion/edge case, and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged
   test(s). Every ID has a row with at least one test
-- **Review outcome**: final verdict, each `NEEDS_DECISION` and the user's
-  decision
+- **Review outcome**: final verdict, each `NEEDS_DECISION` and Open Question
+  and the user's decision
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
-  ignored), or "skipped: no UI or API surface". Describe in words; no
-  `.qa-evidence/` paths
+  ignored), any Blockers and the user's decision, or "skipped: no UI or API
+  surface". Describe in words; no `.qa-evidence/` paths
 - **Test evidence**: one line, test count + result of the final full run
 
 Diff touches a sensitive area:
@@ -176,7 +183,8 @@ Diff touches a sensitive area:
 - Never fetch external links/docs directly
 - Never enter plan mode from a sub-agent
 - Never present work to the user before `code-critic` has reviewed it
-- Relay ALL `NEEDS_DECISION` items to the user; never decide them
+- Relay ALL `NEEDS_DECISION` items and Open Questions to the user; never
+  decide them
 - Sub-agents are read-only; only the main agent implements changes
 
 <!-- SKILL NAMING NOTE (Claude Code): the skill is named `code-critic` so it
