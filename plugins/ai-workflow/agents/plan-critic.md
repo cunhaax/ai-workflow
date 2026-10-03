@@ -2,7 +2,6 @@
 name: plan-critic
 description: "Critiques a draft implementation plan using pre-mortem, inversion, load-bearing assumption analysis, and consistency checks against ADRs and product docs. Invoked between the planner and plan-mode review. Read-only. Returns the critique as markdown text."
 tools: Read, Bash
-permissionMode: plan
 model: opus
 effort: high
 skills:

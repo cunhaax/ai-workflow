@@ -355,15 +355,17 @@ contract.
 ## Sub-agents
 
 Each `plugins/ai-workflow/agents/<name>.md` file is YAML frontmatter
-(tools/model/effort/permission + the one skill to preload) followed by the
+(tools/model/effort + the one skill to preload) followed by the
 body, written for the **autonomous** case — which also makes it usable
 interactively via `claude --agent <name>`.
 
 - **`planner`** — senior architect. Reads the prompt, linked docs, module
   `AGENTS.md`s, ADRs, product docs; applies `plan-draft`; returns plan text
   only.
-- **`plan-critic`** — adversarial plan reviewer. Read-only (`permissionMode:
-  plan`); applies `plan-critic`; surfaces concerns without rewriting.
+- **`plan-critic`** — adversarial plan reviewer. No write tools (`Read`, `Bash`
+  only; `permissionMode` is ignored for plugin sub-agents, so read-only is
+  enforced by the tool list and the skill); applies `plan-critic`; surfaces
+  concerns without rewriting.
 - **`code-critic`** — strict reviewer. Read-only Bash inspection only (`git
   diff`, `git log`); never runs the test suite or mutates files; applies
   `code-critic`.
