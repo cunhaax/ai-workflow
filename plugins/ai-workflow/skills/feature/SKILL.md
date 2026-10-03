@@ -50,7 +50,10 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Before presenting, check the plan: it has a `**Slug:**`, numbered
   `AC-<slug>-n` criteria, and every `AC-<slug>-n` and `EDGE-<slug>-n` has a
   tagged Test Strategy entry. Anything missing → call `planner` again with
-  the plan and the gap (never fix it yourself); don't present until it passes
+  the original prompt, the plan and the gap (never fix it yourself), then
+  re-run `plan-critic` on the revised plan (unless 1b was skipped); don't
+  present until it passes. Still failing after 2 attempts → STOP per Rule 2
+  and show the user the gap
 - Present plan and critique separately, in this order, using the harness's
   mechanism for exiting plan mode (not chat):
   1. plan's **Approval Summary**
@@ -109,8 +112,9 @@ Deviation from plan:
 
 - Any present → STOP, present ALL to the user, wait for direction on each
 - Never decide them yourself
-- An item the user already answered earlier this session and the critic
-  re-raised → don't ask again; carry the earlier answer forward and say so
+- An item the user already answered earlier this session, re-raised by the
+  critic about code unchanged since that answer → don't ask again; carry the
+  earlier answer forward and say so. Code changed since → ask again
 
 ### 6. FAIL
 
@@ -118,12 +122,13 @@ Deviation from plan:
   test summary; repeat until none
 - Same FAIL after a fix, or you disagree with a FAIL → present it to the
   user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
-  to satisfy it
+  to satisfy it. A FAIL the user explicitly overrides counts as resolved (the
+  critic will keep returning it) and goes in the PR **Review outcome**
 - After any later change (including step 8 fixes): re-run step 3, commit,
   re-call `code-critic` with the new summary
 - After each re-review, apply step 5 to anything new before continuing
-- Record only when the committed HEAD has no FAIL and every step 5 item is
-  answered → run `scripts/review-ok.sh`
+- Record only when the committed HEAD has no unresolved FAIL and every
+  step 5 item is answered → run `scripts/review-ok.sh`
   - Any later commit makes the record stale: re-review, re-run the script
   - Never run it without a passing review of the current HEAD
 - No push or PR until a passing review of HEAD is recorded
@@ -179,8 +184,8 @@ PR body:
   Summary) and per `EDGE-<slug>-n` (plan's Edge Cases): the ID, the
   criterion/edge case, and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged
   test(s). Every ID has a row with at least one test
-- **Review outcome**: final verdict, each `NEEDS_DECISION` and Open Question
-  and the user's decision
+- **Review outcome**: final verdict, each `NEEDS_DECISION`, Open Question and
+  user-overridden FAIL, and the user's decision
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
   ignored), any Blockers and the user's decision (including a partial or
   skipped QA run and why), or "skipped: no UI or API surface". Describe in
