@@ -365,8 +365,10 @@ Each `plugins/ai-workflow/agents/<name>.md` file is YAML frontmatter
 body, written for the **autonomous** case — which also makes it usable
 interactively via `claude --agent <name>`.
 
-- **`planner`** — drafts the plan: applies `plan-draft` (which reads the
-  prompt, linked docs, module `AGENTS.md`s, ADRs, product docs) and returns
+- **`planner`** — drafts the plan: applies `plan-draft` (to the prompt, the
+  source contents the main agent read, module `AGENTS.md`s, ADRs, product
+  docs; it never fetches, and returns `BLOCKED: need <source>` if it lacks
+  one) and returns
   plan text only.
 - **`plan-critic`** — adversarial plan reviewer. Writes no files: it has no
   dedicated write tool (`Read`, `Bash` only), and since `permissionMode` is
@@ -385,8 +387,11 @@ orchestrates the four above; `init-workflow`, `workflow-retro`, and
 `workflow-inspect` are likewise main-agent-only, interactive rather than
 delegated.
 
-Design choices: only `planner` carries `WebFetch` (external specs enter at
-exactly one point); the plan-stage critics run on the stronger model tier (a
+Design choices: external sources (a private tracker card, a spec behind a
+login, a public page) are read by the main agent, which has every session
+tool, and passed to the `planner` verbatim — no sub-agent carries `WebFetch`,
+so a source can never fail to load inside a sub-agent after minutes of
+work; the plan-stage critics run on the stronger model tier (a
 bad plan poisons everything downstream), while `code-critic` runs a tier
 lower by default and is escalated to Opus by `/feature` on security-surface
 diffs. Each agent lists exactly the one skill it applies.
@@ -419,9 +424,9 @@ flowchart TB
 
     User -- "1. feature prompt + links" --> Main
 
-    Main -- "2. prompt (verbatim)" --> Planner
+    Main -- "2. prompt + source contents<br/>(read by the main agent, verbatim)" --> Planner
     Planner -- "3. draft plan" ---> Main
-    Main -- "↻ re-plan: prompt + previous plan<br/>+ requested changes" ----> Planner
+    Main -- "↻ re-plan: prompt + sources + previous plan<br/>+ requested changes" ----> Planner
 
     Main -- "4. draft plan" --> Critic
     Critic -- "5. critique" ---> Main
