@@ -84,7 +84,7 @@ same way any consumer would.
   knowledge — standards, checklists, rules, templates. **No orchestration
   concerns** — which is what lets one file back two consumers at once.
 - **Sub-agents** (`plugins/ai-workflow/agents/<name>.md`) compose a skill with
-  orchestration: frontmatter sets the tools/model/effort/permission the
+  orchestration: frontmatter sets the tools/model/effort the
   agent runs with and **preloads the skill** via `skills:` (Claude Code
   injects the full skill body at startup — sub-agents don't inherit skills
   from the parent conversation); the body says what context to gather, what
@@ -355,15 +355,17 @@ contract.
 ## Sub-agents
 
 Each `plugins/ai-workflow/agents/<name>.md` file is YAML frontmatter
-(tools/model/effort/permission + the one skill to preload) followed by the
+(tools/model/effort + the one skill to preload) followed by the
 body, written for the **autonomous** case — which also makes it usable
 interactively via `claude --agent <name>`.
 
 - **`planner`** — senior architect. Reads the prompt, linked docs, module
   `AGENTS.md`s, ADRs, product docs; applies `plan-draft`; returns plan text
   only.
-- **`plan-critic`** — adversarial plan reviewer. Read-only (`permissionMode:
-  plan`); applies `plan-critic`; surfaces concerns without rewriting.
+- **`plan-critic`** — adversarial plan reviewer. Writes no files: it has no
+  dedicated write tool (`Read`, `Bash` only), and since `permissionMode` is
+  ignored for plugin sub-agents, that is enforced by the skill, not the
+  harness; applies `plan-critic`; surfaces concerns without rewriting.
 - **`code-critic`** — strict reviewer. Read-only Bash inspection only (`git
   diff`, `git log`); never runs the test suite or mutates files; applies
   `code-critic`.
