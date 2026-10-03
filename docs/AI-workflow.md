@@ -84,11 +84,12 @@ same way any consumer would.
   knowledge — standards, checklists, rules, templates. **No orchestration
   concerns** — which is what lets one file back two consumers at once.
 - **Sub-agents** (`plugins/ai-workflow/agents/<name>.md`) compose a skill with
-  orchestration: frontmatter sets the tools/model/effort/permission the
+  orchestration: frontmatter sets the tools/model/effort the
   agent runs with and **preloads the skill** via `skills:` (Claude Code
   injects the full skill body at startup — sub-agents don't inherit skills
-  from the parent conversation); the body says what context to gather, what
-  to output, what not to touch.
+  from the parent conversation); the body is a one-line pointer to the skill,
+  plus any limits specific to the agent (e.g. `code-critic`'s read-only Bash).
+  The skill itself carries the input, steps, and output.
 - **Slash commands** are the skills invoked directly (`/plan-draft`,
   `/code-critic`, …) for ad-hoc use, skipping orchestration. `/feature` is
   the exception — its skill *is* the full orchestrated workflow.
@@ -176,9 +177,11 @@ bulky reference material into sibling files in the skill's directory).
 Produces the implementation plan before any code is written. Opens with a
 phone-sized **Approval Summary**, pins a **Contract** section before the
 Approach, and treats **tests as the plan's deterministic oracle** — every
-user-visible claim maps to a committed test tagged `[AC-<slug>-n]`
-(slug-namespaced so it stays unique across the whole test suite); manual "try X,
-confirm Y" checklists are banned. Ambiguities surface as `NEEDS_DECISION` in
+user-visible claim maps to a committed test tagged `[AC-<slug>-n]`, and every
+edge case to one tagged `[EDGE-<slug>-n]`. The planner picks the `<slug>` once
+(ticket ID plus a short feature name, unique across the test suite) and records
+it in the plan's Approval Summary; manual "try X, confirm Y" checklists are
+banned. Ambiguities surface as `NEEDS_DECISION` in
 the plan text, never as questions from inside a sub-agent. (Named
 `plan-draft`, not `plan`, to avoid colliding with Claude Code's built-in
 plan-mode command.)
@@ -224,8 +227,9 @@ your own CI — whatever fits your project) is on you, not this plugin:
   your stack and list them as build-enforced rules in your code review
   guidance file.] -->
 - **The pre-push review gate** (`githooks/pre-push`, enabled once per clone
-  via `git config core.hooksPath githooks`): after a code-critic pass with
-  no FAIL items, the agent records the reviewed HEAD with
+  via `git config core.hooksPath githooks`): after a passing code-critic
+  review (no unresolved FAIL items — a FAIL the user explicitly overrides
+  counts as resolved), the agent records the reviewed HEAD with
   `scripts/review-ok.sh`; the hook refuses to push any other commit, so
   post-review changes force a re-review. Human bypass: `git push
   --no-verify`. The hook deterministically enforces **freshness** (the
@@ -307,12 +311,14 @@ critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
 may not create one — Rule 3); plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
-user explicitly asks; `[AC-<slug>-n]` acceptance tests (slug-namespaced so
+user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
 tags stay unique across the whole suite, not just within one plan) are
 written before implementation and may not be weakened to pass; no push or PR
-until code-critic passes with no FAIL items, escalated to Opus on security-surface
-diffs; QA runs only for changes with a UI and/or API surface; the PR body carries the
-pipeline's conclusions (plan summary, AC → test table, review outcome, QA
+until code-critic passes with no unresolved FAIL items, escalated to Opus on
+security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
+and every QA Blocker, is relayed to the user rather than decided by the agent;
+QA runs only for changes with a UI and/or API surface; the PR body carries the
+pipeline's conclusions (plan summary, plan ID → test table, review outcome, QA
 dispositions, test evidence).
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
@@ -355,19 +361,23 @@ contract.
 ## Sub-agents
 
 Each `plugins/ai-workflow/agents/<name>.md` file is YAML frontmatter
-(tools/model/effort/permission + the one skill to preload) followed by the
+(tools/model/effort + the one skill to preload) followed by the
 body, written for the **autonomous** case — which also makes it usable
 interactively via `claude --agent <name>`.
 
-- **`planner`** — senior architect. Reads the prompt, linked docs, module
-  `AGENTS.md`s, ADRs, product docs; applies `plan-draft`; returns plan text
-  only.
-- **`plan-critic`** — adversarial plan reviewer. Read-only (`permissionMode:
-  plan`); applies `plan-critic`; surfaces concerns without rewriting.
-- **`code-critic`** — strict reviewer. Read-only Bash inspection only (`git
+- **`planner`** — drafts the plan: applies `plan-draft` (to the prompt, the
+  source contents the main agent read, module `AGENTS.md`s, ADRs, product
+  docs; it never fetches, and returns `BLOCKED: need <source>` if it lacks
+  one) and returns
+  plan text only.
+- **`plan-critic`** — adversarial plan reviewer. Writes no files: it has no
+  dedicated write tool (`Read`, `Bash` only), and since `permissionMode` is
+  ignored for plugin sub-agents, that is enforced by the skill, not the
+  harness; applies `plan-critic`; surfaces concerns without rewriting.
+- **`code-critic`** — reviewer. Read-only Bash inspection only (`git
   diff`, `git log`); never runs the test suite or mutates files; applies
   `code-critic`.
-- **`adversarial-qa`** — QA engineer. Applies `adversarial-qa` to drive the
+- **`adversarial-qa`** — applies `adversarial-qa` to drive the
   running app through whichever surface(s) it exposes — via Playwright MCP
   tools for UI, `curl`/Bash for API — and surface what the plan and tests
   missed.
@@ -377,8 +387,11 @@ orchestrates the four above; `init-workflow`, `workflow-retro`, and
 `workflow-inspect` are likewise main-agent-only, interactive rather than
 delegated.
 
-Design choices: only `planner` carries `WebFetch` (external specs enter at
-exactly one point); the plan-stage critics run on the stronger model tier (a
+Design choices: external sources (a private tracker card, a spec behind a
+login, a public page) are read by the main agent, which has every session
+tool, and passed to the `planner` verbatim — no sub-agent carries `WebFetch`,
+so a source can never fail to load inside a sub-agent after minutes of
+work; the plan-stage critics run on the stronger model tier (a
 bad plan poisons everything downstream), while `code-critic` runs a tier
 lower by default and is escalated to Opus by `/feature` on security-surface
 diffs. Each agent lists exactly the one skill it applies.
@@ -411,8 +424,9 @@ flowchart TB
 
     User -- "1. feature prompt + links" --> Main
 
-    Main -- "2. prompt (verbatim)" --> Planner
+    Main -- "2. prompt + source contents<br/>(read by the main agent, verbatim)" --> Planner
     Planner -- "3. draft plan" ---> Main
+    Main -- "↻ re-plan: prompt + sources + previous plan<br/>+ requested changes" ----> Planner
 
     Main -- "4. draft plan" --> Critic
     Critic -- "5. critique" ---> Main
@@ -422,14 +436,14 @@ flowchart TB
 
     Main -- "8. implement approved plan" --> Main
 
-    Main -- "9. approved plan + diff" --> Reviewer
+    Main -- "9. approved plan + test-run summary" --> Reviewer
     Reviewer -- "10. review: PASS / FAIL /<br/>NEEDS_DECISION / Open Question" ---> Main
     Main -- "↻ fix FAIL or QA-driven change, re-run" ----> Reviewer
 
-    Main -- "11. approved plan (context)" --> QA
-    QA -- "12. findings + .qa-evidence/" ---> Main
+    Main -- "11. approved plan (context)<br/>+ open known-issues list" --> QA
+    QA -- "12. findings / known issues /<br/>blockers + .qa-evidence/" ---> Main
 
-    Main -- "↻ relay NEEDS_DECISION /<br/>QA findings" ----> User
+    Main -- "↻ relay NEEDS_DECISION / Open Questions /<br/>QA findings / blockers" ----> User
     Main -- "13. open PR (review passed,<br/>QA dispositioned)" --> PR
 
     Planner -.-> ADR & Docs & Code
@@ -455,12 +469,12 @@ other; the main agent is the only hub. Step 8 is a self-loop because
 implementation is the main agent's own work, done between plan approval and
 code review rather than delegated.
 
-Skip criteria for plan-critic (Step 3): the change is plausibly under ~50
-lines of non-test code, touches no *Sensitive Area*, introduces no new
+Skip criteria for plan-critic (step 4 above): the change is plausibly under
+~50 lines of non-test code, touches no *Sensitive Area*, introduces no new
 public endpoint/persisted field/dependency, **and** the user explicitly
-asked to skip it. QA (Step 8) does not re-check Requirements — that's locked
-down by committed tests and code-critic; it looks for what they didn't
-anticipate.
+asked to skip it. QA (steps 11–12) does not re-check Requirements — that's
+locked down by committed tests and code-critic; it looks for what they
+didn't anticipate.
 
 **Naming collisions, resolved by renaming rather than documenting around
 them:** `code-critic` (not `code-review`, which Claude Code bundles and
