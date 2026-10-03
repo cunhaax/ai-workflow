@@ -63,6 +63,8 @@ Start the server with the project's dev-server command; app URL from
     click/type/snapshot round trip per step
   - Use granular tools (`browser_click`, `browser_snapshot`, …) only for the
     exploration in step 4
+  - To locate an element by text or regex, use `browser_find` instead of
+    capturing a full `browser_snapshot`
 - **API**: `curl` via `Bash` against the same app URL
   - Server won't start, or a request needs credentials you don't have →
     STOP, report the blocker
@@ -74,7 +76,8 @@ Try what the planner likely didn't enumerate.
 - **UI**: narrow viewports · keyboard-only navigation · browser back ·
   multiple tabs on the same form · paste of weird/long/XSS content · reload
   mid-edit · error-toast timing · interaction with unrelated UI on the page
-  · stale state after a failed submit
+  · stale state after a failed submit · light/dark colour scheme and reduced
+  motion (`browser_emulate_media`)
 - **API**: malformed, missing, or extra fields · wrong `Content-Type` ·
   auth/authz boundaries (missing/expired token, wrong role or tenant) ·
   idempotency and duplicate submission · pagination and limit edge cases ·
@@ -100,6 +103,12 @@ Capture only once something is a confirmed finding, never while exploring.
 
 - **UI**: `browser_take_screenshot` (costs more than `browser_snapshot`; use
   it only for a confirmed finding)
+  - Run `mkdir -p .qa-evidence` first, then pass
+    `filename: .qa-evidence/<name>.png`. The path is relative to the repo
+    root, and the call fails if the directory doesn't exist
+  - A request the page made: `browser_network_request` (headers and bodies
+    of one request listed by `browser_network_requests`), saved with its
+    `filename` parameter under `.qa-evidence/`
 - **API**: the request and response showing the problem: method, URL,
   relevant headers, status code, body
 - Save under `.qa-evidence/` at the repo root (gitignored)

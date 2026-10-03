@@ -136,8 +136,9 @@ scaffolded) and act on its one-line verdict:
 - Known limitation, accepted: the marker check is presence, not version, so
   a stale copy from before a plugin update still reads `ACTIVE`
 
-**`.gitignore`**: append `.review-passed`, `.qa-evidence/`, `.workflow-log/`
-if missing (create the file if needed); Step 5 checks for them.
+**`.gitignore`**: append `.review-passed`, `.qa-evidence/`,
+`.playwright-mcp/`, `.workflow-log/` if missing (create the file if needed);
+Step 5 checks for them.
 
 Known limitation: no memory of a prior decline. A file the user chose not to
 scaffold (e.g. a deleted `docs/product-context/README.md`) is proposed again
@@ -288,7 +289,8 @@ report what you can't fix.
      report exactly what the script printed; leave reconciling to the human
      (see Step 1 on why chaining isn't offered)
 3. `CLAUDE.md` exists and contains `@AGENTS.md`
-4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, `.workflow-log/`
+4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, `.playwright-mcp/`,
+   `.workflow-log/`
 5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh` and
    the `deny` rules for the push-bypass flags
 6. `AGENTS.md` → *Commands* exists and has no unfilled placeholder
