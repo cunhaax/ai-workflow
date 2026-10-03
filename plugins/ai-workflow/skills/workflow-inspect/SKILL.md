@@ -1,13 +1,15 @@
 ---
 name: workflow-inspect
 description: >
-  Appends the cost half to a workflow-retro record: parses the feature
-  session's Claude Code transcripts with a bundled read-only script
-  (tokens per agent, wall-clock, handoff tax) and writes the result into
-  the record's Cost section. Companion of /workflow-retro; run it while
-  the transcripts still exist (they are pruned after Claude Code's
-  retention window, ~30 days by default). Requires python3.
+  Fills a workflow-retro record's Cost section with tokens, wall-clock time
+  and handoff cost parsed from Claude Code session transcripts by a bundled
+  read-only script. Use after /workflow-retro, while the transcripts still
+  exist (pruned after about 30 days).
+license: MIT
+compatibility: Requires python3 and Claude Code session transcripts under ~/.claude/projects/.
 allowed-tools: Bash(${CLAUDE_SKILL_DIR}/inspect.py *)
+metadata:
+  author: André Cunha
 ---
 
 # /workflow-inspect

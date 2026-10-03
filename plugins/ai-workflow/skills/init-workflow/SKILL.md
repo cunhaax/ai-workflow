@@ -1,14 +1,14 @@
 ---
 name: init-workflow
 description: >
-  Bootstraps and validates the AI workflow in a project that has this
-  plugin installed: scaffolds whichever project-owned files are missing,
-  detects the project's commands, fills AGENTS.md, points it at
-  review/planning guidance (seeding docs/agent-rules/ or reusing an
-  existing doc), and verifies the review gate. Re-run any time as a
-  doctor — it reports what is missing or drifted. (Named init-workflow so
-  it does not collide with Claude Code's built-in /init command, which
-  generates a CLAUDE.md.)
+  Sets up and checks the AI workflow in a project that has this plugin
+  installed: scaffolds missing AGENTS.md, CLAUDE.md, hooks, settings and
+  docs; detects project commands; seeds review/planning guidance; verifies
+  the review gate. Use when adopting the plugin in a project, or re-run as a
+  doctor when the setup may be missing or drifted.
+license: MIT
+metadata:
+  author: André Cunha
 ---
 
 # /init-workflow

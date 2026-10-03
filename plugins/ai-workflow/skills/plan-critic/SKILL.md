@@ -1,10 +1,13 @@
 ---
 name: plan-critic
 description: >
-  Critiques an implementation plan using pre-mortem, inversion, load-bearing
-  assumption analysis, and consistency checks. Invoked as /plan-critic for
-  ad-hoc plan critique, or used by the plan-critic sub-agent in the
-  /feature workflow.
+  Critiques a draft implementation plan with pre-mortem, inversion,
+  load-bearing-assumption and consistency checks; returns findings,
+  suggested amendments, and a confidence verdict. Use when the user asks to
+  review, challenge, or stress-test a plan before implementation.
+license: MIT
+metadata:
+  author: André Cunha
 ---
 
 # /plan-critic

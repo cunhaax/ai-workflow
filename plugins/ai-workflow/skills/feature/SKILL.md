@@ -1,9 +1,13 @@
 ---
 name: feature
 description: >
-  Runs the full feature workflow: plan, critique, implement, review, QA. Use
-  this when starting a new feature. Guides you through each phase with explicit
-  gates between steps.
+  Runs the full AI-assisted workflow for a non-trivial feature or change:
+  plan, plan critique, user approval, tests-first implementation, code
+  review, exploratory QA, and PR. Use when the user asks to build or start a
+  feature, or to implement a change that needs a plan, review, and PR.
+license: MIT
+metadata:
+  author: André Cunha
 ---
 
 # /feature
