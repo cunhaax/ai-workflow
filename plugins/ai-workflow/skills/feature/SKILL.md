@@ -196,29 +196,40 @@ QA was skipped and why. When in doubt, run it.
 Only after: code review passed, every QA finding dispositioned and every
 Blocker decided (or QA skipped).
 
-PR body:
-- **Plan summary**: requirements + approach in a few sentences, link to
-  source spec if any
-- **Plan ID → test table**: one row per `AC-<slug>-n` (plan's Approval
-  Summary) and per `EDGE-<slug>-n` (plan's Edge Cases): the ID, the
-  criterion/edge case, and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged
-  test(s). Every ID has a row with at least one test
+The PR description usually becomes the merge commit message: keep it short
+and commit-ready. Pipeline details go in the first PR comment.
+
+**PR description** (about 10–15 lines):
+- **What and why**: requirements + approach in a few sentences, the decisions
+  that shape the change (one line each), link to the source spec if any
+- **Sensitive area**, if the diff touches one: state which, as a fact
+- **Test evidence**: one line, test count + result of the final full run
+- No commit SHAs, no review/QA process narration, no instructions to the
+  reviewer
+
+**First PR comment**, titled *Review & traceability*, posted right after
+opening the PR (e.g. `gh pr comment`); if the host can't post comments, put
+it under a `## Review & traceability` heading at the end of the description
+and tell the user to trim it at merge:
+- **Plan ID → test table**: the slug once in the heading, then one row per
+  `AC-n` (plan's Approval Summary) and per `EDGE-n` (plan's Edge Cases) with
+  the criterion/edge case and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged
+  test(s), by test class or file (method names only where needed). Every ID
+  has a row with at least one test
 - **Review outcome**: final verdict, each `NEEDS_DECISION`, Open Question and
   user-overridden FAIL, and the user's decision
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
   ignored), any Blockers and the user's decision (including a partial or
   skipped QA run and why), or "skipped: no UI or API surface". Describe in
   words; no `.qa-evidence/` paths
-- **Test evidence**: one line, test count + result of the final full run
 
 Diff touches a sensitive area:
-- State it in the PR body
 - Re-run `code-critic` in a fresh context as a second look before merge, and
   apply steps 5–6 to its output
 
 ## Output
 
-- Open PR with the body above
+- Open PR with the description and the first comment above
 - Summary of skipped steps, plan deviations, `context7` lookup failures, and why
 
 ## Rules

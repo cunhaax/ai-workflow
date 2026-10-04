@@ -317,9 +317,11 @@ written before implementation and may not be weakened to pass; no push or PR
 until code-critic passes with no unresolved FAIL items, escalated to Opus on
 security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;
-QA runs only for changes with a UI and/or API surface; the PR body carries the
-pipeline's conclusions (plan summary, plan ID → test table, review outcome, QA
-dispositions, test evidence).
+QA runs only for changes with a UI and/or API surface; the PR description is
+a short, commit-ready summary (what and why, sensitive-area flag, test
+evidence), since it usually becomes the merge commit message, and the first PR
+comment carries the pipeline's conclusions (plan ID → test table, review
+outcome, QA dispositions).
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 

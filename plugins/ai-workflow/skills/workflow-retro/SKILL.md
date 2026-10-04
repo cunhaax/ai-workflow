@@ -22,7 +22,7 @@ section stays `pending`.
 
 ## Input
 
-- This session's artifacts: PR body, `git log`, plan / critique / review / QA
+- This session's artifacts: PR description and comments, `git log`, plan / critique / review / QA
   outputs
 - Current branch
 
