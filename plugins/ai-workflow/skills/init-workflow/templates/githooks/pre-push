@@ -47,7 +47,7 @@ if [ "$blocked" -ne 0 ]; then
     echo "" >&2
     echo "The commit being pushed has not passed code review (Rule 4)." >&2
     echo "  1. Run the code-critic sub-agent (or /code-critic) on the committed state." >&2
-    echo "  2. After it passes with no FAIL items, record it: scripts/review-ok.sh" >&2
+    echo "  2. After a passing review (no unresolved FAIL items), record it: scripts/review-ok.sh" >&2
     echo "  3. Push again." >&2
     echo "Human bypass: git push --no-verify" >&2
 fi

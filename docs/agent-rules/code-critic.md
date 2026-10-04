@@ -8,12 +8,9 @@ repo itself — the AI workflow template.
 
 - A file added, removed, or renamed under
   `plugins/ai-workflow/skills/init-workflow/templates/` must be reflected
-  in all three places that enumerate it: the file tree in
-  `docs/AI-workflow.md`, its `.template` → destination mapping paragraph
-  immediately below the tree, and the `init-workflow/templates/`
-  enumeration paragraph in `README.md` (not its collapsed file-tree
-  diagram, which doesn't expand `templates/`). `FAIL` if any of the three
-  goes stale.
+  in both places that enumerate it: the file tree in
+  `docs/AI-workflow.md` and its `.template` → destination mapping paragraph
+  immediately below the tree. `FAIL` if either goes stale.
 - `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`, and
   `scripts/check-hook-status.sh` at repo root must remain symlinks into
   `plugins/ai-workflow/skills/init-workflow/templates/`. Replacing any of
@@ -40,9 +37,8 @@ surface of its own.
 ## Checklist
 
 - [ ] Any file added/removed/renamed under `templates/` is reflected in
-      `docs/AI-workflow.md`'s file tree, its `.template` → destination
-      mapping paragraph, and README.md's `init-workflow/templates/`
-      enumeration paragraph.
+      `docs/AI-workflow.md`'s file tree and its `.template` → destination
+      mapping paragraph.
 - [ ] `.claude/settings.json`, `githooks/pre-push`, `scripts/review-ok.sh`,
       and `scripts/check-hook-status.sh` at root are still symlinks into
       `templates/`, not regular files.
