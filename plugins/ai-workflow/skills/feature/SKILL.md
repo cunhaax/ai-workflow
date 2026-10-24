@@ -45,7 +45,7 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   exists and has a `.gitignore` containing `*`, so plans are never committed.
   The slug must match `a-z0-9-`, max 30 characters (a rename that doesn't → ask
   again). File exists → ask: overwrite or rename the slug (fold the new slug
-  into the plan text, `**Slug:**` and all tags, as at 1c); never overwrite
+  into the plan text: `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
   silently
   ```
   ---
