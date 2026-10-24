@@ -35,13 +35,16 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   `git status --porcelain` non-empty → tell the user at approval that the plan
   was drafted against uncommitted changes
 - `depends-on` = slugs named in the prompt or approval message (never ask for
-  them). Read each one's plan file (path below) and pass it to `planner` as a
-  labelled source; a missing file → warn the user
+  them; `[]` if none). Named in the prompt → read each one's plan file (path
+  below) and pass it to `planner` as a labelled source; a missing file → warn
+  the user. Named only at approval → just record it, no re-plan
 - After approval and leaving plan mode, write the plan to
   `.workflow-plans/<slug>.md` under the **main worktree**, resolved as in
-  `/workflow-retro` Step 1 (including its sanity check). Create the directory
-  with a `.gitignore` containing `*`, so plans are never committed. File exists →
-  ask: overwrite or rename the slug; never overwrite silently
+  `/workflow-retro` Step 1 (including its sanity check). Ensure the directory
+  exists and has a `.gitignore` containing `*`, so plans are never committed.
+  The slug must match `a-z0-9-`, max 30 characters (a rename that doesn't → ask
+  again). File exists → ask: overwrite or rename the slug; never overwrite
+  silently
   ```
   ---
   slug: <slug>

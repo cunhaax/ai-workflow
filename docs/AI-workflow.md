@@ -116,9 +116,9 @@ Architecture Decision Records; `docs/product-context/` holds the product
 vision/strategy the planner and plan-critic ground their work in. Plans are
 never committed — the planner returns plan text to the main agent, which
 presents it via plan mode. Only `/feature --plan-only` saves one: the
-approved plan goes to `.workflow-plans/<slug>.md` under the main worktree,
-self-ignored with a `.gitignore` inside the directory, like the local-only
-`.workflow-log/`.
+approved plan goes to `.workflow-plans/<slug>.md` under the main worktree —
+local-only like `.workflow-log/`, but self-ignored by a `.gitignore` inside
+the directory.
 
 ## AGENTS.md
 
