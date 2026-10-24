@@ -142,7 +142,7 @@ where it doesn't is platform-dependent and not verified here.
 `/init-workflow`'s doctor checklist is the safety net regardless of
 platform: item 1 checks that all three scripts exist and are executable,
 and item 5 checks that `.claude/settings.json` actually contains its
-`ask`/`deny` rules rather than merely existing — so a degraded
+`deny` rules rather than merely existing — so a degraded
 materialization of any of the four surfaces on the next `/init-workflow`
 run.
 
