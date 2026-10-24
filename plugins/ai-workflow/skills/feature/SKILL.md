@@ -36,8 +36,8 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   was drafted against uncommitted changes
 - `depends-on` = slugs named in the prompt or approval message (never ask for
   them; `[]` if none). Named in the prompt → read each one's plan file (path
-  below) and pass it to `planner` as a labelled source; a missing file → warn
-  the user. Named only at approval → just record it, no re-plan. Each slug
+  below) and pass it to `planner` as a labelled source; a missing or
+  unreadable file → warn the user (not a 1a STOP). Named only at approval → just record it, no re-plan. Each slug
   must match `a-z0-9-`, max 30 characters, before it is used in a path
 - After approval and leaving plan mode, write the plan to
   `.workflow-plans/<slug>.md` under the **main worktree**, resolved as in
