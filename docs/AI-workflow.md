@@ -235,9 +235,9 @@ your own CI — whatever fits your project) is on you, not this plugin:
   --no-verify`. The hook deterministically enforces **freshness** (the
   pushed commit is exactly the reviewed one), not the review's **verdict**
   — `review-ok.sh` records whatever it's told. The verdict is covered by
-  the `ask` rule in `.claude/settings.json` (recording a pass always
-  surfaces a human approval prompt, and the bypass flags are denied to
-  agents, best-effort), and `review-ok.sh` warns whenever
+  the human merge review (recording a pass does not prompt, so unattended
+  and parallel runs don't stall; the bypass flags are denied to agents via
+  `.claude/settings.json`, best-effort), and `review-ok.sh` warns whenever
   `scripts/check-hook-status.sh` reports the gate isn't actually active —
   not just an unset `core.hooksPath`, but a foreign hook occupying the spot
   too. (CI, if your project runs it, is further independent evidence that

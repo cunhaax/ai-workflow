@@ -1,15 +1,5 @@
 {
   "permissions": {
-    "ask": [
-      "Bash(scripts/review-ok.sh)",
-      "Bash(scripts/review-ok.sh:*)",
-      "Bash(./scripts/review-ok.sh)",
-      "Bash(./scripts/review-ok.sh:*)",
-      "Bash(sh scripts/review-ok.sh)",
-      "Bash(sh scripts/review-ok.sh:*)",
-      "Bash(bash scripts/review-ok.sh)",
-      "Bash(bash scripts/review-ok.sh:*)"
-    ],
     "deny": [
       "Bash(git push --no-verify)",
       "Bash(git push --no-verify:*)",

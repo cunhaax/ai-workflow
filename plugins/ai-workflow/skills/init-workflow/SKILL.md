@@ -74,11 +74,14 @@ them here would leave orphaned stubs. Check each other destination on its
 a project-scope plugin install can create it first)
 - Exists → read it; propose adding whichever of
   `${CLAUDE_SKILL_DIR}/templates/settings.json.template`'s
-  `permissions.ask`/`permissions.deny` entries are missing, preserving
-  everything else. Never a flat overwrite
+  `permissions.deny` entries are missing, preserving everything else. Never
+  a flat overwrite
+- Contains the old `permissions.ask` rules for `scripts/review-ok.sh`
+  (earlier template versions) → offer to remove them: the prompt stalls
+  unattended and parallel runs, and the merge review is the human gate
 - Missing → scaffold from the template
 - Doesn't parse as JSON, root isn't an object, or `permissions` /
-  `permissions.ask` / `permissions.deny` exist but aren't an object and two
+  `permissions.deny` exist but aren't an object and two
   arrays → no merge, no guessed fix. Flag as an unresolved item in this
   step's proposal (like a hook conflict) and continue; a malformed file on
   this security-relevant path needs the user's own eyes
@@ -291,8 +294,9 @@ report what you can't fix.
 3. `CLAUDE.md` exists and contains `@AGENTS.md`
 4. `.gitignore` covers `.review-passed`, `.qa-evidence/`, `.playwright-mcp/`,
    `.workflow-log/`
-5. `.claude/settings.json` has the `ask` rules for `scripts/review-ok.sh` and
-   the `deny` rules for the push-bypass flags
+5. `.claude/settings.json` has the `deny` rules for the push-bypass flags,
+   and no leftover `ask` rule for `scripts/review-ok.sh` (an old template
+   rule; offer to remove it)
 6. `AGENTS.md` → *Commands* exists and has no unfilled placeholder
    - `/feature`, `code-critic`, and `adversarial-qa` read it by role and fail
      at runtime without it, so a missing section counts as unfilled (a
