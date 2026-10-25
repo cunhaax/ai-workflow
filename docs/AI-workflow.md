@@ -121,8 +121,9 @@ local-only like `.workflow-log/`, but self-ignored by a `.gitignore` inside
 the directory. `/feature --from-plan <slug>` later runs it from a feature
 branch in any worktree, reading it by absolute path and marking it
 `consumed: <PR URL>` once the PR opens (deleting it is a manual `rm`).
-Unattended runs in a worktree other than the main one need permission to read
-and edit that directory (e.g. `--add-dir <main-worktree>/.workflow-plans`).
+Reading it from another worktree works by default; the `consumed:` edit
+there may need permission, so unattended runs may need to allow edits to that
+directory (e.g. `--add-dir <main-worktree>/.workflow-plans`).
 
 ## AGENTS.md
 
