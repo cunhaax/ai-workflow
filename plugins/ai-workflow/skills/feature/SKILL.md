@@ -37,15 +37,18 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
 - `depends-on` = slugs named in the prompt or approval message (never ask for
   them; `[]` if none). Named in the prompt → read each one's plan file (path
   below) and pass it to `planner` as a labelled source; a missing or
-  unreadable file → warn the user (not a 1a STOP). Named only at approval → just record it, no re-plan. Each slug
-  must match `a-z0-9-`, max 30 characters, before it is used in a path
+  unreadable file → warn the user (not a 1a STOP). Named only at approval →
+  just record it, no re-plan. Each slug must match `a-z0-9-`, max 30
+  characters, before it is used in a path
 - After approval and leaving plan mode, write the plan to
-  `.workflow-plans/<slug>.md` under the **main worktree**, resolved as in
-  `/workflow-retro` Step 1 (including its sanity check). Ensure the directory
-  exists and has a `.gitignore` containing `*`, so plans are never committed.
-  The slug must match `a-z0-9-`, max 30 characters (a rename that doesn't → ask
-  again). File exists → ask: overwrite or rename the slug (fold the new slug
-  into the plan text: `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
+  `.workflow-plans/<slug>.md` under the **main worktree**: the parent of the
+  `.git` dir printed by `git rev-parse --path-format=absolute --git-common-dir`.
+  That path still contains a `.git` segment (e.g. a submodule) → ask the user
+  where to write. Ensure the directory exists and has a `.gitignore`
+  containing `*`, so plans are never committed. The slug must match `a-z0-9-`,
+  max 30 characters (a rename that doesn't → ask again). File exists → ask:
+  overwrite or rename the slug (fold the new slug into the plan text:
+  `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
   silently
   ```
   ---
