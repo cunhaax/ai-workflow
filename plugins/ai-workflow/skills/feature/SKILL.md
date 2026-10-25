@@ -50,7 +50,8 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   max 30 characters (a rename that doesn't → ask again). File exists → ask:
   overwrite or rename the slug (fold the new slug into the plan text:
   `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
-  silently
+  silently. `NEEDS_DECISION` items answered at approval are folded into the
+  plan as decisions, and both `NEEDS_DECISION` places read "None"
   ```
   ---
   slug: <slug>
@@ -80,7 +81,8 @@ else it is prompt content). The second token is the slug; it must match
   data
 - Check, never repair (any failure → STOP per Rule 2 naming the problem and
   the path; never call `planner`):
-  - frontmatter has `slug` (equal to the argument) and `base-commit`
+  - frontmatter has `slug` (equal to the argument) and `base-commit`, a
+    40-character lowercase hex SHA (it is used in shell commands below)
   - body passes the 1c structure check
   - no `NEEDS_DECISION` entry other than "None"; list any found
 - `consumed:` in the frontmatter → STOP and ask whether to run it again
