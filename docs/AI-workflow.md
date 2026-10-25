@@ -113,9 +113,12 @@ than a per-project copy.
 Module-level `AGENTS.md` files are the place for constraints in critical
 areas (auth, payments) where mistakes are expensive. `docs/adr/` holds
 Architecture Decision Records; `docs/product-context/` holds the product
-vision/strategy the planner and plan-critic ground their work in. Plans
-themselves are never stored in the repo — the planner returns plan text to
-the main agent, which presents it via plan mode.
+vision/strategy the planner and plan-critic ground their work in. Plans are
+never committed — the planner returns plan text to the main agent, which
+presents it via plan mode. Only `/feature --plan-only` saves one: the
+approved plan goes to `.workflow-plans/<slug>.md` under the main worktree —
+local-only like `.workflow-log/`, but self-ignored by a `.gitignore` inside
+the directory.
 
 ## AGENTS.md
 
@@ -309,7 +312,8 @@ their task.
 The full lifecycle the **main** agent runs for non-trivial work: **plan →
 critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
-may not create one — Rule 3); plan mode is entered before any planning;
+may not create one — Rule 3; `--plan-only`, which plans, saves the plan and
+stops, is exempt); plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
 user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
 tags stay unique across the whole suite, not just within one plan) are

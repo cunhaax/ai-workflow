@@ -9,3 +9,6 @@
 
 # Local workflow-evaluation records written by /workflow-retro
 .workflow-log/
+
+# Approved plans saved by /feature --plan-only
+.workflow-plans/

@@ -34,7 +34,8 @@ responsibility.
    assumes the **human** starts the session on a fresh feature branch — the
    code review diffs against the default branch and the PR targets it, neither
    of which works from the default branch itself. If you start on the default
-   branch, STOP and ask before planning.
+   branch, STOP and ask before planning — except `/feature --plan-only`, which
+   commits nothing and only writes a plan file.
 
 4. **Get reviewed before pushing.** Never `git push` or open a PR without a
    recorded passing review of the current commit — no unresolved critical

@@ -4,7 +4,8 @@ description: >
   Runs the full AI-assisted workflow for a non-trivial feature or change:
   plan, plan critique, user approval, tests-first implementation, code
   review, exploratory QA, and PR. Use when the user asks to build or start a
-  feature, or to implement a change that needs a plan, review, and PR.
+  feature, or to implement a change that needs a plan, review, and PR. With
+  `--plan-only` it plans, saves the approved plan to a file, and stops.
 license: MIT
 metadata:
   author: André Cunha
@@ -13,21 +14,62 @@ metadata:
 # /feature
 
 Pipeline: plan → critique → implement → test → code-review → QA → PR.
-Run steps in order, skipping only where a step says so. `AGENTS.md` is the
-source for commands, default branch, sensitive areas, and task tracking.
+Run steps in order, skipping only where a step or *Mode* says so. `AGENTS.md`
+is the source for commands, default branch, sensitive areas, and task tracking.
 
 ## Input
 
 - User prompt (verbatim, including any doc/link references)
-- Session branch: a feature branch, not the default branch
+- Session branch: a feature branch, not the default branch (any branch with
+  `--plan-only`)
+
+## Mode: --plan-only
+
+Active only when `--plan-only` is the first token of the arguments (anywhere
+else it is prompt content, passed on verbatim). Strip it from the prompt given
+to `planner`. Plans one task and saves the plan; run it again for the next.
+
+- Step 1 applies unchanged, except its default-branch precondition: nothing is
+  committed, so any branch or worktree is fine
+- At the start of 1a, record `git rev-parse HEAD` (fails → STOP per Rule 2).
+  `git status --porcelain` non-empty → tell the user at approval that the plan
+  was drafted against uncommitted changes
+- `depends-on` = slugs named in the prompt or approval message (never ask for
+  them; `[]` if none). Named in the prompt → read each one's plan file (path
+  below) and pass it to `planner` as a labelled source; a missing or
+  unreadable file → warn the user (not a 1a STOP). Named only at approval →
+  just record it, no re-plan. Each slug must match `a-z0-9-`, max 30
+  characters, before it is used in a path
+- After approval and leaving plan mode, write the plan to
+  `.workflow-plans/<slug>.md` under the **main worktree**: the parent of the
+  `.git` dir printed by `git rev-parse --path-format=absolute --git-common-dir`.
+  That parent still contains a `.git` segment (e.g. a submodule) → ask the user
+  where to write. Ensure the directory exists and has a `.gitignore`
+  containing `*`, so plans are never committed. The slug must match `a-z0-9-`,
+  max 30 characters (a rename that doesn't → ask again). File exists → ask:
+  overwrite or rename the slug (fold the new slug into the plan text:
+  `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
+  silently
+  ```
+  ---
+  slug: <slug>
+  base-commit: <recorded SHA>
+  depends-on: [<slug>, ...]
+  tier:
+  ---
+
+  <approved plan text, amendments folded in>
+  ```
+- Then STOP: skip steps 2–9, report the file's absolute path. No branch,
+  commit, push, or PR
 
 ## Steps
 
 ### 1. Plan
 
 Preconditions:
-- On the default branch → STOP, ask the user to create a feature branch
-  (never create/switch branches yourself, `AGENTS.md` Rule 3)
+- On the default branch (unless `--plan-only`) → STOP, ask the user to create
+  a feature branch (never create/switch branches yourself, `AGENTS.md` Rule 3)
 
 Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 
@@ -229,7 +271,8 @@ Diff touches a sensitive area:
 
 ## Output
 
-- Open PR with the description and the first comment above
+- Open PR with the description and the first comment above (`--plan-only`:
+  the plan file's absolute path instead)
 - Summary of skipped steps, plan deviations, `context7` lookup failures, and why
 
 ## Rules
