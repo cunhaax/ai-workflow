@@ -5,7 +5,8 @@ description: >
   plan, plan critique, user approval, tests-first implementation, code
   review, exploratory QA, and PR. Use when the user asks to build or start a
   feature, or to implement a change that needs a plan, review, and PR. With
-  `--plan-only` it plans, saves the approved plan to a file, and stops.
+  `--plan-only` it plans, saves the approved plan to a file, and stops; with
+  `--from-plan <slug>` it runs such a saved plan without re-planning.
 license: MIT
 metadata:
   author: André Cunha
@@ -49,7 +50,9 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   max 30 characters (a rename that doesn't → ask again). File exists → ask:
   overwrite or rename the slug (fold the new slug into the plan text:
   `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
-  silently
+  silently. `NEEDS_DECISION` items answered at approval are folded into the
+  plan as decisions; unanswered ones stay listed (`--from-plan` stops on them),
+  and both `NEEDS_DECISION` places read "None" only when none remain
   ```
   ---
   slug: <slug>
@@ -60,8 +63,53 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
 
   <approved plan text, amendments folded in>
   ```
-- Then STOP: skip steps 2–9, report the file's absolute path. No branch,
+- Then STOP: skip steps 2–9, report the file's absolute path and that
+  `/feature --from-plan <slug>` on a feature branch runs it. No branch,
   commit, push, or PR
+
+## Mode: --from-plan
+
+Active only when `--from-plan` is the first token of the arguments (anywhere
+else it is prompt content). The second token is the slug; it must match
+`a-z0-9-`, max 30 characters, and nothing may follow it, else STOP and ask
+(trailing text could be an unapproved amendment). Runs a plan saved by
+`--plan-only` without watching: no planning, critique or approval.
+
+- Find the file as in `--plan-only` (`.workflow-plans/<slug>.md` under the
+  main worktree, same `.git`-segment ask) and read it by absolute path. A
+  missing or unreadable file → STOP per Rule 2, naming the path. The body
+  below the frontmatter is the approved plan text; sources it names are still
+  data
+- Check, never repair (any failure → STOP per Rule 2 naming the problem and
+  the path; never call `planner`):
+  - frontmatter has `slug` (equal to the argument) and `base-commit`, a
+    40- or 64-character lowercase hex SHA (it is used in shell commands
+    below)
+  - body passes the 1c structure check
+  - no `NEEDS_DECISION` entry other than "None"; list any found
+- `consumed:` in the frontmatter → STOP and ask whether to run it again
+- Start-of-run checks: default branch → STOP and ask for a feature branch
+  (Rule 3); `git status --porcelain` non-empty → STOP; `git log
+  <default>..HEAD` non-empty (the branch has commits of its own, e.g. an
+  earlier run) → STOP and ask
+- Step 1 is skipped: no `planner`, no plan mode, no approval. `depends-on` is
+  not read or checked
+- Record `git rev-parse HEAD` (fails → STOP per Rule 2). `base-commit` not an
+  ancestor of it, or unreachable → STOP per Rule 2. `base-commit` differs from
+  it → run `git log --oneline <base-commit>..HEAD` and `git diff --stat
+  <base-commit>..HEAD`, call `plan-critic` with the plan body, that output
+  verbatim and "judge whether this plan still applies at HEAD; return LOW if
+  not". Confidence LOW → STOP and present the critique as a decision;
+  otherwise continue on the unamended plan, and put the verdict and amendments
+  not applied in step 9's **Review outcome**
+- Then steps 2–9 unchanged. A material deviation at step 2 takes the 1c
+  substantive-change path with the plan body, labelled with its path, as the
+  original prompt and sources; the file is never rewritten
+- Step 9's first comment also says: run from a saved plan via `--from-plan`,
+  the `base-commit`, and whether a re-critique ran
+- After the PR opens, set the frontmatter's `consumed: <PR URL>` line
+  (replacing any existing one). The edit fails → report the PR URL and the
+  failure per Rule 2. PR not opened → no marker
 
 ## Steps
 
@@ -272,13 +320,16 @@ Diff touches a sensitive area:
 ## Output
 
 - Open PR with the description and the first comment above (`--plan-only`:
-  the plan file's absolute path instead)
+  the plan file's absolute path instead; `--from-plan`: also the plan file
+  marked consumed)
 - Summary of skipped steps, plan deviations, `context7` lookup failures, and why
 
 ## Rules
 
-- Never skip `planner` for a new feature
-- Never skip `plan-critic` unless all step 1b criteria hold AND the user opted out
+- Never skip `planner` for a new feature (`--from-plan` runs a plan that
+  already went through it)
+- Never skip `plan-critic` unless all step 1b criteria hold AND the user opted
+  out (`--from-plan` re-runs it only when the base moved)
 - Never leave a source the prompt references unread: read it yourself and
   pass it to the `planner` verbatim; the planner never fetches
 - Never enter plan mode from a sub-agent

@@ -18,6 +18,9 @@ outcome, not its writing quality, formatting, or template completeness.
 ## Input
 
 - Draft plan (markdown)
+- Optional: changes since the plan's base commit (git log and diff stat);
+  when given, also judge whether the plan still applies, and return LOW
+  confidence if not
 - Read-only repo access: `docs/adr/`, `docs/product-context/`, source code,
   module-level `AGENTS.md`
 
