@@ -118,7 +118,11 @@ never committed — the planner returns plan text to the main agent, which
 presents it via plan mode. Only `/feature --plan-only` saves one: the
 approved plan goes to `.workflow-plans/<slug>.md` under the main worktree —
 local-only like `.workflow-log/`, but self-ignored by a `.gitignore` inside
-the directory.
+the directory. `/feature --from-plan <slug>` later runs it from a feature
+branch in any worktree, reading it by absolute path and marking it
+`consumed: <PR URL>` once the PR opens (deleting it is a manual `rm`).
+Unattended runs in a worktree other than the main one need permission to read
+and edit that directory (e.g. `--add-dir <main-worktree>/.workflow-plans`).
 
 ## AGENTS.md
 
@@ -313,7 +317,9 @@ The full lifecycle the **main** agent runs for non-trivial work: **plan →
 critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
 may not create one — Rule 3; `--plan-only`, which plans, saves the plan and
-stops, is exempt); plan mode is entered before any planning;
+stops, is exempt; `--from-plan <slug>` still requires one but skips planning
+and approval, re-running plan-critic only if the plan's base commit moved);
+plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
 user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
 tags stay unique across the whole suite, not just within one plan) are
