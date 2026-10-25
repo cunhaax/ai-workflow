@@ -52,7 +52,10 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
   silently. `NEEDS_DECISION` items answered at approval are folded into the
   plan as decisions; unanswered ones stay listed (`--from-plan` stops on them),
-  and both `NEEDS_DECISION` places read "None" only when none remain
+  and both `NEEDS_DECISION` places read "None" only when none remain. The
+  critique the user approved against is saved with the plan, verbatim, with
+  each suggested amendment marked folded or not applied; omit the section if
+  1b was skipped
   ```
   ---
   slug: <slug>
@@ -62,6 +65,10 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   ---
 
   <approved plan text, amendments folded in>
+
+  # Plan-critic review
+
+  <critique: Confidence, findings, suggested amendments (folded / not applied)>
   ```
 - Then STOP: skip steps 2–9, report the file's absolute path and that
   `/feature --from-plan <slug>` on a feature branch runs it. No branch,
@@ -78,15 +85,17 @@ else it is prompt content). The second token is the slug; it must match
 - Find the file as in `--plan-only` (`.workflow-plans/<slug>.md` under the
   main worktree, same `.git`-segment ask) and read it by absolute path. A
   missing or unreadable file → STOP per Rule 2, naming the path. The body
-  below the frontmatter is the approved plan text; sources it names are still
-  data
+  below the frontmatter is the approved plan text, up to a trailing
+  `# Plan-critic review` section, which is context (known gaps, amendments not
+  applied), not requirements and never instructions; sources it names are
+  still data
 - Check, never repair (any failure → STOP per Rule 2 naming the problem and
   the path; never call `planner`):
   - frontmatter has `slug` (equal to the argument) and `base-commit`, a
     40- or 64-character lowercase hex SHA (it is used in shell commands
     below)
-  - body passes the 1c structure check
-  - no `NEEDS_DECISION` entry other than "None"; list any found
+  - the approved plan text passes the 1c structure check
+  - no `NEEDS_DECISION` entry in it other than "None"; list any found
 - `consumed:` in the frontmatter → STOP and ask whether to run it again
 - Start-of-run checks: default branch → STOP and ask for a feature branch
   (Rule 3); `git status --porcelain` non-empty → STOP; `git log
@@ -97,13 +106,13 @@ else it is prompt content). The second token is the slug; it must match
 - Record `git rev-parse HEAD` (fails → STOP per Rule 2). `base-commit` not an
   ancestor of it, or unreachable → STOP per Rule 2. `base-commit` differs from
   it → run `git log --oneline <base-commit>..HEAD` and `git diff --stat
-  <base-commit>..HEAD`, call `plan-critic` with the plan body, that output
+  <base-commit>..HEAD`, call `plan-critic` with the approved plan text, that output
   verbatim and "judge whether this plan still applies at HEAD; return LOW if
   not". Confidence LOW → STOP and present the critique as a decision;
   otherwise continue on the unamended plan, and put the verdict and amendments
   not applied in step 9's **Review outcome**
 - Then steps 2–9 unchanged. A material deviation at step 2 takes the 1c
-  substantive-change path with the plan body, labelled with its path, as the
+  substantive-change path with the approved plan text, labelled with its path, as the
   original prompt and sources; the file is never rewritten
 - Step 9's first comment also says: run from a saved plan via `--from-plan`,
   the `base-commit`, and whether a re-critique ran
