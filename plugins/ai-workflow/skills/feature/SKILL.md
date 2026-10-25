@@ -106,14 +106,14 @@ else it is prompt content). The second token is the slug; it must match
 - Record `git rev-parse HEAD` (fails → STOP per Rule 2). `base-commit` not an
   ancestor of it, or unreachable → STOP per Rule 2. `base-commit` differs from
   it → run `git log --oneline <base-commit>..HEAD` and `git diff --stat
-  <base-commit>..HEAD`, call `plan-critic` with the approved plan text, that output
-  verbatim and "judge whether this plan still applies at HEAD; return LOW if
-  not". Confidence LOW → STOP and present the critique as a decision;
+  <base-commit>..HEAD`, call `plan-critic` with the approved plan text, that
+  output verbatim and "judge whether this plan still applies at HEAD; return
+  LOW if not". Confidence LOW → STOP and present the critique as a decision;
   otherwise continue on the unamended plan, and put the verdict and amendments
   not applied in step 9's **Review outcome**
 - Then steps 2–9 unchanged. A material deviation at step 2 takes the 1c
-  substantive-change path with the approved plan text, labelled with its path, as the
-  original prompt and sources; the file is never rewritten
+  substantive-change path with the approved plan text, labelled with its
+  path, as the original prompt and sources; the file is never rewritten
 - Step 9's first comment also says: run from a saved plan via `--from-plan`,
   the `base-commit`, and whether a re-critique ran
 - After the PR opens, set the frontmatter's `consumed: <PR URL>` line
