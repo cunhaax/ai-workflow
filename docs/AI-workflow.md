@@ -334,10 +334,17 @@ until code-critic passes with no unresolved FAIL items, escalated to Opus on
 security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;
 QA runs only for changes with a UI and/or API surface; the PR description is
-a short, commit-ready summary (what and why, sensitive-area flag, test
-evidence), since it usually becomes the merge commit message, and the first PR
-comment carries the pipeline's conclusions (plan ID → test table, review
-outcome, QA dispositions).
+a short, commit-ready summary (what and why, Tier, test evidence), since it
+usually becomes the merge commit message, and the first PR comment carries the
+pipeline's conclusions (a review guide, then plan ID → test table, review
+outcome, QA dispositions). The guide's computed part comes from the skill's
+bundled `review-guide.sh`: the changed files the saved plan's `## Files` list
+didn't name, and the changed files that match a Sensitive Area pattern in
+`AGENTS.md` (bullets that start with backticked repo-relative path patterns;
+syntax in the script's header). A match sets a floor of Tier 2, so the Tier
+only goes up from the plan's; bullets without a leading pattern are counted,
+not checked. A `--from-plan` run re-approved mid-run reports unplanned changes
+as not computed, since its saved plan is not rewritten.
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 

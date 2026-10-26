@@ -100,7 +100,8 @@ Fill the template below, following these rules.
 - **Files**: every touched file tagged `NEW`/`EDIT`/`DELETE`/`MOVE` + what
   changes and why (a diff file not listed = undiscussed change)
   - One entry per file, by exact repo-relative path: no globs, directories or
-    "etc."; test files included; a `MOVE` gives both paths
+    "etc."; test files included; a `MOVE` gives both paths; each path in
+    backticks (the review guide script reads them)
 - **Out of Scope**: what a reader might expect but is deliberately excluded.
   "None" only if meant
 - **Edge Cases**: list ALL, numbered `EDGE-<slug>-n` (same slug as ACs)
@@ -143,6 +144,9 @@ Fill the template below, following these rules.
      `# Plan-critic review` section) is the source; frontmatter `tier:` is an
      informational copy, so consumers read the plan text. A consumer relaxing a
      gate for a low tier uses the higher of the user-set and derived tier.
+     feature's bundled review-guide.sh reads the plan text's `## Files`
+     bullets (tag, backticked path; a MOVE gives both), skipping frontmatter
+     and fenced blocks and stopping at a line starting `# Plan-critic review`.
      adversarial-qa reads Requirements for context.
      Add/rename/remove a section → update those consumers. -->
 
@@ -192,10 +196,10 @@ detailed contract it stands on.)*
 [Step-by-step strategy. Existing patterns to follow, by name.]
 
 ## Files
-- NEW    [path]: [what it holds / why]
-- EDIT   [path]: [what changes / why]
-- DELETE [path]: [why]
-- MOVE   [old] → [new]: [why]
+- NEW    `[path]`: [what it holds / why]
+- EDIT   `[path]`: [what changes / why]
+- DELETE `[path]`: [why]
+- MOVE   `[old]` → `[new]`: [why]
 
 ## Out of Scope
 - [Expected but deliberately excluded]
