@@ -331,7 +331,7 @@ returns the Tier line and the Review guide. Pass it the default branch and the
 plan source: the plan file path 1d wrote or `--from-plan` read;
 `--plan-reapproved` after a `--from-plan` step 2 material deviation; nothing
 if no plan file was saved. Run it again and replace both after any commit made
-once the PR is open (e.g. fixes from the second look below)
+once the PR is open (e.g. fixes from the second look below).
 
 The PR description usually becomes the merge commit message: keep it short
 and commit-ready. Pipeline details go in the first PR comment.
