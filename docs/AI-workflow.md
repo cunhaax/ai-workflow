@@ -343,7 +343,8 @@ didn't name, and the changed files that match a Sensitive Area pattern in
 `AGENTS.md` (bullets that start with backticked repo-relative path patterns;
 syntax in the script's header). A match sets a floor of Tier 2, so the Tier
 only goes up from the plan's; bullets without a leading pattern are counted,
-not checked. A `--from-plan` run re-approved mid-run reports unplanned changes
+not checked. Projects whose Sensitive Areas bullets already start with
+backticked paths get the floor as soon as they update the plugin. A `--from-plan` run re-approved mid-run reports unplanned changes
 as not computed, since its saved plan is not rewritten.
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
