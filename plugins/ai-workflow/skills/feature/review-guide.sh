@@ -11,10 +11,15 @@
 #                      plan is stale: the unplanned list is not computed
 #   (no 2nd argument)  no plan file was saved
 #
-# Output: the base ref (origin/<default-branch> if it exists, else the local
-# branch), merge-base and HEAD; the changed paths that match a Sensitive Area
-# pattern (a floor of Tier 2); the changed paths the plan's "## Files" list did
-# not name. A part that cannot be computed says "not computed (<reason>)".
+# Output, in order: a header (the base ref, origin/<default-branch> if it
+# exists, else the local branch; merge-base; HEAD; the plan's basename, or
+# "no plan file", "plan re-approved this run" or "plan file not readable");
+# "Sensitive paths changed: <n> -> floor 2" or "0 -> none", with the changed
+# paths that match a Sensitive Area pattern; then, when they apply, the
+# prose-only bullet count, "no patterns defined", mid-list bullets and
+# patterns matching no file at HEAD; then "Unplanned changes", the changed
+# paths the plan's "## Files" list did not name. A part that cannot be
+# computed says "not computed (<reason>)".
 #
 # Exit 0 whenever output was printed. Exit 1, "review-guide: <problem>" on
 # stderr and nothing on stdout, for a usage error, no work tree, an
@@ -42,8 +47,16 @@
 #
 # The awk is POSIX awk without regex intervals or character classes: mawk
 # (the default on Debian and Ubuntu) does not support them.
+#
+# Known limitations: if AGENTS.md is a symlink, git show prints the link
+# target and no patterns are found (the output says so); fence tracking
+# ignores marker type and length, so nested fences in a plan can end a skip
+# early; the zero-match check is a shell loop over patterns x files, slow on
+# very large repos; only tested with macOS awk.
 
 set -eu
+LC_ALL=C
+export LC_ALL
 
 die() {
     echo "review-guide: $*" >&2
@@ -67,7 +80,7 @@ mb=$(git merge-base "$ref" HEAD 2>/dev/null) || die "no merge base between $ref 
 mb_short=$(git rev-parse --short "$mb") || die "cannot resolve merge base"
 head_short=$(git rev-parse --short HEAD) || die "cannot resolve HEAD"
 changed=$(git -c core.quotepath=off diff --no-renames --name-only "$mb" HEAD) || die "git diff failed"
-files=$(git -c core.quotepath=off ls-tree -r --name-only HEAD) || die "git ls-tree failed"
+files=$(git -c core.quotepath=off ls-tree -r --full-tree --name-only HEAD) || die "git ls-tree failed"
 
 parse_areas() {
     awk '
