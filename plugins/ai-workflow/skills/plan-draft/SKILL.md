@@ -138,8 +138,8 @@ Fill the template below, following these rules.
      PR's plan ID → test table (Step 9), and checks the **Slug:** line, the
      AC numbering and the tagged Test Strategy entries before presenting the
      plan (Step 1c), and the **Tier:** line (0/1/2 plus reason). With
-     --plan-only it copies the Tier number into the saved plan's frontmatter
-     `tier:`. The Tier line in the approved plan text (above any
+     When it saves the plan (Step 1d) it copies the Tier number into the saved
+     plan's frontmatter `tier:`. The Tier line in the approved plan text (above any
      `# Plan-critic review` section) is the source; frontmatter `tier:` is an
      informational copy, so consumers read the plan text. A consumer relaxing a
      gate for a low tier uses the higher of the user-set and derived tier.

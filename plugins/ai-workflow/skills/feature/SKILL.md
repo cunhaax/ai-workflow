@@ -5,8 +5,8 @@ description: >
   plan, plan critique, user approval, tests-first implementation, code
   review, exploratory QA, and PR. Use when the user asks to build or start a
   feature, or to implement a change that needs a plan, review, and PR. With
-  `--plan-only` it plans, saves the approved plan to a file, and stops; with
-  `--from-plan <slug>` it runs such a saved plan without re-planning.
+  Every run saves the approved plan to a file; with `--plan-only` it stops
+  there, and `--from-plan <slug>` runs such a saved plan without re-planning.
 license: MIT
 metadata:
   author: André Cunha
@@ -32,9 +32,6 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
 
 - Step 1 applies unchanged, except its default-branch precondition: nothing is
   committed, so any branch or worktree is fine
-- At the start of 1a, record `git rev-parse HEAD` (fails → STOP per Rule 2).
-  `git status --porcelain` non-empty → tell the user at approval that the plan
-  was drafted against uncommitted changes
 - `depends-on` = slugs named in the prompt or approval message (never ask for
   them; `[]` if none). Named in the prompt → read each one's plan file (path
   below) and pass it to `planner` as a labelled source; a missing or
@@ -47,35 +44,9 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   substantive-change path, so the tier is re-derived). Present only when
   none remain, so both `NEEDS_DECISION` places read "None". An item left
   unanswered → STOP: nothing is saved, say so, no path to report
-- After approval and leaving plan mode, write the plan to
-  `.workflow-plans/<slug>.md` under the **main worktree**: the parent of the
-  `.git` dir printed by `git rev-parse --path-format=absolute --git-common-dir`.
-  That parent still contains a `.git` segment (e.g. a submodule) → ask the user
-  where to write. Ensure the directory exists and has a `.gitignore`
-  containing `*`, so plans are never committed. The slug must match `a-z0-9-`,
-  max 30 characters (a rename that doesn't → ask again). File exists → ask:
-  overwrite or rename the slug (fold the new slug into the plan text:
-  `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
-  silently. The critique the user approved against is saved with the plan,
-  verbatim, with each suggested amendment marked folded or not applied; omit
-  the section if 1b was skipped
-  ```
-  ---
-  slug: <slug>
-  base-commit: <recorded SHA>
-  depends-on: [<slug>, ...]
-  tier: <0|1|2>
-  ---
-
-  <approved plan text, amendments folded in>
-
-  # Plan-critic review
-
-  <critique: Confidence, findings, suggested amendments (folded / not applied)>
-  ```
-  `tier` is the number on the approved plan text's `**Tier:**` line, taken
-  after approval edits are folded in
-- Then STOP: skip steps 2–9, report the file's absolute path and that
+- After approval and leaving plan mode, step 1d saves the plan (every run
+  does; this mode just stops after it)
+- After 1d, STOP: skip steps 2–9, report the file's absolute path and that
   `/feature --from-plan <slug>` on a feature branch runs it. No branch,
   commit, push, or PR
 
@@ -87,8 +58,9 @@ else it is prompt content). The second token is the slug; it must match
 (trailing text could be an unapproved amendment). Runs a plan saved by
 `--plan-only` without watching: no planning, critique or approval.
 
-- Find the file as in `--plan-only` (`.workflow-plans/<slug>.md` under the
-  main worktree, same `.git`-segment ask) and read it by absolute path. A
+- Find the file as in 1d (`.workflow-plans/<slug>.md` under the main
+  worktree, same `.git`-segment and bare-repo ask) and read it by absolute
+  path. A
   missing or unreadable file → STOP per Rule 2, naming the path. The body
   below the frontmatter is the approved plan text, up to a trailing
   `# Plan-critic review` section, which is context (known gaps, amendments not
@@ -120,12 +92,11 @@ else it is prompt content). The second token is the slug; it must match
   not applied in step 9's **Review outcome**
 - Then steps 2–9 unchanged. A material deviation at step 2 takes the 1c
   substantive-change path with the approved plan text, labelled with its
-  path, as the original prompt and sources; the file is never rewritten
+  path, as the original prompt and sources; the file is never rewritten (1d's
+  rewrite rule does not apply)
 - Step 9's first comment also says: run from a saved plan via `--from-plan`,
   the `base-commit`, and whether a re-critique ran
-- After the PR opens, set the frontmatter's `consumed: <PR URL>` line
-  (replacing any existing one). The edit fails → report the PR URL and the
-  failure per Rule 2. PR not opened → no marker
+- Step 9 marks the file consumed once the PR opens
 
 ## Steps
 
@@ -138,6 +109,9 @@ Preconditions:
 Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 
 **1a. Draft**
+- Record `git rev-parse HEAD` as the base commit (fails → STOP per Rule 2).
+  `git status --porcelain` non-empty → tell the user at approval that the plan
+  was drafted against uncommitted changes
 - Read every source the prompt references yourself (links, tickets, docs,
   files), with whatever tool the session has for it: the tracker's tools for
   a tracker item (`AGENTS.md` → *Task Tracking*), `WebFetch` for a public
@@ -189,7 +163,8 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   sources, the previous plan and the requested changes (never re-plan
   yourself) → re-run
   `plan-critic` → re-present with a **delta** section first (what changed vs.
-  the previously presented version)
+  the previously presented version). After re-approval and leaving plan mode
+  again, 1d's rewrite rule runs if the plan was already saved
 - Approval conditional on critique amendments, or edits the user makes at
   approval (including renaming the `**Slug:**`, or changing the `**Tier:**`:
   the line becomes `<new> — set by user at approval; derived: <old> — <old
@@ -198,6 +173,47 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   text yourself (transcription, not re-planning). Sub-agents only see plan
   text, so conversation-only amendments are invisible to them
 - Keep the approved plan text for steps 4 and 7
+
+**1d. Save**
+- After approval and leaving plan mode, write the plan to
+  `.workflow-plans/<slug>.md` under the **main worktree**: the parent of the
+  `.git` dir printed by `git rev-parse --path-format=absolute --git-common-dir`.
+  That parent still contains a `.git` segment (e.g. a submodule), or the dir's
+  name is not `.git` (a bare repo) → ask the user where to write. Ensure the
+  directory exists and has a `.gitignore`
+  containing `*`, so plans are never committed. The slug must match `a-z0-9-`,
+  max 30 characters (a rename that doesn't → ask again). File exists → ask:
+  overwrite or rename the slug (fold the new slug into the plan text:
+  `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
+  silently. The critique the user approved against is saved with the plan,
+  verbatim, with each suggested amendment marked folded or not applied; omit
+  the section if 1b was skipped
+  ```
+  ---
+  slug: <slug>
+  base-commit: <recorded SHA>
+  depends-on: [<slug>, ...]
+  tier: <0|1|2>
+  ---
+
+  <approved plan text, amendments folded in>
+
+  # Plan-critic review
+
+  <critique: Confidence, findings, suggested amendments (folded / not applied)>
+  ```
+  `tier` is the number on the approved plan text's `**Tier:**` line, taken
+  after approval edits are folded in. `depends-on` is as in *Mode:
+  --plan-only*, and `[]` in any other run
+- Remember the absolute path written. A write that fails (resolve, mkdir,
+  write) → STOP per Rule 2
+- Plan re-approved through the 1c substantive-change path after this write:
+  before rewriting, check the file still has this run's `slug` and
+  `base-commit`, else treat it as a foreign file and ask as above. Then
+  rewrite the same file, no collision question: the re-approved text, the new
+  critique, `tier` re-copied, `base-commit` and `depends-on` kept. A renamed
+  slug → write the new path (collision rule applies), then remove the old file
+  this run wrote. A minor deviation at step 2 does not rewrite
 
 ### 2. Implement
 
@@ -217,7 +233,7 @@ Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
   briefly, continue
 - Material (scope, approach, requirements): STOP → re-plan via the step 1c
-  substantive-change path → get re-approval
+  substantive-change path → get re-approval (then 1d rewrites the saved plan)
 
 ### 3. Test
 
@@ -337,11 +353,19 @@ Diff touches a sensitive area:
 - Re-run `code-critic` in a fresh context as a second look before merge, and
   apply steps 5–6 to its output
 
+**Plan file** (saved at 1d, or read by `--from-plan`): after the PR opens,
+check its `slug` and `base-commit` still match, then set the frontmatter's
+`consumed: <PR URL>` line (replacing any existing one). A mismatch → ask. The
+edit fails → report the PR URL and the failure per Rule 2. PR not opened → no
+marker. No plan file was saved (the user chose to continue) → say so in the
+first comment. Never put the plan file's absolute path in the PR description
+or the first comment
+
 ## Output
 
-- Open PR with the description and the first comment above (`--plan-only`:
-  the plan file's absolute path instead; `--from-plan`: also the plan file
-  marked consumed)
+- Open PR with the description and the first comment above, and the plan
+  file marked consumed (`--plan-only`: the plan file's absolute path instead
+  of a PR)
 - Summary of skipped steps, plan deviations, `context7` lookup failures, and why
 
 ## Rules
