@@ -43,7 +43,8 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   characters, before it is used in a path
 - Open `NEEDS_DECISION` items are asked at 1c, before the plan is presented:
   ask each one and fold the answers in as decisions (an answer that changes
-  scope or approach takes the 1c substantive-change path). Present only when
+  scope, approach, a Risk flag or a Tier criterion takes the 1c
+  substantive-change path, so the tier is re-derived). Present only when
   none remain, so both `NEEDS_DECISION` places read "None". An item left
   unanswered → STOP: nothing is saved, say so, no path to report
 - After approval and leaving plan mode, write the plan to
