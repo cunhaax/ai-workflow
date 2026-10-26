@@ -208,9 +208,9 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Remember the absolute path written. A write that fails (resolve, mkdir,
   write) → STOP per Rule 2
 - Plan re-approved through the 1c substantive-change path after this write:
-  before rewriting, check the file still has this run's `slug` and
-  `base-commit` and the exact content this run last wrote (content no longer
-  available, e.g. after context compaction → can't verify), else treat it as a
+  before rewriting, check the file still has the `slug`, `base-commit` and
+  exact content this run last wrote to it (content no longer available, e.g.
+  after context compaction → can't verify → ask), else treat it as a
   foreign file and ask as above. Then
   rewrite the same file, no collision question: the re-approved text, the new
   critique, `tier` re-copied, `base-commit` and `depends-on` kept. A renamed
@@ -358,8 +358,8 @@ Diff touches a sensitive area:
   apply steps 5–6 to its output
 
 **Plan file** (saved at 1d, or read by `--from-plan`): after the PR opens,
-check it still has this run's `slug`, `base-commit` and content (as last
-written at 1d, or as read by `--from-plan`), then set the frontmatter's
+check it still has the `slug`, `base-commit` and content this run last wrote
+at 1d (or read, for `--from-plan`), then set the frontmatter's
 `consumed: <PR URL>` line (replacing any existing one; that line itself is not
 part of the comparison). A mismatch or content no longer available → ask. The
 edit fails → report the PR URL and the failure per Rule 2. PR not opened → no
