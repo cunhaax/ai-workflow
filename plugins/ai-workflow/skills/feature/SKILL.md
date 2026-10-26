@@ -326,17 +326,12 @@ QA was skipped and why. When in doubt, run it.
 Only after: code review passed, every QA finding dispositioned and every
 Blocker decided (or QA skipped).
 
-**Review guide script**, run before opening the PR (and again after any
-commit made once it is open, e.g. fixes from the second look below; then
-update the guide and the Tier line):
-`sh ${CLAUDE_SKILL_DIR}/review-guide.sh <default-branch> [<plan-file>]`
-- Second argument: the plan file path 1d wrote or `--from-plan` read;
-  `--plan-reapproved` instead after a `--from-plan` step 2 material
-  deviation; none if no plan file was saved
-- Any non-zero exit, any stderr, empty stdout, an unexpanded
-  `${CLAUDE_SKILL_DIR}` or a missing script → STOP per Rule 2; never guess a
-  path. A `not computed` reason other than `no plan file` or the re-approved
-  one → tell the user before opening the PR
+**Review guide**: before opening the PR, run the `review-guide` skill. It
+returns the Tier line and the Review guide. Pass it the default branch and the
+plan source: the plan file path 1d wrote or `--from-plan` read;
+`--plan-reapproved` after a `--from-plan` step 2 material deviation; nothing
+if no plan file was saved. Run it again and replace both after any commit made
+once the PR is open (e.g. fixes from the second look below)
 
 The PR description usually becomes the merge commit message: keep it short
 and commit-ready. Pipeline details go in the first PR comment.
@@ -344,28 +339,16 @@ and commit-ready. Pipeline details go in the first PR comment.
 **PR description** (about 10–15 lines):
 - **What and why**: requirements + approach in a few sentences, the decisions
   that shape the change (one line each), link to the source spec if any
-- **Tier**: `**Tier:** <n> — <reason>`. n = the higher of the approved plan
-  text's tier and the script's floor (2 when it lists sensitive paths); a
-  user-set tier shows both (`1 (set by user; derived 2) → 2`); the reason
-  names each sensitive area touched, as a fact. A floor above the plan's tier
-  → tell the user before opening the PR
+- **Tier**: the Tier line `review-guide` returned
 - **Test evidence**: one line, test count + result of the final full run
 - In the description only: no commit SHAs, no review/QA process narration, no
   instructions to the reviewer (the first comment has them)
 
 **First PR comment**, posted right after opening the PR (e.g. `gh pr
-comment`): the **Review guide**, then *Review & traceability*. If the host
-can't post comments, put both under `##` headings at the end of the
-description, guide first, and tell the user to trim them at merge.
-
-**Review guide** (for the reviewer; SHAs allowed):
-- The script's stdout, verbatim
-- **Decisions not in the plan**: one line each, every unplanned path
-  accounted for, or "None"
-- **Read closely** / **Skim**: paths, one line why each
-- **Check by hand**: what to try in the running app, or "nothing: no UI or
-  API surface"
-- Never contradict the computed part
+comment`): the **Review guide** `review-guide` returned (addressed to the
+reviewer; SHAs allowed), then *Review & traceability*. If the host can't post
+comments, put both under `##` headings at the end of the description, guide
+first, and tell the user to trim them at merge.
 
 **Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per

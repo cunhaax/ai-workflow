@@ -144,7 +144,7 @@ Fill the template below, following these rules.
      `# Plan-critic review` section) is the source; frontmatter `tier:` is an
      informational copy, so consumers read the plan text. A consumer relaxing a
      gate for a low tier uses the higher of the user-set and derived tier.
-     feature's bundled review-guide.sh reads the plan text's `## Files`
+     the review-guide skill's script reads the plan text's `## Files`
      bullets (tag, backticked path; a MOVE gives both), skipping frontmatter
      and fenced blocks and stopping at a line starting `# Plan-critic review`.
      adversarial-qa reads Requirements for context.

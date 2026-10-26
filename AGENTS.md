@@ -105,9 +105,9 @@ the local-path form instead (see *Installing into a project* in
 No build step — this is a documentation/skills/scripts repo, nothing to
 compile and no app to run or stop. There is no automated test suite either:
 skill and sub-agent bodies are agent-interpreted prose, not executable code.
-The shell scripts under `githooks/` and `scripts/`, and the review guide
-script bundled with the `feature` skill, are plain POSIX `sh`, kept small and
-reviewed by hand.
+The shell scripts under `githooks/` and `scripts/`, and the script bundled
+with the `review-guide` skill, are plain POSIX `sh`, kept small and reviewed
+by hand.
 
 - default branch: `master` — reviews diff against it; PRs target it
 
@@ -123,7 +123,8 @@ plugins/ai-workflow/
 ├── .mcp.json                         # Bundled MCP servers (playwright, context7) — starts on plugin enable
 ├── agents/                           # Sub-agent definitions (planner, plan-critic, code-critic, adversarial-qa)
 └── skills/                           # Reusable knowledge: feature, plan-draft, plan-critic, code-critic,
-    │                                  #   adversarial-qa, init-workflow, workflow-retro, workflow-inspect
+    │                                  #   adversarial-qa, review-guide, init-workflow, workflow-retro,
+    │                                  #   workflow-inspect
     └── init-workflow/templates/      # THE scaffold source a fresh project's /init-workflow reads
 docs/
 ├── agent-rules/                      # This repo's own real review rules + risk lenses
@@ -171,7 +172,7 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
   itself; it writes files into a project on the user's behalf.
 - `.claude-plugin/marketplace.json` / `plugins/ai-workflow/.claude-plugin/plugin.json`
   — a broken manifest breaks installation for everyone.
-- `plugins/ai-workflow/skills/feature/review-guide.sh` — computes the PR's
+- `plugins/ai-workflow/skills/review-guide/review-guide.sh` — computes the PR's
   sensitive-path tier floor and unplanned-changes list; a bug here
   under-reports risk silently.
 - `plugins/ai-workflow/.mcp.json` — bundled MCP servers start automatically
