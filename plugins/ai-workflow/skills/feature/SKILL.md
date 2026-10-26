@@ -41,6 +41,11 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   unreadable file → warn the user (not a 1a STOP). Named only at approval →
   just record it, no re-plan. Each slug must match `a-z0-9-`, max 30
   characters, before it is used in a path
+- Open `NEEDS_DECISION` items are asked at 1c, before the plan is presented:
+  ask each one and fold the answers in as decisions (an answer that changes
+  scope or approach takes the 1c substantive-change path). Present only when
+  none remain, so both `NEEDS_DECISION` places read "None". An item left
+  unanswered → STOP: nothing is saved, say so, no path to report
 - After approval and leaving plan mode, write the plan to
   `.workflow-plans/<slug>.md` under the **main worktree**: the parent of the
   `.git` dir printed by `git rev-parse --path-format=absolute --git-common-dir`.
@@ -50,12 +55,9 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   max 30 characters (a rename that doesn't → ask again). File exists → ask:
   overwrite or rename the slug (fold the new slug into the plan text:
   `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
-  silently. `NEEDS_DECISION` items answered at approval are folded into the
-  plan as decisions; unanswered ones stay listed (`--from-plan` stops on them),
-  and both `NEEDS_DECISION` places read "None" only when none remain. The
-  critique the user approved against is saved with the plan, verbatim, with
-  each suggested amendment marked folded or not applied; omit the section if
-  1b was skipped
+  silently. The critique the user approved against is saved with the plan,
+  verbatim, with each suggested amendment marked folded or not applied; omit
+  the section if 1b was skipped
   ```
   ---
   slug: <slug>
