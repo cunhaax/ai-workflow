@@ -115,15 +115,19 @@ areas (auth, payments) where mistakes are expensive. `docs/adr/` holds
 Architecture Decision Records; `docs/product-context/` holds the product
 vision/strategy the planner and plan-critic ground their work in. Plans are
 never committed — the planner returns plan text to the main agent, which
-presents it via plan mode. Only `/feature --plan-only` saves one: the
-approved plan goes to `.workflow-plans/<slug>.md` under the main worktree —
-local-only like `.workflow-log/`, but self-ignored by a `.gitignore` inside
-the directory; its frontmatter `tier:` copies the approved plan's Tier. `/feature --from-plan <slug>` later runs it from a feature
-branch in any worktree, reading it by absolute path and marking it
-`consumed: <PR URL>` once the PR opens (deleting it is a manual `rm`).
-Reading it from another worktree works by default; the `consumed:` edit
-there may need permission, so unattended runs may need to allow edits to that
-directory (e.g. `--add-dir <main-worktree>/.workflow-plans`).
+presents it via plan mode. Every `/feature` run that plans saves the approved
+plan (`--plan-only` then stops): it goes to `.workflow-plans/<slug>.md` under
+the main worktree — local-only like `.workflow-log/`, but self-ignored by a
+`.gitignore` inside the directory; its frontmatter `tier:` copies the approved
+plan's Tier. A substantive re-approval later in the same run rewrites it.
+`/feature --from-plan <slug>` later runs a saved plan from a feature branch in
+any worktree, reading it by absolute path. Plain and `--from-plan` runs mark
+it `consumed: <PR URL>` once the PR opens (deleting it is a manual `rm`).
+Reading it from another worktree works by default; writing or editing it
+there may need permission, and the directory may not exist yet on a first
+run, so unattended runs may need to allow writes to the main worktree (e.g.
+`--add-dir <main-worktree>`; unverified for a not-yet-existing
+`.workflow-plans/`).
 
 ## AGENTS.md
 
@@ -319,8 +323,7 @@ their task.
 The full lifecycle the **main** agent runs for non-trivial work: **plan →
 critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
-may not create one — Rule 3; `--plan-only`, which plans, saves the plan and
-stops, is exempt; `--from-plan <slug>` still requires one but skips planning
+may not create one — Rule 3; `--plan-only`, which plans and stops, is exempt; `--from-plan <slug>` still requires one but skips planning
 and approval, re-running plan-critic only if the plan's base commit moved);
 plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
