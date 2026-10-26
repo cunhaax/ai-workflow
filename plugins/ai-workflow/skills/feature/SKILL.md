@@ -326,21 +326,31 @@ QA was skipped and why. When in doubt, run it.
 Only after: code review passed, every QA finding dispositioned and every
 Blocker decided (or QA skipped).
 
+**Review guide**: before opening the PR, run the `review-guide` skill. It
+returns the Tier line and the Review guide. Pass it the default branch and the
+plan source: the plan file path 1d wrote or `--from-plan` read;
+`--plan-reapproved` after a `--from-plan` step 2 material deviation; nothing
+if no plan file was saved. Run it again and replace both after any commit made
+once the PR is open (e.g. fixes from the second look below).
+
 The PR description usually becomes the merge commit message: keep it short
 and commit-ready. Pipeline details go in the first PR comment.
 
 **PR description** (about 10–15 lines):
 - **What and why**: requirements + approach in a few sentences, the decisions
   that shape the change (one line each), link to the source spec if any
-- **Sensitive area**, if the diff touches one: state which, as a fact
+- **Tier**: the Tier line `review-guide` returned
 - **Test evidence**: one line, test count + result of the final full run
-- No commit SHAs, no review/QA process narration, no instructions to the
-  reviewer
+- In the description only: no commit SHAs, no review/QA process narration, no
+  instructions to the reviewer (the first comment has them)
 
-**First PR comment**, titled *Review & traceability*, posted right after
-opening the PR (e.g. `gh pr comment`); if the host can't post comments, put
-it under a `## Review & traceability` heading at the end of the description
-and tell the user to trim it at merge:
+**First PR comment**, posted right after opening the PR (e.g. `gh pr
+comment`): the **Review guide** `review-guide` returned (addressed to the
+reviewer; SHAs allowed), then *Review & traceability*. If the host can't post
+comments, put both under `##` headings at the end of the description, guide
+first, and tell the user to trim them at merge.
+
+**Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per
   `AC-n` (plan's Approval Summary) and per `EDGE-n` (plan's Edge Cases) with
   the criterion/edge case and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged

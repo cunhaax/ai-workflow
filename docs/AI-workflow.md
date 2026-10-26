@@ -334,10 +334,29 @@ until code-critic passes with no unresolved FAIL items, escalated to Opus on
 security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;
 QA runs only for changes with a UI and/or API surface; the PR description is
-a short, commit-ready summary (what and why, sensitive-area flag, test
-evidence), since it usually becomes the merge commit message, and the first PR
-comment carries the pipeline's conclusions (plan ID → test table, review
-outcome, QA dispositions).
+a short, commit-ready summary (what and why, Tier, test evidence), since it
+usually becomes the merge commit message, and the first PR comment carries the
+pipeline's conclusions (a review guide, then plan ID → test table, review
+outcome, QA dispositions). The Tier line and the guide come from the
+`review-guide` skill, which step 9 runs before the PR opens.
+
+### `plugins/ai-workflow/skills/review-guide/SKILL.md` — `/review-guide`
+
+Gives a reviewer a short guide to where to look in a PR, split by trust. A
+bundled read-only script (`review-guide.sh`, POSIX `sh` + `awk`) computes the
+parts that must be trustworthy: the changed files the saved plan's `## Files`
+list didn't name, and the changed files that match a Sensitive Area pattern in
+`AGENTS.md` (bullets that start with backticked repo-relative path patterns;
+syntax in the script's header). A match sets a floor of Tier 2, so the Tier
+only goes up from the plan's; bullets without a leading pattern are counted,
+not checked. The skill then writes the judgment parts: the Tier line, decisions
+not in the plan, files to read closely vs skim, and what to check by hand.
+`/feature` step 9 puts the Tier line in the PR description and the guide at
+the top of the first comment; it can also be run on its own. Projects whose
+Sensitive Areas bullets already start with backticked paths get the floor as
+soon as they update the plugin. A `--from-plan` run re-approved mid-run
+reports unplanned changes as not computed, since its saved plan is not
+rewritten.
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 
@@ -401,9 +420,9 @@ interactively via `claude --agent <name>`.
   missed.
 
 There is no `feature` sub-agent — `feature` is a main-agent skill that
-orchestrates the four above; `init-workflow`, `workflow-retro`, and
-`workflow-inspect` are likewise main-agent-only, interactive rather than
-delegated.
+orchestrates the four above; `review-guide`, `init-workflow`,
+`workflow-retro`, and `workflow-inspect` are likewise main-agent-only,
+interactive rather than delegated.
 
 Design choices: external sources (a private tracker card, a spec behind a
 login, a public page) are read by the main agent, which has every session
