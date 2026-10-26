@@ -51,9 +51,9 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   overwrite or rename the slug (fold the new slug into the plan text:
   `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as at 1c); never overwrite
   silently. `NEEDS_DECISION` items answered at approval are folded into the
-  plan as decisions; unanswered ones stay listed (`--from-plan` stops on them),
-  and both `NEEDS_DECISION` places read "None" only when none remain. The
-  critique the user approved against is saved with the plan, verbatim, with
+  plan as decisions; any still open → ask the user and write nothing until
+  none remain (no answer, no approved plan), so both `NEEDS_DECISION` places
+  read "None". The critique the user approved against is saved with the plan, verbatim, with
   each suggested amendment marked folded or not applied; omit the section if
   1b was skipped
   ```
