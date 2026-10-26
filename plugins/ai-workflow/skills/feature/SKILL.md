@@ -63,7 +63,7 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
   slug: <slug>
   base-commit: <recorded SHA>
   depends-on: [<slug>, ...]
-  tier:
+  tier: <0|1|2>
   ---
 
   <approved plan text, amendments folded in>
@@ -72,6 +72,8 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
 
   <critique: Confidence, findings, suggested amendments (folded / not applied)>
   ```
+  `tier` is the number on the approved plan text's `**Tier:**` line, taken
+  after approval edits are folded in
 - Then STOP: skip steps 2–9, report the file's absolute path and that
   `/feature --from-plan <slug>` on a feature branch runs it. No branch,
   commit, push, or PR
@@ -96,7 +98,9 @@ else it is prompt content). The second token is the slug; it must match
   - frontmatter has `slug` (equal to the argument) and `base-commit`, a
     40- or 64-character lowercase hex SHA (it is used in shell commands
     below)
-  - the approved plan text passes the 1c structure check
+  - the approved plan text passes the 1c structure check (a missing or
+    invalid `**Tier:**` → the STOP also says the line can be added to the
+    saved file by hand, `**Tier:** <0|1|2> — <reason>`, or `--plan-only` re-run)
   - no `NEEDS_DECISION` entry in it other than "None"; list any found
 - `consumed:` in the frontmatter → STOP and ask whether to run it again
 - Start-of-run checks: default branch → STOP and ask for a feature branch
@@ -163,8 +167,9 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Never infer "trivial" yourself; when in doubt, run it
 
 **1c. Approve**
-- Before presenting, check the plan: it has a `**Slug:**`, numbered
-  `AC-<slug>-n` criteria, and every `AC-<slug>-n` and `EDGE-<slug>-n` has a
+- Before presenting, check the plan: it has a `**Slug:**`, a `**Tier:**`
+  of exactly 0, 1 or 2 followed by ` — ` (an em dash) and a non-empty reason,
+  numbered `AC-<slug>-n` criteria, and every `AC-<slug>-n` and `EDGE-<slug>-n` has a
   tagged Test Strategy entry. Anything missing → call `planner` again with
   the original prompt and sources, the plan and the gap (never fix it
   yourself), then
@@ -185,7 +190,10 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   `plan-critic` → re-present with a **delta** section first (what changed vs.
   the previously presented version)
 - Approval conditional on critique amendments, or edits the user makes at
-  approval (including renaming the `**Slug:**`): fold them into the plan
+  approval (including renaming the `**Slug:**`, or changing the `**Tier:**`:
+  the line becomes `<new> — set by user at approval; derived: <old> — <old
+  reason>`, and the new value must be exactly 0, 1 or 2, else ask again):
+  fold them into the plan
   text yourself (transcription, not re-planning). Sub-agents only see plan
   text, so conversation-only amendments are invisible to them
 - Keep the approved plan text for steps 4 and 7
