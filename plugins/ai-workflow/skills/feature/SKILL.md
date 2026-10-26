@@ -4,8 +4,8 @@ description: >
   Runs the full AI-assisted workflow for a non-trivial feature or change:
   plan, plan critique, user approval, tests-first implementation, code
   review, exploratory QA, and PR. Use when the user asks to build or start a
-  feature, or to implement a change that needs a plan, review, and PR. With
-  Every run saves the approved plan to a file; with `--plan-only` it stops
+  feature, or to implement a change that needs a plan, review, and PR. Every
+  planning run saves the approved plan to a file; with `--plan-only` it stops
   there, and `--from-plan <slug>` runs such a saved plan without re-planning.
 license: MIT
 metadata:
@@ -55,8 +55,8 @@ to `planner`. Plans one task and saves the plan; run it again for the next.
 Active only when `--from-plan` is the first token of the arguments (anywhere
 else it is prompt content). The second token is the slug; it must match
 `a-z0-9-`, max 30 characters, and nothing may follow it, else STOP and ask
-(trailing text could be an unapproved amendment). Runs a plan saved by
-`--plan-only` without watching: no planning, critique or approval.
+(trailing text could be an unapproved amendment). Runs a saved plan
+without watching: no planning, critique or approval.
 
 - Find the file as in 1d (`.workflow-plans/<slug>.md` under the main
   worktree, same `.git`-segment and bare-repo ask) and read it by absolute
@@ -164,7 +164,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   yourself) → re-run
   `plan-critic` → re-present with a **delta** section first (what changed vs.
   the previously presented version). After re-approval and leaving plan mode
-  again, 1d's rewrite rule runs if the plan was already saved
+  again, 1d's rewrite rule runs if this run saved the plan at 1d
 - Approval conditional on critique amendments, or edits the user makes at
   approval (including renaming the `**Slug:**`, or changing the `**Tier:**`:
   the line becomes `<new> — set by user at approval; derived: <old> — <old
@@ -209,11 +209,14 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   write) → STOP per Rule 2
 - Plan re-approved through the 1c substantive-change path after this write:
   before rewriting, check the file still has this run's `slug` and
-  `base-commit`, else treat it as a foreign file and ask as above. Then
+  `base-commit` and the exact content this run last wrote (content no longer
+  available, e.g. after context compaction → can't verify), else treat it as a
+  foreign file and ask as above. Then
   rewrite the same file, no collision question: the re-approved text, the new
   critique, `tier` re-copied, `base-commit` and `depends-on` kept. A renamed
   slug → write the new path (collision rule applies), then remove the old file
-  this run wrote. A minor deviation at step 2 does not rewrite
+  this run wrote, only if it still passes the same check. A minor deviation at
+  step 2 does not rewrite
 
 ### 2. Implement
 
@@ -233,7 +236,8 @@ Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
   briefly, continue
 - Material (scope, approach, requirements): STOP → re-plan via the step 1c
-  substantive-change path → get re-approval (then 1d rewrites the saved plan)
+  substantive-change path → get re-approval (then 1d's rewrite rule runs;
+  not in `--from-plan`)
 
 ### 3. Test
 
@@ -354,8 +358,10 @@ Diff touches a sensitive area:
   apply steps 5–6 to its output
 
 **Plan file** (saved at 1d, or read by `--from-plan`): after the PR opens,
-check its `slug` and `base-commit` still match, then set the frontmatter's
-`consumed: <PR URL>` line (replacing any existing one). A mismatch → ask. The
+check it still has this run's `slug`, `base-commit` and content (as last
+written at 1d, or as read by `--from-plan`), then set the frontmatter's
+`consumed: <PR URL>` line (replacing any existing one; that line itself is not
+part of the comparison). A mismatch or content no longer available → ask. The
 edit fails → report the PR URL and the failure per Rule 2. PR not opened → no
 marker. No plan file was saved (the user chose to continue) → say so in the
 first comment. Never put the plan file's absolute path in the PR description
