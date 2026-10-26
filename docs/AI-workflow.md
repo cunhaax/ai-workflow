@@ -118,7 +118,7 @@ never committed — the planner returns plan text to the main agent, which
 presents it via plan mode. Only `/feature --plan-only` saves one: the
 approved plan goes to `.workflow-plans/<slug>.md` under the main worktree —
 local-only like `.workflow-log/`, but self-ignored by a `.gitignore` inside
-the directory. `/feature --from-plan <slug>` later runs it from a feature
+the directory; its frontmatter `tier:` copies the approved plan's Tier. `/feature --from-plan <slug>` later runs it from a feature
 branch in any worktree, reading it by absolute path and marking it
 `consumed: <PR URL>` once the PR opens (deleting it is a manual `rm`).
 Reading it from another worktree works by default; the `consumed:` edit
@@ -192,7 +192,9 @@ it in the plan's Approval Summary; manual "try X, confirm Y" checklists are
 banned. Ambiguities surface as `NEEDS_DECISION` in
 the plan text, never as questions from inside a sub-agent. (Named
 `plan-draft`, not `plan`, to avoid colliding with Claude Code's built-in
-plan-mode command.)
+plan-mode command.) The Approval Summary also states a risk **Tier** (0/1/2)
+with the reason that set it, and Files lists every file by exact
+repo-relative path.
 
 ### `plugins/ai-workflow/skills/plan-critic/SKILL.md` — `/plan-critic`
 
