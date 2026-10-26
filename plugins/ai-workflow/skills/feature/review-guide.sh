@@ -14,12 +14,13 @@
 # Output, in order: a header (the base ref, origin/<default-branch> if it
 # exists, else the local branch; merge-base; HEAD; the plan's basename, or
 # "no plan file", "plan re-approved this run" or "plan file not readable");
-# "Sensitive paths changed: <n> -> floor 2" or "0 -> none", with the changed
-# paths that match a Sensitive Area pattern; then, when they apply, the
-# prose-only bullet count, "no patterns defined", mid-list bullets and
-# patterns matching no file at HEAD; then "Unplanned changes", the changed
-# paths the plan's "## Files" list did not name. A part that cannot be
-# computed says "not computed (<reason>)".
+# "Sensitive paths changed: <n> → floor 2" or "0 → none" (→ is U+2192), with
+# the changed paths that match a Sensitive Area pattern; then, when they
+# apply, the prose-only bullet count, "no patterns defined", mid-list bullets
+# and patterns matching no file at HEAD; then "Unplanned changes", the changed
+# paths the plan's "## Files" list did not name, and last "Unparsed plan Files
+# bullets" if there are any. A part that cannot be computed says
+# "not computed (<reason>)".
 #
 # Exit 0 whenever output was printed. Exit 1, "review-guide: <problem>" on
 # stderr and nothing on stdout, for a usage error, no work tree, an
@@ -40,8 +41,8 @@
 # space; only that leading run counts. Patterns are repo-relative and anchored
 # at the repo root (a bare name matches only at the root; use */name for any
 # depth). A pattern also covers everything under it. * matches any characters
-# including /; ? and [...] work as in a shell; ** matches zero or more
-# directories (a/**/b matches a/b). A bullet with no leading pattern is
+# including /; ? and [...] work as in a shell, byte-wise (LC_ALL=C); ** matches
+# zero or more directories (a/**/b matches a/b). A bullet with no leading pattern is
 # "prose-only": counted, not checked. A pattern matching no file at HEAD is
 # listed, since a typo would otherwise under-report silently.
 #
@@ -79,7 +80,7 @@ fi
 mb=$(git merge-base "$ref" HEAD 2>/dev/null) || die "no merge base between $ref and HEAD"
 mb_short=$(git rev-parse --short "$mb") || die "cannot resolve merge base"
 head_short=$(git rev-parse --short HEAD) || die "cannot resolve HEAD"
-changed=$(git -c core.quotepath=off diff --no-renames --name-only "$mb" HEAD) || die "git diff failed"
+changed=$(git -c core.quotepath=off -c diff.relative=false diff --no-renames --name-only "$mb" HEAD) || die "git diff failed"
 files=$(git -c core.quotepath=off ls-tree -r --full-tree --name-only HEAD) || die "git ls-tree failed"
 
 parse_areas() {
