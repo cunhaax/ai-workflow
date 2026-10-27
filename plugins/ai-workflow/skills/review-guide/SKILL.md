@@ -50,11 +50,13 @@ comments on a PR.
 - n = the higher of the plan's tier and the script's floor (2 when it lists
   sensitive paths). A user-set tier shows both values (`1 (set by user;
   derived 2) → 2`)
+- A judged prose area (step 3, not `unsure`) also raises n to 2, named in the
+  reason as `<area> (judged, not computed)`; it never lowers n
 - The plan's tier is the approved plan text's `**Tier:**` line (inside
   `/feature`, the one in context). Standalone, read it from the given plan
   file; with no plan, n is the floor, marked "no plan tier"
 - The reason names each sensitive area touched, as a fact
-- Floor above the plan's tier → tell the user before the PR opens:
+- Floor or a judged area above the plan's tier → tell the user before the PR opens:
   `/feature` step 4's `opus` override may not have been applied, and step 9's
   second look applies
 
@@ -63,6 +65,13 @@ comments on a PR.
 For the reviewer; commit SHAs are allowed here.
 
 - The script's stdout, verbatim, first
+- **Prose Sensitive Areas (judged, not computed)** under it, when the script
+  prints `Not path-checked: <k>` or the branch's `AGENTS.md` diff removes a
+  prose-only bullet (no leading backticked path; read `git show HEAD:AGENTS.md`
+  plus the removed ones, marked ` (removed on this branch)`). One line per area,
+  named by its text before ` — `: each changed file whose diff changes behaviour
+  it describes, `` `<path>` — <reason> `` (not mere nearness; if unsure, reason
+  `unsure`), else `none judged`. Your count differs from `<k>` → say so
 - **Decisions not in the plan**: one line each; every unplanned path
   accounted for, or "None"
 - **Read closely** / **Skim**: paths, one line why each
@@ -78,6 +87,7 @@ replace both, after any commit made once the PR is open.
 ## Rules
 
 - Never alter, trim or contradict the script's output; an omission in your own
-  parts must stay visible next to it
+  parts must stay visible next to it. Its `→ none` covers computed paths only,
+  so a judged raise beside it is not a contradiction
 - Never put the plan file's absolute path in the output: the script prints the
   basename only

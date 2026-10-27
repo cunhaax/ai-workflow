@@ -107,13 +107,25 @@ description. Keep the list short and concrete; if the rationale for an entry
 needs more than a line, link a page under `docs/` for the depth rather than
 expanding here.
 
+Start each bullet with its repo-relative paths or globs in backticks (several:
+separate with `, ` on the first line), then ` — ` and the reason. A pattern is
+anchored at the repo root, covers everything under it, and `*` matches `/`
+(`**/` spans directories). The review guide raises a PR that changes a matching
+file to at least Tier 2; a bullet without leading patterns is judged by the
+agent, not path-checked.
+
+Update this section in the same change whenever a change adds, renames, moves
+or removes files that belong to one of these areas, or introduces a new
+sensitive area. A pattern that matches no file is reported by the review guide.
+
 <!-- [TODO: one bullet per area — e.g. security config, auth/token/session
 handling, route definitions, sensitive data fields and their rendering paths,
-payment flows, schema migrations. Name concrete files/packages so an agent
-can match a diff against them.] -->
+payment flows, schema migrations. Name the files or directories that implement
+each (e.g. `src/auth/`, `db/migrations/`), never a package name or prose
+alone.] -->
 
-- [TODO: sensitive area 1 — concrete file/package/pattern]
-- [TODO: sensitive area 2]
+- `[TODO: path or glob]` — [TODO: why a mistake here is expensive]
+- `[TODO: path or glob]` — [TODO: reason]
 
 ## Task Tracking
 
