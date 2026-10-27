@@ -348,8 +348,9 @@ and commit-ready. Pipeline details go in the first PR comment.
 
 **First PR comment**, posted right after opening the PR (e.g. `gh pr
 comment`): the **Review guide** `review-guide` returned (addressed to the
-reviewer; SHAs allowed), then *Review & traceability*. On a github.com PR, a
-guide with neither link lines nor a `Links: not computed` line is incomplete.
+reviewer; SHAs allowed), then *Review & traceability*. On a github.com PR with a
+non-empty *Read closely* or *Skim*, a guide with neither link lines nor a
+`Links: not computed` line is incomplete.
 If the host can't post comments, put both under `##` headings at the end of
 the description, guide first (plain paths), and tell the user to trim them at
 merge.
