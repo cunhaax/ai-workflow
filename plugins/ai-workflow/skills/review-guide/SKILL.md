@@ -86,16 +86,19 @@ For the reviewer; commit SHAs are allowed here.
 
 ### 4. Links
 
-Only with a PR URL and a non-empty **Read closely** or **Skim**.
+Only with a PR URL and a non-empty **Read closely** or **Skim**; with both
+empty, skip it (the caller's incomplete-guide rule does not apply).
 
 `sh ${CLAUDE_SKILL_DIR}/review-guide.sh --links <pr-url> <path>...`
 
-- Pass every **Read closely** and **Skim** path, in single quotes when it has
-  spaces or shell-special characters
-- Its lines replace those entries; append ` — <why>` to each. A `Links: not
-  computed (…)` line goes verbatim under the lists, and tell the user
-- Exit 1 or any stderr → STOP per `AGENTS.md` Rule 2. Report the PR URL, the
-  error and the guide with plain paths, ready to post by hand
+- One call: pass every **Read closely** path, then every **Skim** path, in
+  single quotes when it has spaces or shell-special characters
+- Its lines replace those entries (split back into the two lists by argument
+  order); append ` — <why>` to each. A `Links: not computed (…)` line goes
+  verbatim once under the lists, and tell the user
+- Exit 1, any stderr or empty stdout → STOP per `AGENTS.md` Rule 2. Report the
+  PR URL, the error and the guide with plain paths, ready to post by hand; the
+  plan file stays unconsumed
 - Never write a link by hand
 
 ## Output
@@ -109,8 +112,9 @@ made once the PR is open (including step 4).
 ## Rules
 
 - Never alter, trim or contradict the script's output; an omission in your own
-  parts must stay visible next to it. Step 4's lines are entries to extend with
-  ` — <why>`; never drop or reorder one or edit its path. Its `→ none` covers computed paths only,
+  parts must stay visible next to it. Its `→ none` covers computed paths only,
   so a judged raise beside it is not a contradiction
+- Step 4's lines are entries to extend with ` — <why>`; never drop or reorder
+  one or edit its path
 - Never put the plan file's absolute path in the output: the script prints the
   basename only
