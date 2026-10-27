@@ -79,8 +79,9 @@ For the reviewer; commit SHAs are allowed here.
 - **Decisions not in the plan**: one line each; every unplanned path
   accounted for, or "None"
 - **Read closely** / **Skim**: paths, one line why each. Copy each path from
-  `git -c core.quotepath=off diff --no-renames --name-only <base ref from the
-  script's header>...HEAD`, never type it from memory
+  `git -c core.quotepath=off -c diff.relative=false diff --no-renames
+  --name-only <base ref from the script's header>...HEAD`, never type it from
+  memory
 - **Check by hand**: what to try in the running app, or "nothing: no UI or API
   surface"
 
