@@ -177,9 +177,9 @@ sensitive area. A pattern that matches no file is reported by the review guide.
 - `.claude-plugin/marketplace.json` / `plugins/ai-workflow/.claude-plugin/plugin.json`
   — a broken manifest breaks installation for everyone.
 - `plugins/ai-workflow/skills/review-guide/review-guide.sh` — computes the PR's
-  sensitive-path tier floor and unplanned-changes list, and backs
-  `/init-workflow`'s Sensitive Areas doctor check; a bug here
-  under-reports risk silently.
+  sensitive-path tier floor and unplanned-changes list, builds the guide's
+  file links, and backs `/init-workflow`'s Sensitive Areas doctor check; a bug
+  here under-reports risk silently.
 - `plugins/ai-workflow/.mcp.json` — bundled MCP servers start automatically
   for every project that enables the plugin; keep versions pinned
   (never `@latest`) so an upstream release can't silently change what

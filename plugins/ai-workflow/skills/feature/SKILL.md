@@ -330,8 +330,10 @@ Blocker decided (or QA skipped).
 returns the Tier line and the Review guide. Pass it the default branch and the
 plan source: the plan file path 1d wrote or `--from-plan` read;
 `--plan-reapproved` after a `--from-plan` step 2 material deviation; nothing
-if no plan file was saved. Run it again and replace both after any commit made
-once the PR is open (e.g. fixes from the second look below).
+if no plan file was saved. Its paths are plain until the PR is open; then apply
+its step 4 (links) with the PR URL before posting the first comment. Run it
+again and replace both after any commit made once the PR is open (e.g. fixes
+from the second look below), passing the PR URL.
 
 The PR description usually becomes the merge commit message: keep it short
 and commit-ready. Pipeline details go in the first PR comment.
@@ -346,9 +348,11 @@ and commit-ready. Pipeline details go in the first PR comment.
 
 **First PR comment**, posted right after opening the PR (e.g. `gh pr
 comment`): the **Review guide** `review-guide` returned (addressed to the
-reviewer; SHAs allowed), then *Review & traceability*. If the host can't post
-comments, put both under `##` headings at the end of the description, guide
-first, and tell the user to trim them at merge.
+reviewer; SHAs allowed), then *Review & traceability*. On a github.com PR, a
+guide with neither link lines nor a `Links: not computed` line is incomplete.
+If the host can't post comments, put both under `##` headings at the end of
+the description, guide first (plain paths), and tell the user to trim them at
+merge.
 
 **Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per

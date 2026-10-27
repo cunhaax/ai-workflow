@@ -3,11 +3,12 @@ name: review-guide
 description: >
   Computes a PR's Tier floor and unplanned-changes list with a bundled
   read-only script, then writes the PR's Tier line and Review guide (decisions
-  not in the plan, files to read closely vs skim, what to check by hand). Use
-  at /feature step 9 before opening the PR, or when the user asks for a review
-  guide for the current branch.
+  not in the plan, files to read closely vs skim, what to check by hand), and
+  once the PR is open links each file to its diff. Use at /feature step 9
+  before and after opening the PR, or when the user asks for a review guide for
+  the current branch.
 license: MIT
-compatibility: Requires git and a POSIX sh with awk.
+compatibility: Requires git and a POSIX sh with awk; file links use sha256sum or shasum when present.
 metadata:
   author: André Cunha
 ---
@@ -29,6 +30,9 @@ comments on a PR.
   file was saved). Run standalone with none given → ask for the path or "none"
 - The approved plan text's **Tier** line and the session's context (deviations,
   decisions made while implementing)
+- The PR URL, once the PR is open (the one `gh pr create` printed; on a re-run
+  in a resumed session, `gh pr view --json url -q .url`; never build it by
+  hand). Without it, step 4 does not run
 
 ## Steps
 
@@ -74,20 +78,39 @@ For the reviewer; commit SHAs are allowed here.
   `unsure`), else `none judged`. Your count differs from `<k>` → say so
 - **Decisions not in the plan**: one line each; every unplanned path
   accounted for, or "None"
-- **Read closely** / **Skim**: paths, one line why each
+- **Read closely** / **Skim**: paths, one line why each. Copy each path from
+  `git -c core.quotepath=off diff --no-renames --name-only <base ref from the
+  script's header>...HEAD`, never type it from memory
 - **Check by hand**: what to try in the running app, or "nothing: no UI or API
   surface"
+
+### 4. Links
+
+Only with a PR URL and a non-empty **Read closely** or **Skim**.
+
+`sh ${CLAUDE_SKILL_DIR}/review-guide.sh --links <pr-url> <path>...`
+
+- Pass every **Read closely** and **Skim** path, in single quotes when it has
+  spaces or shell-special characters
+- Its lines replace those entries; append ` — <why>` to each. A `Links: not
+  computed (…)` line goes verbatim under the lists, and tell the user
+- Exit 1 or any stderr → STOP per `AGENTS.md` Rule 2. Report the PR URL, the
+  error and the guide with plain paths, ready to post by hand
+- Never write a link by hand
 
 ## Output
 
 The Tier line and the Review guide. The caller puts the Tier line in the PR
-description and the guide at the top of the first comment. Run again, and
-replace both, after any commit made once the PR is open.
+description and the guide at the top of the first comment. Before the PR opens
+the entries are plain paths; step 4 links them once it is open, and the
+description never carries links. Run again, and replace both, after any commit
+made once the PR is open (including step 4).
 
 ## Rules
 
 - Never alter, trim or contradict the script's output; an omission in your own
-  parts must stay visible next to it. Its `→ none` covers computed paths only,
+  parts must stay visible next to it. Step 4's lines are entries to extend with
+  ` — <why>`; never drop or reorder one or edit its path. Its `→ none` covers computed paths only,
   so a judged raise beside it is not a contradiction
 - Never put the plan file's absolute path in the output: the script prints the
   basename only

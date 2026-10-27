@@ -3,8 +3,10 @@
 #
 # Usage: sh review-guide.sh <default-branch> [<plan-file> | --plan-reapproved]
 #        sh review-guide.sh --areas
-# Run inside the work tree. Prints markdown to stdout; /feature step 9 pastes
-# it verbatim at the top of the PR's first comment.
+#        sh review-guide.sh --links <pr-url> <path>...
+# Run inside the work tree (--links needs none). Prints markdown to stdout;
+# /feature step 9 pastes it verbatim at the top of the PR's first comment
+# (--links lines are entries the guide's author extends, see below).
 #   <plan-file>        absolute path of the saved plan (.workflow-plans/<slug>.md
 #                      under the main worktree; the caller passes it, nothing
 #                      is resolved here)
@@ -12,6 +14,7 @@
 #                      plan is stale: the unplanned list is not computed
 #   (no 2nd argument)  no plan file was saved
 #   --areas            (first argument only) the Sensitive Areas check, below
+#   --links            (first argument only) clickable file links, below
 #
 # Output, in order: a header (the base ref, origin/<default-branch> if it
 # exists, else the local branch; merge-base; HEAD; the plan's basename, or
@@ -40,6 +43,26 @@
 # Areas" section or no areas at all. The last line is "Result: ok" with no
 # issue, else "Result: <n> issue(s)". Exit codes as above, plus exit 1 for an
 # unreadable AGENTS.md.
+#
+# --links: turns paths into links to their diff in the PR's "Files changed"
+# view. A pure function of its arguments: it runs no git, needs no work tree
+# and writes nothing. <pr-url> is the URL `gh pr create` prints, accepted only
+# as https://github.com/<owner>/<repo>/pull/<digits> with at most one trailing
+# "/" (owner and repo use A-Za-z0-9._-); the link is rebuilt from the parsed
+# parts as <that PR>/changes#diff-<sha256 of the path>. The hash is of the
+# exact path argument bytes (no "./" stripping, no URL-encoding), by sha256sum
+# if found, else shasum -a 256. Prints one line per non-empty path, in order:
+# "- [`<path>`](<link>)", or "- `<path>`" when no link can be made; then, only
+# if any is plain, one line "Links: not computed (<reason>)" for a URL that is
+# not a github.com PR URL or no hash tool, or "Links: not computed for <k>
+# path(s) (hash tool failed)". Exit 0 whenever lines were printed. Exit 1, a
+# usage line on stderr and nothing on stdout when no URL or no path follows.
+# Pass paths as git prints them (git diff --name-only), never retyped. Known
+# limitations: a path with a backtick breaks the code span; a path that is not
+# in the PR's diff, or is a rename's old name, links to the top of the page;
+# other hosts (GitHub Enterprise, GitLab) get plain paths; that GitHub hashes
+# the raw path bytes is verified for ASCII paths only, and that anchors
+# survive new commits is reasoned, not tested.
 #
 # Changed paths: git diff --no-renames <merge-base> HEAD, so a rename is a
 # delete plus an add (a planned MOVE lists both paths). Paths git still quotes
@@ -200,8 +223,70 @@ $pats
 EOF
 }
 
+if [ "${1-}" = --links ]; then
+    [ $# -ge 3 ] || die "usage: sh review-guide.sh --links <pr-url> <path>..."
+    url=${2%/}
+    shift 2
+    ok=0
+    rest=${url#https://github.com/}
+    case $rest in
+    "$url") ;;
+    */*/pull/*)
+        owner=${rest%%/*}
+        t=${rest#*/}
+        repo=${t%%/*}
+        t=${t#*/}
+        num=${t#*/}
+        case $owner$repo in
+        "" | *[!A-Za-z0-9._-]*) ;;
+        *)
+            if [ -n "$owner" ] && [ -n "$repo" ] && [ "${t%%/*}" = pull ]; then
+                case $num in
+                "" | *[!0-9]*) ;;
+                *) ok=1 ;;
+                esac
+            fi
+            ;;
+        esac
+        ;;
+    esac
+    tool=""
+    if command -v sha256sum >/dev/null 2>&1; then
+        tool=sha256sum
+    elif command -v shasum >/dev/null 2>&1; then
+        tool="shasum -a 256"
+    fi
+    failed=0
+    for p in "$@"; do
+        [ -n "$p" ] || continue
+        h=""
+        if [ "$ok" = 1 ] && [ -n "$tool" ]; then
+            h=$(printf '%s' "$p" | $tool 2>/dev/null) || h=""
+            h=${h%% *}
+            case $h in
+            *[!0-9a-f]*) h="" ;;
+            esac
+            [ ${#h} -eq 64 ] || h=""
+            [ -n "$h" ] || failed=$((failed + 1))
+        fi
+        if [ -n "$h" ]; then
+            printf '%s\n' "- [\`$p\`](https://github.com/$owner/$repo/pull/$num/changes#diff-$h)"
+        else
+            printf '%s\n' "- \`$p\`"
+        fi
+    done
+    if [ "$ok" = 0 ]; then
+        echo "Links: not computed (not a github.com pull request URL)"
+    elif [ -z "$tool" ]; then
+        echo "Links: not computed (no sha256sum or shasum)"
+    elif [ "$failed" -gt 0 ]; then
+        echo "Links: not computed for $failed path(s) (hash tool failed)"
+    fi
+    exit 0
+fi
+
 if [ "${1-}" = --areas ]; then
-    [ $# -eq 1 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved] | --areas"
+    [ $# -eq 1 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved] | --areas | --links <pr-url> <path>..."
     git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree"
     top=$(git rev-parse --show-toplevel) || die "cannot resolve the work tree root"
     agents="$top/AGENTS.md"
@@ -288,7 +373,7 @@ Patterns: $npats
     exit 0
 fi
 
-[ $# -ge 1 ] && [ $# -le 2 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved] | --areas"
+[ $# -ge 1 ] && [ $# -le 2 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved] | --areas | --links <pr-url> <path>..."
 base_name=$1
 plan_arg=${2-}
 
