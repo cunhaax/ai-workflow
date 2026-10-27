@@ -350,11 +350,20 @@ list didn't name, and the changed files that match a Sensitive Area pattern in
 syntax in the script's header). A match sets a floor of Tier 2, so the Tier
 only goes up from the plan's; bullets without a leading pattern are counted,
 not checked. The skill then writes the judgment parts: the Tier line, decisions
-not in the plan, files to read closely vs skim, and what to check by hand.
-`/feature` step 9 puts the Tier line in the PR description and the guide at
-the top of the first comment; it can also be run on its own. Projects whose
-Sensitive Areas bullets already start with backticked paths get the floor as
-soon as they update the plugin. A `--from-plan` run re-approved mid-run
+not in the plan, files to read closely vs skim, and what to check by hand. For
+prose-only bullets it also names, labelled *judged, not computed*, the changed
+files it believes fall under each one (or "none judged"); that can raise the
+Tier to 2, never lower it. `/feature` step 9 puts the Tier line in the PR
+description and the guide at the top of the first comment; it can also be run
+on its own. The `AGENTS.md` template defines the bullet format and asks that
+the list be updated in the same change that adds, renames, moves or removes
+files in an area (existing projects add that note by hand), and `/init-workflow`
+drafts bullets in it. Projects whose Sensitive Areas bullets already start
+with backticked paths get the floor as soon as they update the plugin; the
+`/init-workflow` doctor runs the script's read-only `--areas` mode on the
+first run after updating, reporting issues (patterns that match no committed
+file, malformed bullets) and advising on prose-only bullets. A `--from-plan`
+run re-approved mid-run
 reports unplanned changes as not computed, since its saved plan is not
 rewritten.
 
@@ -369,7 +378,8 @@ build/test commands and default branch, drafts `AGENTS.md` from the actual
 codebase, points *Review & Planning Guidance* at existing docs or seeds new
 ones, and validates the whole setup (hook wiring via
 `scripts/check-hook-status.sh`, `CLAUDE.md` import, `.gitignore`, settings,
-the `Commands` section, the guidance section resolving to real files).
+the `Commands` section, the guidance section resolving to real files, the
+Sensitive Areas patterns the PR Tier floor can check).
 Everything is proposed and confirmed before writing. Never edits the
 plugin's own mechanism. (Named `init-workflow` to avoid colliding with
 Claude Code's built-in `/init`.)

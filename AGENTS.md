@@ -160,6 +160,10 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
 
 ## Sensitive Areas — the security surface
 
+Update this section in the same change whenever a change adds, renames, moves
+or removes files that belong to one of these areas, or introduces a new
+sensitive area. A pattern that matches no file is reported by the review guide.
+
 - `plugins/ai-workflow/skills/init-workflow/templates/` — this is what
   every scaffolded project's enforcement mechanism and starting rules are
   built from; an error here propagates silently to every downstream
@@ -173,7 +177,8 @@ ends up correct (see `docs/AI-workflow.md`, *Evolving the System*).
 - `.claude-plugin/marketplace.json` / `plugins/ai-workflow/.claude-plugin/plugin.json`
   — a broken manifest breaks installation for everyone.
 - `plugins/ai-workflow/skills/review-guide/review-guide.sh` — computes the PR's
-  sensitive-path tier floor and unplanned-changes list; a bug here
+  sensitive-path tier floor and unplanned-changes list, and backs
+  `/init-workflow`'s Sensitive Areas doctor check; a bug here
   under-reports risk silently.
 - `plugins/ai-workflow/.mcp.json` — bundled MCP servers start automatically
   for every project that enables the plugin; keep versions pinned

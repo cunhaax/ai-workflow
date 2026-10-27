@@ -168,7 +168,7 @@ next run; answering "no" each time is the workaround.
 - Mostly open → **first-run mode**: Steps 2–4, then validate
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
   open or drifted (plus Step 5 item 8's two informational Task Tracking
-  notes, which are neither, by design)
+  notes and item 9's prose advisory, which are neither, by design)
 
 ### Step 2 — Detect the commands, propose, confirm
 
@@ -204,9 +204,16 @@ For each still-open section, draft from evidence and confirm before writing:
   surfaces: auth/session/token code, security config, route definitions,
   payment/billing flows, schema migrations, personal data fields and their
   rendering paths, secret/config loading
-  - One bullet per confirmed area, naming a concrete file/package/pattern
+  - One bullet per confirmed area in the template's format: backticked
+    repo-relative paths or globs, then ` — ` and the reason; never a package
+    name. Take paths from `git ls-files` and check each glob with
+    `git ls-files -- '<pattern>'` (non-empty) before proposing it; files just
+    scaffolded in Step 1 may be listed (they clear once committed). Nothing
+    tracked yet → leave the TODO, re-run the doctor after the first commit. A
+    prose-only bullet the user insists on is kept; tell them the agent judges
+    it, the script does not path-check it (never write that into the bullet)
   - This list gates three workflow decisions (critic-skip, reviewer model
-    escalation, PR security flag); empty = those protections off. If the user
+    escalation, the PR's Tier floor); empty = those protections off. If the user
     has no time, leave the TODO and say so in the report
 - **Rule 5** (project hygiene rule): ask whether one applies (e.g. reset a
   dev database at session end); fill it or delete the placeholder
@@ -328,6 +335,25 @@ report what you can't fix.
      exception too)
    - Known limitation (as in Step 1): no memory of a prior decline across
      runs, so a deliberately deleted section is re-offered every run
+9. **Sensitive Areas patterns** the PR Tier floor can check. Run
+   `sh ${CLAUDE_SKILL_DIR}/../review-guide/review-guide.sh --areas` from the
+   project root (read-only; reads the working-tree `AGENTS.md`, checks the
+   files at HEAD). Issues first, each with a fix offer, written only on
+   confirmation:
+   - `matches no file at HEAD` → a typo, a moved file, or a staged or
+     uncommitted one (clears once committed)
+   - `ends mid-list` → patterns on the bullet's first line; symlink → make
+     `AGENTS.md` a real file; no `## Sensitive Areas` section → rename a
+     misspelt heading; `no commit at HEAD` → re-run after the first commit
+   - `No Sensitive Areas defined` → Step 3's drafting, else a deferral: the PR
+     Tier floor is off
+   - `Prose-only bullets` → advisory, never an issue: the agent judges them in
+     the review guide, the script does not path-check them. Offer to add path
+     bullets by Step 3's procedure (keep the prose bullet unless they cover
+     it); declining is not a deferral
+   - A non-zero exit, stderr, empty stdout, a timeout, an unexpanded
+     `${CLAUDE_SKILL_DIR}` or a missing script → STOP per Rule 2 naming the
+     reason; never guess a path
 
 ### Step 6 — Report
 
@@ -338,17 +364,19 @@ End with a short summary:
   scripts correctly identified as this gate's)
 - Declined appends and unresolved hook/settings conflicts (Step 1, Step 5
   item 2)
-- Deliberately deferred: open TODOs and what they disable (excluding Step 5
-  item 8's QA-finding-bullet fallback note, not a deferral)
+- Deliberately deferred: open TODOs and what they disable, e.g. Sensitive
+  Areas → the PR Tier floor (excluding Step 5 item 8's QA-finding-bullet
+  fallback note, not a deferral)
 - Doctor checklist results
 - Suggested next action: commit the setup changes, then start the first
   feature on a fresh branch with `/feature`
 
 For each item still open (incl. deferrals found in doctor mode, **excluding**
-Step 5 item 8's two informational notes: its absent-section offer, already
-made and, if accepted, acted on inside Step 5; and its QA-finding-bullet
-fallback note), offer to run the relevant step (2–4) for just that item now,
-so deferred TODOs are re-offered every run, not silently carried forward.
+Step 5's informational notes: item 8's absent-section offer, already made and,
+if accepted, acted on inside Step 5, and its QA-finding-bullet fallback note;
+and item 9's prose advisory), offer to run the relevant step (2–4) for just
+that item now, so deferred TODOs are re-offered every run, not silently
+carried forward.
 
 Do not commit or push unless the user asks (setup changes deserve their own
 review). If asked to push, `AGENTS.md` Rule 4 applies: `code-critic` pass,

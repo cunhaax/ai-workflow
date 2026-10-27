@@ -2,6 +2,7 @@
 # Computes the trustworthy parts of /feature's PR review guide. Read-only.
 #
 # Usage: sh review-guide.sh <default-branch> [<plan-file> | --plan-reapproved]
+#        sh review-guide.sh --areas
 # Run inside the work tree. Prints markdown to stdout; /feature step 9 pastes
 # it verbatim at the top of the PR's first comment.
 #   <plan-file>        absolute path of the saved plan (.workflow-plans/<slug>.md
@@ -10,6 +11,7 @@
 #   --plan-reapproved  a --from-plan run was re-approved at step 2, so the saved
 #                      plan is stale: the unplanned list is not computed
 #   (no 2nd argument)  no plan file was saved
+#   --areas            (first argument only) the Sensitive Areas check, below
 #
 # Output, in order: a header (the base ref, origin/<default-branch> if it
 # exists, else the local branch; merge-base; HEAD; the plan's basename, or
@@ -25,6 +27,19 @@
 # Exit 0 whenever output was printed. Exit 1, "review-guide: <problem>" on
 # stderr and nothing on stdout, for a usage error, no work tree, an
 # unresolvable base, no merge-base or a failing git command.
+#
+# --areas: the doctor check behind /init-workflow. It reads the work tree's
+# root AGENTS.md from disk (so it sees edits not yet committed) and checks the
+# patterns against the files at HEAD, with the same parser and matching as the
+# PR mode. It takes no other argument and diffs nothing. It prints the pattern
+# count, the placeholder count, the prose-only bullets (informational: the
+# review guide's author judges them, nothing path-checks them), then each
+# issue: a bullet ending mid-list, a pattern matching no file at HEAD, a
+# symlinked AGENTS.md (the PR mode reads the blob, so it finds no patterns),
+# no commit at HEAD, and the most specific of no AGENTS.md, no "## Sensitive
+# Areas" section or no areas at all. The last line is "Result: ok" with no
+# issue, else "Result: <n> issue(s)". Exit codes as above, plus exit 1 for an
+# unreadable AGENTS.md.
 #
 # Changed paths: git diff --no-renames <merge-base> HEAD, so a rename is a
 # delete plus an add (a planned MOVE lists both paths). Paths git still quotes
@@ -64,24 +79,7 @@ die() {
     exit 1
 }
 
-[ $# -ge 1 ] && [ $# -le 2 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved]"
-base_name=$1
-plan_arg=${2-}
 tab=$(printf '\t')
-
-git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree"
-if git rev-parse --verify -q "refs/remotes/origin/$base_name^{commit}" >/dev/null 2>&1; then
-    ref="origin/$base_name"
-elif git rev-parse --verify -q "$base_name^{commit}" >/dev/null 2>&1; then
-    ref=$base_name
-else
-    die "cannot resolve base '$base_name'"
-fi
-mb=$(git merge-base "$ref" HEAD 2>/dev/null) || die "no merge base between $ref and HEAD"
-mb_short=$(git rev-parse --short "$mb") || die "cannot resolve merge base"
-head_short=$(git rev-parse --short HEAD) || die "cannot resolve HEAD"
-changed=$(git -c core.quotepath=off -c diff.relative=false diff --no-renames --name-only "$mb" HEAD) || die "git diff failed"
-files=$(git -c core.quotepath=off ls-tree -r --full-tree --name-only HEAD) || die "git ls-tree failed"
 
 parse_areas() {
     awk '
@@ -94,13 +92,13 @@ parse_areas() {
     }
     function bullet(text,    e, tok, n, last, sep) {
         sub(/^ +/, "", text)
-        if (substr(text, 1, 5) == "[TODO") return
-        if (substr(text, 1, 1) != "`") { prose++; return }
+        if (substr(text, 1, 5) == "[TODO") { todo++; return }
+        if (substr(text, 1, 1) != "`") { prose++; print "Q\t" NR "\t" text; return }
         while (substr(text, 1, 1) == "`") {
             e = index(substr(text, 2), "`")
             if (e == 0) break
             tok = substr(text, 2, e - 1); text = substr(text, e + 2)
-            if (tok ~ /^\[TODO/) return
+            if (tok ~ /^\[TODO/) { if (n == 0) todo++; return }
             if (tok != "") { emit(tok, tok); n++; last = tok }
             sep = 0
             if (match(text, /^ *, */)) sep = 1
@@ -127,10 +125,10 @@ parse_areas() {
         }
         line = out line
     }
-    line ~ /^## Sensitive Areas/ { sec = 1; next }
+    line ~ /^## Sensitive Areas/ { sec = 1; seen = 1; next }
     line ~ /^## / { sec = 0; next }
     sec && line ~ /^[-*] / { bullet(substr(line, 3)) }
-    END { print "X\t" prose + 0 }
+    END { print "X\t" prose + 0; print "Y\t" todo + 0 "\t" seen + 0 }
     '
 }
 
@@ -180,6 +178,134 @@ matches() {
     return 1
 }
 
+# unmatched: sets zero to a "Pattern matches no file at HEAD" line for each
+# pattern in $pats that no path in $files matches (a global, set directly)
+unmatched() {
+    zero=""
+    while IFS=$tab read -r kind disp g1 g2; do
+        [ "$kind" = P ] || continue
+        found=0
+        while IFS= read -r f; do
+            if matches "$f" "$g1" || matches "$f" "$g2"; then
+                found=1
+                break
+            fi
+        done <<EOF
+$files
+EOF
+        [ "$found" = 1 ] || zero="${zero}Pattern matches no file at HEAD: \`$disp\`
+"
+    done <<EOF
+$pats
+EOF
+}
+
+if [ "${1-}" = --areas ]; then
+    [ $# -eq 1 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved] | --areas"
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree"
+    top=$(git rev-parse --show-toplevel) || die "cannot resolve the work tree root"
+    agents="$top/AGENTS.md"
+    files=""
+    nocommit=0
+    if git rev-parse --verify -q "HEAD^{commit}" >/dev/null 2>&1; then
+        head_short=$(git rev-parse --short HEAD) || die "cannot resolve HEAD"
+        files=$(git -c core.quotepath=off ls-tree -r --full-tree --name-only HEAD) || die "git ls-tree failed"
+        where="files at HEAD \`$head_short\`"
+    else
+        nocommit=1
+        where="no commit at HEAD"
+    fi
+    exists=0
+    symlink=0
+    rec=""
+    if [ -e "$agents" ] || [ -L "$agents" ]; then
+        { [ -f "$agents" ] && [ -r "$agents" ]; } || die "AGENTS.md is not a readable file"
+        exists=1
+        [ ! -L "$agents" ] || symlink=1
+        rec=$(parse_areas <"$agents")
+    fi
+    pats=$(printf '%s\n' "$rec" | grep '^P' | sort -u || true)
+    npats=$(printf '%s\n' "$pats" | awk 'NF { c++ } END { print c + 0 }')
+    prose=$(printf '%s\n' "$rec" | awk -F'\t' '$1 == "X" { n = $2 } END { print n + 0 }')
+    todo=$(printf '%s\n' "$rec" | awk -F'\t' '$1 == "Y" { n = $2 } END { print n + 0 }')
+    seen=$(printf '%s\n' "$rec" | awk -F'\t' '$1 == "Y" { n = $3 } END { print n + 0 }')
+    mids=$(printf '%s\n' "$rec" | awk -F'\t' '$1 == "M" { print "Sensitive Areas bullet ends mid-list: `" $2 "`" }')
+    zero=""
+    [ "$nocommit" = 1 ] || unmatched
+    issues=0
+    out="**Sensitive Areas check by review-guide.sh** — \`AGENTS.md\` (work tree) · $where
+
+Patterns: $npats
+"
+    [ "$todo" = 0 ] || out="${out}Placeholder bullets: $todo
+"
+    if [ "$prose" != 0 ]; then
+        out="${out}Prose-only bullets: $prose (judged by the agent in the review guide, not path-checked)
+"
+        out="${out}$(printf '%s\n' "$rec" | awk -F'\t' '$1 == "Q" { print "Prose-only bullet, line " $2 ": " substr($0, length($1) + length($2) + 3) }')
+"
+    fi
+    if [ -n "$mids" ]; then
+        out="${out}$mids
+"
+        issues=$((issues + $(printf '%s\n' "$mids" | awk 'END { print NR }')))
+    fi
+    if [ -n "$zero" ]; then
+        out="${out}$zero"
+        issues=$((issues + $(printf '%s' "$zero" | awk 'END { print NR }')))
+    fi
+    if [ "$symlink" = 1 ]; then
+        out="${out}AGENTS.md is a symlink; PR mode cannot read it, so the floor will not fire
+"
+        issues=$((issues + 1))
+    fi
+    if [ "$exists" = 0 ]; then
+        out="${out}No AGENTS.md at the repo root
+"
+        issues=$((issues + 1))
+    elif [ "$seen" = 0 ]; then
+        out="${out}No \"## Sensitive Areas\" section in AGENTS.md
+"
+        issues=$((issues + 1))
+    elif [ "$npats" = 0 ] && [ "$prose" = 0 ]; then
+        out="${out}No Sensitive Areas defined
+"
+        issues=$((issues + 1))
+    fi
+    if [ "$nocommit" = 1 ]; then
+        out="${out}Patterns not checked against files: no commit at HEAD
+"
+        issues=$((issues + 1))
+    fi
+    if [ "$issues" = 0 ]; then
+        out="${out}Result: ok
+"
+    else
+        out="${out}Result: $issues issue(s)
+"
+    fi
+    printf '%s' "$out"
+    exit 0
+fi
+
+[ $# -ge 1 ] && [ $# -le 2 ] || die "usage: sh review-guide.sh <default-branch> [<plan-file>|--plan-reapproved] | --areas"
+base_name=$1
+plan_arg=${2-}
+
+git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree"
+if git rev-parse --verify -q "refs/remotes/origin/$base_name^{commit}" >/dev/null 2>&1; then
+    ref="origin/$base_name"
+elif git rev-parse --verify -q "$base_name^{commit}" >/dev/null 2>&1; then
+    ref=$base_name
+else
+    die "cannot resolve base '$base_name'"
+fi
+mb=$(git merge-base "$ref" HEAD 2>/dev/null) || die "no merge base between $ref and HEAD"
+mb_short=$(git rev-parse --short "$mb") || die "cannot resolve merge base"
+head_short=$(git rev-parse --short HEAD) || die "cannot resolve HEAD"
+changed=$(git -c core.quotepath=off -c diff.relative=false diff --no-renames --name-only "$mb" HEAD) || die "git diff failed"
+files=$(git -c core.quotepath=off ls-tree -r --full-tree --name-only HEAD) || die "git ls-tree failed"
+
 head_rec=""
 base_rec=""
 if git cat-file -e HEAD:AGENTS.md 2>/dev/null; then
@@ -212,23 +338,7 @@ done <<EOF
 $changed
 EOF
 
-zero=""
-while IFS=$tab read -r kind disp g1 g2; do
-    [ "$kind" = P ] || continue
-    found=0
-    while IFS= read -r f; do
-        if matches "$f" "$g1" || matches "$f" "$g2"; then
-            found=1
-            break
-        fi
-    done <<EOF
-$files
-EOF
-    [ "$found" = 1 ] || zero="${zero}Pattern matches no file at HEAD: \`$disp\`
-"
-done <<EOF
-$pats
-EOF
+unmatched
 
 plan_label="no plan file"
 reason="no plan file"
