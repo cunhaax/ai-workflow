@@ -219,7 +219,7 @@ if [ "${1-}" = --areas ]; then
     symlink=0
     rec=""
     if [ -e "$agents" ] || [ -L "$agents" ]; then
-        [ -r "$agents" ] || die "AGENTS.md is not readable"
+        { [ -f "$agents" ] && [ -r "$agents" ]; } || die "AGENTS.md is not a readable file"
         exists=1
         [ ! -L "$agents" ] || symlink=1
         rec=$(parse_areas <"$agents")

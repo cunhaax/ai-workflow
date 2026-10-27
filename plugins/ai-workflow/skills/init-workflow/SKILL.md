@@ -168,7 +168,7 @@ next run; answering "no" each time is the workaround.
 - Mostly open → **first-run mode**: Steps 2–4, then validate
 - Mostly filled → **doctor mode**: skip to Step 5, then report only what is
   open or drifted (plus Step 5 item 8's two informational Task Tracking
-  notes, which are neither, by design)
+  notes and item 9's prose advisory, which are neither, by design)
 
 ### Step 2 — Detect the commands, propose, confirm
 

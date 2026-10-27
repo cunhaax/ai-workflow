@@ -67,7 +67,7 @@ For the reviewer; commit SHAs are allowed here.
 - The script's stdout, verbatim, first
 - **Prose Sensitive Areas (judged, not computed)** under it, when the script
   prints `Not path-checked: <k>` or the branch's `AGENTS.md` diff removes a
-  prose-only bullet (no leading backticked path; read `git show HEAD:AGENTS.md`
+  prose-only bullet (no leading backticked path, not a `[TODO` placeholder; read `git show HEAD:AGENTS.md`
   plus the removed ones, marked ` (removed on this branch)`). One line per area,
   named by its text before ` — `: each changed file whose diff changes behaviour
   it describes, `` `<path>` — <reason> `` (not mere nearness; if unsure, reason
