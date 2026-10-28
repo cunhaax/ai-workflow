@@ -338,7 +338,8 @@ a short, commit-ready summary (what and why, Tier, test evidence), since it
 usually becomes the merge commit message, and the first PR comment carries the
 pipeline's conclusions (a review guide, then plan ID → test table, review
 outcome, QA dispositions). The Tier line and the guide come from the
-`review-guide` skill, which step 9 runs before the PR opens.
+`review-guide` skill, which step 9 runs before the PR opens and again, to link
+each file to its diff, once it is open.
 
 ### `plugins/ai-workflow/skills/review-guide/SKILL.md` — `/review-guide`
 
@@ -365,7 +366,13 @@ first run after updating, reporting issues (patterns that match no committed
 file, malformed bullets) and advising on prose-only bullets. A `--from-plan`
 run re-approved mid-run
 reports unplanned changes as not computed, since its saved plan is not
-rewritten.
+rewritten. Once the PR is open, the script's `--links <pr-url> <path>...` mode
+(a pure function of its arguments: no git) turns the *Read closely* and *Skim*
+paths into links to their diff in the PR's "Files changed" view
+(`/changes#diff-<sha256 of the path>`). It falls back to plain paths with a
+`Links: not computed` line when the URL is not a github.com PR URL or no
+`sha256sum`/`shasum` exists, so links never fail the guide. The description
+carries no links, since it is written before the PR number exists.
 
 ### `plugins/ai-workflow/skills/init-workflow/SKILL.md` — `/init-workflow`
 
