@@ -253,11 +253,12 @@ Deviation from plan:
 - Run the run-all-tests command (`AGENTS.md` → *Commands*)
 - All must pass before continuing
 - No automated test suite (`AGENTS.md` → *Commands* says so): run every
-  tagged walkthrough in the plan's Test Strategy instead, and record per ID
-  what you ran and the result. That record is the test summary in every later
-  step. All must pass, as with tests. A walkthrough you can't run → STOP per
-  Rule 2 and ask; a user waiver goes in the record. A coverage gap
-  `code-critic` raises is fixed by adding a walkthrough to the record,
+  tagged walkthrough in the plan's Test Strategy instead, plus every one
+  added to the record earlier in this run (each re-run runs them all), and
+  record per ID what you ran and the result. That record is the test summary
+  in every later step. All must pass, as with tests. A walkthrough you can't
+  run → STOP per Rule 2 and ask; a user waiver goes in the record. A coverage
+  gap `code-critic` raises is fixed by adding a walkthrough to the record,
   labelled as not in the plan
 
 ### 4. Code review
@@ -359,7 +360,7 @@ and commit-ready. Pipeline details go in the first PR comment.
   that shape the change (one line each), link to the source spec if any
 - **Tier**: the Tier line `review-guide` returned
 - **Test evidence**: one line, test count + result of the final full run
-  (no suite: walkthroughs run + result)
+  (no suite: walkthroughs run, any waived, + result)
 - In the description only: no commit SHAs, no review/QA process narration, no
   instructions to the reviewer (the first comment has them)
 
