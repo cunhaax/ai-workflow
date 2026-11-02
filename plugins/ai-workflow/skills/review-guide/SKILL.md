@@ -52,8 +52,8 @@ comments on a PR.
 `**Tier:** <n> — <reason>`
 
 - n = the higher of the plan's tier and the script's floor (2 when it lists
-  sensitive paths). A user-set tier shows both values (`1 (set by user;
-  derived 2) → 2`)
+  sensitive paths). A `set by user` plan line counts as the higher of its two
+  values, and shows both (`1 (set by user; derived 2) → 2`)
 - A judged prose area (step 3, not `unsure`) also raises n to 2, named in the
   reason as `<area> (judged, not computed)`; it never lowers n
 - The plan's tier is the approved plan text's `**Tier:**` line (inside
