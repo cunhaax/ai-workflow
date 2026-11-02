@@ -171,10 +171,11 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   again, 1d's rewrite rule runs if this run saved the plan at 1d
 - Approval conditional on critique amendments, or edits the user makes at
   approval (including renaming the `**Slug:**`, or changing the `**Tier:**`:
-  the line becomes `<new> — set by user; derived: <old> — <old reason>`,
-  and the new value must be exactly 0, 1 or 2, else ask again; a value below
-  the derived one is recorded, but the higher of the two still applies, so
-  tell the user):
+  the line becomes `<new> — set by user; derived: <d> — <reason>`, where
+  `<d> — <reason>` is the line's existing `derived:` part if it has one, else
+  the line's own value and reason (never nest). The new value must be
+  exactly 0, 1 or 2, else ask again; a value below `<d>` is recorded, but the
+  higher of the two still applies, so tell the user):
   fold them into the plan
   text yourself (transcription, not re-planning). Sub-agents only see plan
   text, so conversation-only amendments are invisible to them
@@ -254,9 +255,10 @@ Deviation from plan:
 - No automated test suite (`AGENTS.md` → *Commands* says so): run every
   tagged walkthrough in the plan's Test Strategy instead, and record per ID
   what you ran and the result. That record is the test summary in every later
-  step. A walkthrough you can't run → say so in the record; never skip it
-  silently. A coverage gap `code-critic` raises is fixed by adding a
-  walkthrough to the record, labelled as not in the plan
+  step. All must pass, as with tests. A walkthrough you can't run → STOP per
+  Rule 2 and ask; a user waiver goes in the record. A coverage gap
+  `code-critic` raises is fixed by adding a walkthrough to the record,
+  labelled as not in the plan
 
 ### 4. Code review
 

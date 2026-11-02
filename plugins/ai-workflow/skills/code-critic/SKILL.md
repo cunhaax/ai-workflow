@@ -52,8 +52,8 @@ Per plan section:
   Missing → `FAIL`
 - No automated test suite (`AGENTS.md` → *Commands* says so): in the two
   checks above, each ID instead needs a tagged walkthrough in the plan's Test
-  Strategy and a recorded result for it in the test evidence. Missing →
-  `FAIL`
+  Strategy and a recorded passing result for it in the test evidence. Missing,
+  failed or not run → `FAIL`, unless the evidence records the user waived it
 - **Contract** (skip if "None"): diff's routes, fields/params, response
   shapes, error rendering, schema match. Undiscussed deviation → `FAIL`
 - **Types anywhere in the plan** (Contract, Approach, Requirements, even
@@ -110,8 +110,10 @@ Per plan section:
 - Booleans read as questions (`isValid`, `hasPermission`)
 
 **Tests** (you own quality AND completeness)
-- No automated test suite (step 3): read "test" below as the plan's
-  walkthroughs and their recorded results
+- No automated test suite (`AGENTS.md` → *Commands* says so): read "test"
+  below as the plan's walkthroughs plus any extra ones recorded in the test
+  evidence, with their results. No plan → a coverage gap is an Open Question
+  ("no walkthrough evidence"), not a `FAIL`
 - Quality:
   - Every public function with non-trivial behaviour has happy-path and edge
     tests. Exempt: trivial delegators, generated code, plain data classes,
