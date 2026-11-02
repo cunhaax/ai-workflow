@@ -77,10 +77,11 @@ Fill the template below, following these rules.
     tool; `AGENTS.md`, skill, agent, prompt and config files are code even
     when markdown, YAML or JSON. Size never makes a change Tier 0
   - 1: everything else, including a route that is not such a contract
-  - Re-plan: re-derive from the revised scope; a tier set by the user wins
-    (`<n> — set by user; derived: <d> — <reason>`), and a `set by user` tier
-    in the prior plan carries forward unless the requested changes set a new
-    one (say in the delta if the newly derived tier is higher)
+  - Re-plan: re-derive from the revised scope. A `set by user` tier in the
+    prior plan carries forward unless the requested changes set a new one:
+    `<n> — set by user; derived: <d> — <reason>`, with `<d>` re-derived. The
+    user's number is recorded, but anything acting on the tier uses the higher
+    of the two (say in the delta if the newly derived tier is higher)
   - Mirrors `/feature` 1b minus size, except "public": here only an externally
     consumed or versioned contract counts
 - Sections below must never contradict the summary
@@ -116,6 +117,10 @@ Fill the template below, following these rules.
     a test assertion
   - Exception: environmental preconditions (e.g. "migration edited in
     place, reset local DB first") → **Environment & Preconditions**
+  - Exception: the repo-root `AGENTS.md` → *Commands* says there is no
+    automated test suite → each
+    tagged entry is a scripted walkthrough instead: the exact commands or
+    steps and the expected result, still tagged `[AC-…]`/`[EDGE-…]`
 - **Risks / SRP**: flag single-responsibility concerns in the approach
 - Be concrete: name files, show key signatures/data classes, point at
   existing patterns by name (e.g. "mirror `ExistingValidator`")

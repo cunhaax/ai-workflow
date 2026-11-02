@@ -50,6 +50,10 @@ Per plan section:
   broke. Missing → `FAIL`
 - **Edge Cases**: same for every `EDGE-<slug>-n` / `[EDGE-<slug>-n]`.
   Missing → `FAIL`
+- No automated test suite (`AGENTS.md` → *Commands* says so): in the two
+  checks above, each ID instead needs a tagged walkthrough in the plan's Test
+  Strategy and a recorded result for it in the test evidence. Missing →
+  `FAIL`
 - **Contract** (skip if "None"): diff's routes, fields/params, response
   shapes, error rendering, schema match. Undiscussed deviation → `FAIL`
 - **Types anywhere in the plan** (Contract, Approach, Requirements, even
@@ -106,6 +110,8 @@ Per plan section:
 - Booleans read as questions (`isValid`, `hasPermission`)
 
 **Tests** (you own quality AND completeness)
+- No automated test suite (step 3): read "test" below as the plan's
+  walkthroughs and their recorded results
 - Quality:
   - Every public function with non-trivial behaviour has happy-path and edge
     tests. Exempt: trivial delegators, generated code, plain data classes,
@@ -212,6 +218,8 @@ Items:
     if the criterion broke
   - every `EDGE-<slug>-n` has a committed `[EDGE-<slug>-n]` test that would
     fail if the handling broke
+  - (no automated test suite: walkthroughs and recorded results instead,
+    step 3)
   - Contract matches (skip if "None")
   - plan-stated types match the signatures
   - Requirements addressed
