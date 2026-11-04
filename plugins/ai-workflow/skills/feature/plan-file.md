@@ -51,15 +51,16 @@ name is not `.git` (a bare repo) → ask the user where to write (for
   foreign file and ask as in *Save*. Then
   rewrite the same file, no collision question: the re-approved text, the new
   critique, `tier` re-copied, `base-commit` and `depends-on` kept. A renamed
-  slug → write the new path (collision rule applies), then remove the old file
-  this run wrote, only if it still passes the same check. A minor deviation at
-  step 2 does not rewrite
+  slug → write the new path (collision rule applies) and remember it in place
+  of the old one, then remove the old file this run wrote, only if it still
+  passes the same check. A minor deviation at step 2 does not rewrite
 
 ## Mark consumed (step 9)
 
-After the PR opens, check the file (saved at 1d, or read by `--from-plan`)
-still has the `slug`, `base-commit` and content this run last wrote at 1d or
-*Rewrite* (or read, for `--from-plan`), then set the frontmatter's `consumed: <PR URL>` line
-(replacing any existing one; that line itself is not part of the comparison).
+After the PR opens, check the file (at the path this run last wrote at 1d or
+*Rewrite*, or read by `--from-plan`) still has the `slug`, `base-commit` and
+content this run last wrote there (or read, for `--from-plan`), then set the
+frontmatter's `consumed: <PR URL>` line (replacing any existing one; that line
+itself is not part of the comparison).
 A mismatch or content no longer available → ask. The edit fails → report the
 PR URL and the failure per Rule 2. PR not opened → no marker

@@ -142,7 +142,8 @@ Blocker decided (or QA skipped).
 
 **Review guide**: before opening the PR, run the `review-guide` skill. It
 returns the Tier line and the Review guide. Pass it the default branch and the
-plan source: the plan file path 1d wrote or `--from-plan` read;
+plan source: the plan file path this run last wrote (1d or `plan-file.md` →
+*Rewrite*) or `--from-plan` read;
 `--plan-reapproved` after a `--from-plan` step 2 material deviation; nothing
 if no plan file was saved. Its paths are plain until the PR is open; then apply
 its step 4 (links) with the PR URL before posting the first comment. Run it
