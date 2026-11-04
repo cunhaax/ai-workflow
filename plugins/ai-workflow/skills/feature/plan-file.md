@@ -62,6 +62,4 @@ still has the `slug`, `base-commit` and content this run last wrote at 1d (or
 read, for `--from-plan`), then set the frontmatter's `consumed: <PR URL>` line
 (replacing any existing one; that line itself is not part of the comparison).
 A mismatch or content no longer available → ask. The edit fails → report the
-PR URL and the failure per Rule 2. PR not opened → no marker. No plan file was
-saved (the user chose to continue) → say so in the first comment. Never put
-the plan file's absolute path in the PR description or the first comment
+PR URL and the failure per Rule 2. PR not opened → no marker

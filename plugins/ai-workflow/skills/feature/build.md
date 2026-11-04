@@ -46,7 +46,8 @@ Deviation from plan:
   briefly, continue
 - Material (scope, approach, requirements): STOP → re-read `plan.md` and
   re-plan via its step 1c substantive-change path → get re-approval (then
-  `plan-file.md` → *Rewrite* runs)
+  `plan-file.md` → *Rewrite* runs) → return here and continue step 2; 1d does
+  not re-run
   - `--from-plan`: that path takes the approved plan text, labelled with its
     path, as the original prompt and sources; the file is never rewritten
     (*Rewrite* does not apply)
@@ -168,7 +169,9 @@ non-empty *Read closely* or *Skim*, a guide with neither link lines nor a
 If the host can't post comments, put both under `##` headings at the end of
 the description, guide first (plain paths), and tell the user to trim them at
 merge. `--from-plan`: the first comment also says: run from a saved plan via
-`--from-plan`, the `base-commit`, and whether a re-critique ran.
+`--from-plan`, the `base-commit`, and whether a re-critique ran. No plan file
+was saved (the user chose to continue) → say so in the first comment. Never
+put the plan file's absolute path in the PR description or the first comment.
 
 **Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per
