@@ -18,6 +18,10 @@ Pipeline: plan → critique → implement → test → code-review → QA → PR
 Run steps in order, skipping only where a step or *Mode* says so. `AGENTS.md`
 is the source for commands, default branch, sensitive areas, and task tracking.
 
+`planner`, `plan-critic`, `code-critic` and `adversarial-qa` below are
+sub-agents: "call" means spawn the sub-agent of that name, never load the
+same-named skill into your own context (you would be reviewing your own work).
+
 ## Input
 
 - User prompt (verbatim, including any doc/link references)
@@ -167,8 +171,11 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   again, 1d's rewrite rule runs if this run saved the plan at 1d
 - Approval conditional on critique amendments, or edits the user makes at
   approval (including renaming the `**Slug:**`, or changing the `**Tier:**`:
-  the line becomes `<new> — set by user at approval; derived: <old> — <old
-  reason>`, and the new value must be exactly 0, 1 or 2, else ask again):
+  the line becomes `<new> — set by user; derived: <d> — <reason>`, where
+  `<d> — <reason>` is the line's existing `derived:` part if it has one, else
+  the line's own value and reason (never nest). The new value must be
+  exactly 0, 1 or 2, else ask again; a value below `<d>` is recorded, but the
+  higher of the two still applies, so tell the user):
   fold them into the plan
   text yourself (transcription, not re-planning). Sub-agents only see plan
   text, so conversation-only amendments are invisible to them
@@ -226,8 +233,10 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
    - Tag each test with the plan ID it proves, exactly as in the plan
      (`[AC-<slug>-n]` / `[EDGE-<slug>-n]`)
    - Never weaken or rewrite them to pass; a wrong test is a plan deviation
+   - No automated test suite (`AGENTS.md` → *Commands* says so): skip this;
+     the plan's tagged walkthroughs stand in for the tests (step 3)
 2. Implement in small steps until green; run the suite after each coherent
-   unit of work
+   unit of work (no suite: the walkthroughs that unit affects)
 3. Before using an external library/framework API that may have changed,
    look it up with `context7` (resolve library ID → query docs). Skip for
    stdlib/language core. On lookup failure: note it in the summary, continue
@@ -243,6 +252,14 @@ Deviation from plan:
 
 - Run the run-all-tests command (`AGENTS.md` → *Commands*)
 - All must pass before continuing
+- No automated test suite (`AGENTS.md` → *Commands* says so): run every
+  tagged walkthrough in the plan's Test Strategy instead, plus every one
+  added to the record earlier in this run (each re-run runs them all), and
+  record per ID what you ran and the result. That record is the test summary
+  in every later step. All must pass, as with tests. A walkthrough you can't
+  run → STOP per Rule 2 and ask; a user waiver goes in the record. A coverage
+  gap `code-critic` raises is fixed by adding a walkthrough to the record,
+  labelled as not in the plan
 
 ### 4. Code review
 
@@ -343,6 +360,7 @@ and commit-ready. Pipeline details go in the first PR comment.
   that shape the change (one line each), link to the source spec if any
 - **Tier**: the Tier line `review-guide` returned
 - **Test evidence**: one line, test count + result of the final full run
+  (no suite: walkthroughs run, any waived, + result)
 - In the description only: no commit SHAs, no review/QA process narration, no
   instructions to the reviewer (the first comment has them)
 
@@ -359,8 +377,9 @@ merge.
 - **Plan ID → test table**: the slug once in the heading, then one row per
   `AC-n` (plan's Approval Summary) and per `EDGE-n` (plan's Edge Cases) with
   the criterion/edge case and its `[AC-<slug>-n]`/`[EDGE-<slug>-n]`-tagged
-  test(s), by test class or file (method names only where needed). Every ID
-  has a row with at least one test
+  test(s), by test class or file (method names only where needed; no suite:
+  the walkthrough and its result). Every ID has a row with at least one test
+  or walkthrough
 - **Review outcome**: final verdict, each `NEEDS_DECISION`, Open Question and
   user-overridden FAIL, and the user's decision
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
@@ -369,8 +388,8 @@ merge.
   words; no `.qa-evidence/` paths
 
 Diff touches a sensitive area:
-- Re-run `code-critic` in a fresh context as a second look before merge, and
-  apply steps 5–6 to its output
+- Spawn a new `code-critic` (not one continued from earlier rounds) as a
+  second look before merge, and apply steps 5–6 to its output
 
 **Plan file** (saved at 1d, or read by `--from-plan`): after the PR opens,
 check it still has the `slug`, `base-commit` and content this run last wrote

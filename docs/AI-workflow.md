@@ -193,8 +193,13 @@ user-visible claim maps to a committed test tagged `[AC-<slug>-n]`, and every
 edge case to one tagged `[EDGE-<slug>-n]`. The planner picks the `<slug>` once
 (ticket ID plus a short feature name, unique across the test suite) and records
 it in the plan's Approval Summary; manual "try X, confirm Y" checklists are
-banned. Ambiguities surface as `NEEDS_DECISION` in
-the plan text, never as questions from inside a sub-agent. (Named
+banned, except in a project whose `AGENTS.md` says it has no automated test
+suite, where each tagged entry is a scripted walkthrough that `/feature`
+runs and records in place of the test run. That record is self-reported: the
+agent that implemented the change also runs the walkthroughs, and
+`code-critic` only reads the result, so it is weaker evidence than a committed
+test. Ambiguities surface as `NEEDS_DECISION` in the plan text, never as
+questions from inside a sub-agent. (Named
 `plan-draft`, not `plan`, to avoid colliding with Claude Code's built-in
 plan-mode command.) The Approval Summary also states a risk **Tier** (0/1/2)
 with the reason that set it, and Files lists every file by exact
