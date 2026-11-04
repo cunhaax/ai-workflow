@@ -1,8 +1,8 @@
 # /feature — steps 2–9: Build
 
-Part of `/feature` (`SKILL.md` beside this file). Runs after step 1
-(`plan.md`) or after `from-plan.md`, with the approved plan text and the plan
-file path, if one was saved or read. Files named below are beside this one.
+Part of `/feature` (`SKILL.md` beside this file, whose mode table decides when
+this phase runs). Needs the approved plan text, and the plan file path if one
+was saved or read. Files named below are beside this one.
 
 ## No automated test suite
 

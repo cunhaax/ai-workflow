@@ -45,9 +45,15 @@ prompt content, passed on verbatim:
 
 | First token | Runs |
 |---|---|
-| `--plan-only` | `plan.md`, stopping after 1d |
+| `--plan-only` | `plan.md`, then STOP |
 | `--from-plan` | `from-plan.md` → `build.md` |
 | anything else | `plan.md` → `build.md` |
+
+Only this table decides what runs next: each phase file ends at its last
+step, then continue with the next file in the table. `--plan-only` STOP:
+skip steps 2–9, report the plan file's absolute path and that `/feature
+--from-plan <slug>` on a feature branch runs it. No branch, commit, push, or
+PR
 
 - An unexpanded `${CLAUDE_SKILL_DIR}`, or a phase file you can't read → STOP
   per `AGENTS.md` Rule 2; never work from memory of it
@@ -56,6 +62,13 @@ prompt content, passed on verbatim:
   pointer into it
 - Step numbers are the same across files: steps 1a–1d are in `plan.md`,
   steps 2–9 in `build.md`
+
+## Plan structure check
+
+Used by 1c and by `from-plan.md`. A plan passes when it has a `**Slug:**`, a
+`**Tier:**` of exactly 0, 1 or 2 followed by ` — ` (an em dash) and a
+non-empty reason, numbered `AC-<slug>-n` criteria, and every `AC-<slug>-n`
+and `EDGE-<slug>-n` has a tagged Test Strategy entry.
 
 ## Output
 

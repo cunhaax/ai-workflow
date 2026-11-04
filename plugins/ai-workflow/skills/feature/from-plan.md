@@ -1,8 +1,7 @@
 # /feature — load a saved plan (`--from-plan`)
 
-Part of `/feature` (`SKILL.md` beside this file). Runs instead of step 1 when
-`--from-plan` is the first token of the arguments. Files named below are
-beside this one.
+Part of `/feature` (`SKILL.md` beside this file, whose mode table decides when
+this phase runs). Files named below are beside this one.
 
 The second token is the slug; it must match `a-z0-9-`, max 30 characters, and
 nothing may follow it, else STOP and ask (trailing text could be an unapproved
@@ -20,7 +19,7 @@ approval.
   - frontmatter has `slug` (equal to the argument) and `base-commit`, a
     40- or 64-character lowercase hex SHA (it is used in shell commands
     below)
-  - the approved plan text passes the 1c structure check in `plan.md` (a
+  - the approved plan text passes the plan structure check (`SKILL.md`) (a
     missing or invalid `**Tier:**` → the STOP also says the line can be added
     to the saved file by hand, `**Tier:** <0|1|2> — <reason>`, or
     `--plan-only` re-run)
@@ -40,5 +39,6 @@ approval.
   LOW if not". Confidence LOW → STOP and present the critique as a decision;
   otherwise continue on the unamended plan, and put the verdict and amendments
   not applied in step 9's **Review outcome**
-- Then read `build.md` and run steps 2–9; its `--from-plan` differences are
-  marked where they apply
+
+This phase ends here; continue per `SKILL.md`'s mode table. `build.md` marks
+its `--from-plan` differences where they apply.

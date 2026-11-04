@@ -1,8 +1,7 @@
 # /feature — step 1: Plan
 
-Part of `/feature` (`SKILL.md` beside this file). Runs in a default run and
-with `--plan-only`; `--from-plan` skips it. Files named below are beside this
-one.
+Part of `/feature` (`SKILL.md` beside this file, whose mode table decides when
+this phase runs). Files named below are beside this one.
 
 `--plan-only`: strip it from the prompt given to `planner`. Plans one task and
 saves the plan; run it again for the next.
@@ -56,10 +55,8 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Never infer "trivial" yourself; when in doubt, run it
 
 **1c. Approve**
-- Before presenting, check the plan: it has a `**Slug:**`, a `**Tier:**`
-  of exactly 0, 1 or 2 followed by ` — ` (an em dash) and a non-empty reason,
-  numbered `AC-<slug>-n` criteria, and every `AC-<slug>-n` and `EDGE-<slug>-n` has a
-  tagged Test Strategy entry. Anything missing → call `planner` again with
+- Before presenting, run the plan structure check (`SKILL.md`). Anything
+  missing → call `planner` again with
   the original prompt and sources, the plan and the gap (never fix it
   yourself), then
   re-run `plan-critic` on the revised plan (unless 1b was skipped); don't
@@ -100,7 +97,5 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 **1d. Save**
 - After approval and leaving plan mode, follow `plan-file.md` → *Save* (every
   run does; a later re-approval rewrites it via 1c → *Rewrite*, not here)
-- `--plan-only`: after 1d, STOP: skip steps 2–9, report the file's absolute
-  path and that `/feature --from-plan <slug>` on a feature branch runs it. No
-  branch, commit, push, or PR
-- Otherwise, read `build.md` and continue with step 2
+
+This phase ends here; continue per `SKILL.md`'s mode table.
