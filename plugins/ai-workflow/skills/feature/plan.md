@@ -99,8 +99,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 
 **1d. Save**
 - After approval and leaving plan mode, follow `plan-file.md` → *Save* (every
-  run does), or → *Rewrite* after a re-approval of a plan this run already
-  saved
+  run does; a later re-approval rewrites it via 1c → *Rewrite*, not here)
 - `--plan-only`: after 1d, STOP: skip steps 2–9, report the file's absolute
   path and that `/feature --from-plan <slug>` on a feature branch runs it. No
   branch, commit, push, or PR

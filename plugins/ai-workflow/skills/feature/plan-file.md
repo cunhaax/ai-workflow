@@ -58,8 +58,8 @@ name is not `.git` (a bare repo) → ask the user where to write (for
 ## Mark consumed (step 9)
 
 After the PR opens, check the file (saved at 1d, or read by `--from-plan`)
-still has the `slug`, `base-commit` and content this run last wrote at 1d (or
-read, for `--from-plan`), then set the frontmatter's `consumed: <PR URL>` line
+still has the `slug`, `base-commit` and content this run last wrote at 1d or
+*Rewrite* (or read, for `--from-plan`), then set the frontmatter's `consumed: <PR URL>` line
 (replacing any existing one; that line itself is not part of the comparison).
 A mismatch or content no longer available → ask. The edit fails → report the
 PR URL and the failure per Rule 2. PR not opened → no marker
