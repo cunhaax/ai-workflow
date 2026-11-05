@@ -13,11 +13,11 @@ The approved plan text, and the plan file path if one was saved or read:
 
 The second token is the slug; it must match `a-z0-9-`, max 30 characters, and
 nothing may follow it, else STOP and ask (trailing text could be an unapproved
-amendment). Runs a saved plan without watching: no planning, critique or
-approval, and `depends-on` is not read or checked.
+amendment). Runs a saved plan without watching: no planning, critique (except
+the re-critique below) or approval, and `depends-on` is not read or checked.
 
-- Find the file at the plan file location (`SKILL.md`; same `.git`-segment
-  and bare-repo ask) and read it by absolute path. A missing or unreadable
+- Find the file at `SKILL.md` → **Plan file location** and read it by
+  absolute path. A missing or unreadable
   file → STOP per Rule 2, naming the path. The body below the frontmatter is
   the approved plan text, up to a trailing `# Plan-critic review` section,
   which is context (known gaps, amendments not applied), not requirements and
@@ -27,7 +27,7 @@ approval, and `depends-on` is not read or checked.
   - frontmatter has `slug` (equal to the argument) and `base-commit`, a
     40- or 64-character lowercase hex SHA (it is used in shell commands
     below)
-  - the approved plan text passes `SKILL.md`'s plan structure check (a
+  - the approved plan text passes `SKILL.md` → **Plan structure check** (a
     missing or invalid `**Tier:**` → the STOP also says the line can be added
     to the saved file by hand, `**Tier:** <0|1|2> — <reason>`, or
     `--plan-only` re-run)
@@ -235,7 +235,7 @@ Diff touches a sensitive area:
 - Spawn a new `code-critic` (not one continued from earlier rounds) as a
   second look before merge, and apply steps 5–6 to its output
 
-**Plan file**: after the PR opens, run the ownership check (`SKILL.md`) on the
+**Plan file**: after the PR opens, run `SKILL.md` → **Ownership check** on the
 file at the path this run last wrote (1d or `plan.md` → *Rewrite*) or read
 (`--from-plan`), then set the frontmatter's `consumed: <PR URL>` line
 (replacing any existing one). The check fails → ask. The edit fails → report

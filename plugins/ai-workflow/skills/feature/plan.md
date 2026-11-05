@@ -27,7 +27,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
     and tell the user now; don't call the planner
 - `--plan-only`: `depends-on` = slugs named in the prompt or approval message
   (never ask for them; `[]` if none). Named in the prompt → read each one's
-  plan file (plan file location, `SKILL.md`) and pass it to `planner` as a
+  plan file (`SKILL.md` → **Plan file location**) and pass it to `planner` as a
   labelled source; a missing or unreadable file → warn the user (not a 1a
   STOP). Named only at approval → just record it, no re-plan. Each slug must
   match `a-z0-9-`, max 30 characters, before it is used in a path
@@ -55,7 +55,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Never infer "trivial" yourself; when in doubt, run it
 
 **1c. Approve**
-- Before presenting, run the plan structure check (`SKILL.md`). Anything
+- Before presenting, run `SKILL.md` → **Plan structure check**. Anything
   missing → call `planner` again with
   the original prompt and sources, the plan and the gap (never fix it
   yourself), then
@@ -98,7 +98,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 
 After approval and leaving plan mode (every run does; a later re-approval
 rewrites the file via 1c → *Rewrite* below, not here):
-- Write the plan to the plan file location (`SKILL.md`). Ensure the directory
+- Write the plan to `SKILL.md` → **Plan file location**. Ensure the directory
   exists and has a `.gitignore` containing `*`, so plans are never committed.
   The slug must match `a-z0-9-`, max 30 characters (a rename that doesn't →
   ask again). File exists → ask: overwrite or rename the slug (fold the new
@@ -132,7 +132,7 @@ This phase ends here; continue per `SKILL.md`'s mode table.
 
 Reached only from 1c's substantive-change path, when the plan is re-approved
 after this run saved it at 1d (in practice, from a step 2 material deviation):
-- Before rewriting, run the ownership check (`SKILL.md`); it fails → treat it
+- Before rewriting, run `SKILL.md` → **Ownership check**; it fails → treat it
   as a foreign file and ask as in 1d. Then rewrite the same file, no collision
   question: the re-approved text, the new critique, `tier` re-copied,
   `base-commit` and `depends-on` kept. A renamed slug → write the new path
