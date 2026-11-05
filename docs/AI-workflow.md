@@ -347,8 +347,8 @@ outcome, QA dispositions). The Tier line and the guide come from the
 each file to its diff, once it is open.
 
 `SKILL.md` itself is a short dispatcher, plus the definitions both phases
-share (the plan file's location, the ownership check before touching it, the
-plan structure check). The steps live in two phase files beside it, read when
+share (the plan file's location, and the ownership check before touching it).
+The steps live in two phase files beside it, read when
 each phase starts: `plan.md` holds step 1, including saving and rewriting the
 plan file, and `build.md` steps 2–9, including loading a saved plan for
 `--from-plan` and marking the file consumed. A mode is just which phases run:

@@ -78,11 +78,6 @@ wrote to it, or read from it for `--from-plan` (when marking consumed, a
 `consumed:` line is not part of the comparison). Content no longer available,
 e.g. after context compaction → can't verify → ask.
 
-**Plan structure check**: a plan passes when it has a `**Slug:**`, a
-`**Tier:**` of exactly 0, 1 or 2 followed by ` — ` (an em dash) and a
-non-empty reason, numbered `AC-<slug>-n` criteria, and every `AC-<slug>-n`
-and `EDGE-<slug>-n` has a tagged Test Strategy entry.
-
 ## Output
 
 - Default and `--from-plan`: `build.md`'s *Output*

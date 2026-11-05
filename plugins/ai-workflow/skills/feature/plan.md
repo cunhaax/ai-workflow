@@ -55,8 +55,11 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Never infer "trivial" yourself; when in doubt, run it
 
 **1c. Approve**
-- Before presenting, run `SKILL.md` → **Plan structure check**. Anything
-  missing → call `planner` again with
+- Before presenting, check the plan: it has a `**Slug:**`, a `**Tier:**`
+  of exactly 0, 1 or 2 followed by ` — ` (an em dash) and a non-empty reason,
+  numbered `AC-<slug>-n` criteria, and every `AC-<slug>-n` and
+  `EDGE-<slug>-n` has a tagged Test Strategy entry. Anything missing → call
+  `planner` again with
   the original prompt and sources, the plan and the gap (never fix it
   yourself), then
   re-run `plan-critic` on the revised plan (unless 1b was skipped); don't
