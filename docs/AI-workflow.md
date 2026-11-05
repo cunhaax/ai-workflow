@@ -346,13 +346,15 @@ outcome, QA dispositions). The Tier line and the guide come from the
 `review-guide` skill, which step 9 runs before the PR opens and again, to link
 each file to its diff, once it is open.
 
-`SKILL.md` itself is a short dispatcher: the steps live in phase files beside
-it, read when each phase starts. `plan.md` holds step 1, `build.md` steps 2–9,
-`from-plan.md` the `--from-plan` entry that replaces step 1, and
-`plan-file.md` the saved plan file's location, save, rewrite and consumed
-rules. A mode is just which phases run: by default plan then build,
-`--plan-only` plan alone, `--from-plan` from-plan then build. Step numbers
-stay the same across the files, because other skills refer to them.
+`SKILL.md` itself is a short dispatcher, plus the definitions both phases
+share (the plan file's location, the ownership check before touching it, the
+plan structure check). The steps live in two phase files beside it, read when
+each phase starts: `plan.md` holds step 1, including saving and rewriting the
+plan file, and `build.md` steps 2–9, including loading a saved plan for
+`--from-plan` and marking the file consumed. A mode is just which phases run:
+by default plan then build, `--plan-only` plan alone, `--from-plan` build
+alone. Step numbers stay the same across the files, because other skills
+refer to them.
 
 ### `plugins/ai-workflow/skills/review-guide/SKILL.md` — `/review-guide`
 

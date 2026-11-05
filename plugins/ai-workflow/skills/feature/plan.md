@@ -27,7 +27,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
     and tell the user now; don't call the planner
 - `--plan-only`: `depends-on` = slugs named in the prompt or approval message
   (never ask for them; `[]` if none). Named in the prompt → read each one's
-  plan file (`plan-file.md` → *Location*) and pass it to `planner` as a
+  plan file (plan file location, `SKILL.md`) and pass it to `planner` as a
   labelled source; a missing or unreadable file → warn the user (not a 1a
   STOP). Named only at approval → just record it, no re-plan. Each slug must
   match `a-z0-9-`, max 30 characters, before it is used in a path
@@ -81,7 +81,7 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   yourself) → re-run
   `plan-critic` → re-present with a **delta** section first (what changed vs.
   the previously presented version). After re-approval and leaving plan mode
-  again, `plan-file.md` → *Rewrite* runs if this run saved the plan at 1d
+  again, *Rewrite* (below) runs if this run saved the plan at 1d
 - Approval conditional on critique amendments, or edits the user makes at
   approval (including renaming the `**Slug:**`, or changing the `**Tier:**`:
   the line becomes `<new> — set by user; derived: <d> — <reason>`, where
@@ -95,7 +95,47 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 - Keep the approved plan text for steps 4 and 7
 
 **1d. Save**
-- After approval and leaving plan mode, follow `plan-file.md` → *Save* (every
-  run does; a later re-approval rewrites it via 1c → *Rewrite*, not here)
+
+After approval and leaving plan mode (every run does; a later re-approval
+rewrites the file via 1c → *Rewrite* below, not here):
+- Write the plan to the plan file location (`SKILL.md`). Ensure the directory
+  exists and has a `.gitignore` containing `*`, so plans are never committed.
+  The slug must match `a-z0-9-`, max 30 characters (a rename that doesn't →
+  ask again). File exists → ask: overwrite or rename the slug (fold the new
+  slug into the plan text: `**Slug:**` and every `AC-`/`EDGE-` ID and tag, as
+  at 1c); never overwrite silently. The critique the user approved against is
+  saved with the plan, verbatim, with each suggested amendment marked folded
+  or not applied; omit the section if 1b was skipped
+  ```
+  ---
+  slug: <slug>
+  base-commit: <recorded SHA>
+  depends-on: [<slug>, ...]
+  tier: <0|1|2>
+  ---
+
+  <approved plan text, amendments folded in>
+
+  # Plan-critic review
+
+  <critique: Confidence, findings, suggested amendments (folded / not applied)>
+  ```
+  `tier` is the number on the approved plan text's `**Tier:**` line, taken
+  after approval edits are folded in. `depends-on` is as in 1a
+  (`--plan-only`), and `[]` in any other run
+- Remember the absolute path written. A write that fails (resolve, mkdir,
+  write) → STOP per Rule 2
 
 This phase ends here; continue per `SKILL.md`'s mode table.
+
+## Rewrite
+
+Reached only from 1c's substantive-change path, when the plan is re-approved
+after this run saved it at 1d (in practice, from a step 2 material deviation):
+- Before rewriting, run the ownership check (`SKILL.md`); it fails → treat it
+  as a foreign file and ask as in 1d. Then rewrite the same file, no collision
+  question: the re-approved text, the new critique, `tier` re-copied,
+  `base-commit` and `depends-on` kept. A renamed slug → write the new path
+  (collision rule applies) and remember it in place of the old one, then
+  remove the old file this run wrote, only if it still passes the ownership
+  check. A minor deviation at step 2 does not rewrite

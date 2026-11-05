@@ -35,10 +35,8 @@ The steps live in files in `${CLAUDE_SKILL_DIR}/`, the directory of this
 skill. Read each with `Read` when its phase starts:
 
 - `plan.md`: step 1 (1a–1d), from prompt to saved plan
-- `from-plan.md`: loads a saved plan, in place of step 1
-- `build.md`: steps 2–9, from implementation to PR
-- `plan-file.md`: the saved plan file (location, save, rewrite, mark
-  consumed); read where a step points to it
+- `build.md`: steps 2–9, from implementation to PR. Its input is the approved
+  plan text from step 1, or a saved plan it loads itself (`--from-plan`)
 
 The mode is set by the first token of the arguments; a flag anywhere else is
 prompt content, passed on verbatim:
@@ -46,14 +44,15 @@ prompt content, passed on verbatim:
 | First token | Runs |
 |---|---|
 | `--plan-only` | `plan.md`, then STOP |
-| `--from-plan` | `from-plan.md` → `build.md` |
+| `--from-plan` | `build.md`, loading the saved plan |
 | anything else | `plan.md` → `build.md` |
 
 Only this table decides what runs next: each phase file ends at its last
-step, then continue with the next file in the table. `--plan-only` STOP:
-skip steps 2–9, report the plan file's absolute path and that `/feature
---from-plan <slug>` on a feature branch runs it. No branch, commit, push, or
-PR
+step, then continue with the next file in the table.
+
+`--plan-only` STOP: skip steps 2–9, report the plan file's absolute path and
+that `/feature --from-plan <slug>` on a feature branch runs it. No branch,
+commit, push, or PR.
 
 - An unexpanded `${CLAUDE_SKILL_DIR}`, or a phase file you can't read → STOP
   per `AGENTS.md` Rule 2; never work from memory of it
@@ -63,9 +62,23 @@ PR
 - Step numbers are the same across files: steps 1a–1d are in `plan.md`,
   steps 2–9 in `build.md`
 
-## Plan structure check
+## Shared definitions
 
-Used by 1c and by `from-plan.md`. A plan passes when it has a `**Slug:**`, a
+Used by both phase files.
+
+**Plan file location**: `.workflow-plans/<slug>.md` under the **main
+worktree**: the parent of the `.git` dir printed by `git rev-parse
+--path-format=absolute --git-common-dir`. That parent still contains a `.git`
+segment (e.g. a submodule), or the dir's name is not `.git` (a bare repo) →
+ask the user where to write (for `--from-plan`, where to read).
+
+**Ownership check**, before this run rewrites, removes or marks a plan file:
+the file still has the `slug`, `base-commit` and exact content this run last
+wrote to it, or read from it for `--from-plan` (a `consumed:` line is not part
+of the comparison). Content no longer available, e.g. after context
+compaction → can't verify → ask.
+
+**Plan structure check**: a plan passes when it has a `**Slug:**`, a
 `**Tier:**` of exactly 0, 1 or 2 followed by ` — ` (an em dash) and a
 non-empty reason, numbered `AC-<slug>-n` criteria, and every `AC-<slug>-n`
 and `EDGE-<slug>-n` has a tagged Test Strategy entry.
