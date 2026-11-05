@@ -2,7 +2,7 @@
 name: feature
 description: >
   Runs the full AI-assisted workflow for a non-trivial feature or change:
-  plan, plan critique, user approval, tests-first implementation, code
+  plan, plan critique, user approval, implementation with tagged tests, code
   review, exploratory QA, and PR. Use when the user asks to build or start a
   feature, or to implement a change that needs a plan, review, and PR. Every
   planning run saves the approved plan to a file; with `--plan-only` it stops

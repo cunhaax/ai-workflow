@@ -333,8 +333,10 @@ and approval, re-running plan-critic only if the plan's base commit moved);
 plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
 user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
-tags stay unique across the whole suite, not just within one plan) are
-written before implementation and may not be weakened to pass; no push or PR
+tags stay unique across the whole suite, not just within one plan) must
+cover every acceptance criterion and edge case, are written from the plan
+rather than from the implementation, and may not be weakened to pass. The
+skill states that outcome, not an order of work; no push or PR
 until code-critic passes with no unresolved FAIL items, escalated to Opus on
 security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;

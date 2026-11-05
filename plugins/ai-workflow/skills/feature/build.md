@@ -50,8 +50,8 @@ Applies when `AGENTS.md` → *Commands* says the project has no automated test
 suite. The plan's tagged Test Strategy entries are then scripted walkthroughs,
 and they stand in for the tests:
 
-- Step 2: skip writing tests first; after each coherent unit of work, run the
-  walkthroughs it affects
+- Step 2: the plan's tagged walkthroughs stand in for the tagged tests, so
+  there are no tests to write
 - Step 3: instead of the run-all-tests command, run every tagged walkthrough
   in the plan's Test Strategy, plus every one added to the record earlier in
   this run (each re-run runs them all), and record per ID what you ran and the
@@ -67,19 +67,17 @@ and they stand in for the tests:
 
 ### 2. Implement
 
-1. Write the plan's Test Strategy tests first (at minimum the
-   `[AC-<slug>-n]` and `[EDGE-<slug>-n]` ones), at the level the Test
-   Strategy states (end-to-end for user-visible behaviour)
-   - Tag each test with the plan ID it proves, exactly as in the plan
-     (`[AC-<slug>-n]` / `[EDGE-<slug>-n]`)
-   - Never weaken or rewrite them to pass; a wrong test is a plan deviation
-2. Implement in small steps until green; run the suite after each coherent
-   unit of work
-3. Before using an external library/framework API that may have changed,
-   look it up with `context7` (resolve library ID → query docs). Skip for
-   stdlib/language core. On lookup failure: note it in the summary, continue
-
-No suite: 1 and 2 as in *No automated test suite*.
+Implement the approved plan. The result must hold:
+- Every `AC-<slug>-n` and `EDGE-<slug>-n` has a committed test tagged with
+  that ID, exactly as in the plan (`[AC-<slug>-n]` / `[EDGE-<slug>-n]`), at
+  the level the Test Strategy states (end-to-end for user-visible behaviour),
+  that would fail if the criterion broke. Write these tests from the plan,
+  not from your implementation (no suite: as in *No automated test suite*)
+- Never weaken or rewrite a plan-derived test to make it pass; a wrong test
+  is a plan deviation
+- Before using an external library/framework API that may have changed, look
+  it up with `context7` (resolve library ID → query docs). Skip for
+  stdlib/language core. On lookup failure: note it in the summary, continue
 
 Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
