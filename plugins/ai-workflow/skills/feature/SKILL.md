@@ -35,8 +35,10 @@ The steps live in files in `${CLAUDE_SKILL_DIR}/`, the directory of this
 skill. Read each with `Read` when its phase starts:
 
 - `plan.md`: step 1 (1a–1d), from prompt to saved plan
-- `build.md`: steps 2–9, from implementation to PR. Its input is the approved
-  plan text from step 1, or a saved plan it loads itself (`--from-plan`)
+- `build.md`: steps 2–8, from implementation to a reviewed, QA'd HEAD. Its
+  input is the approved plan text from step 1, or a saved plan it loads
+  itself (`--from-plan`)
+- `pr.md`: step 9, opening the PR and keeping it up to date once open
 
 The mode is set by the first token of the arguments; a flag anywhere else is
 prompt content, passed on verbatim:
@@ -44,8 +46,8 @@ prompt content, passed on verbatim:
 | First token | Runs |
 |---|---|
 | `--plan-only` | `plan.md`, then STOP |
-| `--from-plan` | `build.md`, loading the saved plan |
-| anything else | `plan.md` → `build.md` |
+| `--from-plan` | `build.md`, loading the saved plan → `pr.md` |
+| anything else | `plan.md` → `build.md` → `pr.md` |
 
 Only this table decides what runs next: each phase file ends at its last
 step, then continue with the next file in the table. For every phase file:
@@ -56,7 +58,7 @@ step, then continue with the next file in the table. For every phase file:
   context (e.g. after compaction), and read a file before following a
   pointer into it
 - Step numbers are the same across files: steps 1a–1d are in `plan.md`,
-  steps 2–9 in `build.md`
+  steps 2–8 in `build.md`, step 9 in `pr.md`
 
 `--plan-only` STOP: skip steps 2–9, report the plan file's absolute path and
 that `/feature --from-plan <slug>` on a feature branch runs it. No branch,
@@ -64,7 +66,7 @@ commit, push, or PR.
 
 ## Shared definitions
 
-Used by both phase files.
+Used by more than one phase file.
 
 **Plan file location**: `.workflow-plans/<slug>.md` under the **main
 worktree**: the parent of the `.git` dir printed by `git rev-parse
@@ -80,7 +82,7 @@ e.g. after context compaction → can't verify → ask.
 
 ## Output
 
-- Default and `--from-plan`: `build.md`'s *Output*
+- Default and `--from-plan`: `pr.md`'s *Output*
 - `--plan-only`: `plan.md`'s *Output*, reported as in the `--plan-only` STOP
 - Every mode: a summary of skipped steps, plan deviations, `context7` lookup
   failures, and why
