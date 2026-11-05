@@ -25,7 +25,8 @@ comments on a PR.
 
 - The default branch (`AGENTS.md` → *Commands*)
 - The plan source, one of: the plan file's absolute path (the one `/feature`
-  step 1d wrote, or `--from-plan` read); `--plan-reapproved` (a `--from-plan`
+  last wrote, at step 1d or on a rewrite after re-approval, or `--from-plan`
+  read); `--plan-reapproved` (a `--from-plan`
   run re-approved at step 2, so its saved plan is stale); or nothing (no plan
   file was saved). Run standalone with none given → ask for the path or "none"
 - The approved plan text's **Tier** line and the session's context (deviations,

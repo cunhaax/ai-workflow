@@ -140,8 +140,8 @@ Fill the template below, following these rules.
 <!-- COUPLING NOTE: section names and semantics are consumed elsewhere.
      code-critic cross-checks diffs against Approval Summary / Contract /
      Requirements / Approach / Edge Cases / Test Strategy / Files / Out of
-     Scope. feature presents the Approval Summary (Step 1c), writes the
-     [AC-<slug>-n] / [EDGE-<slug>-n] tests first (Step 2), and builds the
+     Scope. feature presents the Approval Summary (Step 1c), requires an
+     [AC-<slug>-n] / [EDGE-<slug>-n]-tagged test per ID (Step 2), and builds the
      PR's plan ID → test table (Step 9), and checks the **Slug:** line, the
      AC numbering and the tagged Test Strategy entries before presenting the
      plan (Step 1c), and the **Tier:** line (0/1/2 plus reason). When it saves

@@ -333,8 +333,10 @@ and approval, re-running plan-critic only if the plan's base commit moved);
 plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
 user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
-tags stay unique across the whole suite, not just within one plan) are
-written before implementation and may not be weakened to pass; no push or PR
+tags stay unique across the whole suite, not just within one plan) must
+cover every acceptance criterion and edge case, are written from the plan
+rather than from the implementation, and may not be weakened to pass. The
+skill states that outcome, not an order of work; no push or PR
 until code-critic passes with no unresolved FAIL items, escalated to Opus on
 security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;
@@ -345,6 +347,17 @@ pipeline's conclusions (a review guide, then plan ID → test table, review
 outcome, QA dispositions). The Tier line and the guide come from the
 `review-guide` skill, which step 9 runs before the PR opens and again, to link
 each file to its diff, once it is open.
+
+`SKILL.md` itself is a short dispatcher, plus the definitions the phases
+share (the plan file's location, and the ownership check before touching it).
+The steps live in three phase files beside it, read when each phase starts:
+`plan.md` holds step 1, including saving and rewriting the plan file;
+`build.md` steps 2–8, including loading a saved plan for `--from-plan`; and
+`pr.md` step 9, split into opening the PR (including marking the plan file
+consumed) and keeping it up to date once open, the seam a later PR feedback
+loop would use. A mode is just which phases run: by default plan, build, PR;
+`--plan-only` plan alone; `--from-plan` build then PR. Step numbers stay the
+same across the files, because other skills refer to them.
 
 ### `plugins/ai-workflow/skills/review-guide/SKILL.md` — `/review-guide`
 
@@ -590,7 +603,7 @@ documentation, a tool from a plugin-bundled server is callable as
 `mcp__playwright__browser_click` form a project- or user-configured
 server would use. `adversarial-qa.md`'s `tools:` allowlist uses the scoped
 form already (it has to — it's a literal allowlist Claude Code matches
-against registered tool names). `feature/SKILL.md`'s `context7` mention is
+against registered tool names). `feature/build.md`'s `context7` mention is
 deliberately kept as descriptive prose rather than a hardcoded tool name,
 so an upstream rename there can't go stale silently. If this plugin's
 `name` in `plugin.json` (currently `ai-workflow`) ever changes,
