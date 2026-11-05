@@ -85,7 +85,10 @@ Per plan section:
 
 ### 5. Apply standards
 
-Apply general review practice; the rules below set the verdicts.
+Apply general review practice. The rules below fix the verdicts where
+judgment would vary; report anything else you find (e.g. unhandled
+null/empty input or dependency failures in the code) under the closest step
+7 item.
 
 **Design**
 - New code that mixes concerns (a function doing two jobs, a class with more
@@ -125,7 +128,9 @@ Apply general review practice; the rules below set the verdicts.
   render a distinct type whose fields are asserted), and no personal data in
   logs
 - One exists → only check the diff doesn't weaken it (below); one doesn't →
-  check its invariant by hand on diffs that touch it
+  check its invariant by hand on diffs that touch it. A public view still
+  built from the full domain object is existing debt → `NEEDS_DECISION`
+  (restructuring is its own task), not a `FAIL` on every PR touching it
 - Personal data in logs, including indirect serialization (a rich object's
   `toString()`, dumped request params), or in URLs → `FAIL`
 
@@ -173,7 +178,8 @@ Items, one verdict each:
   business logic in infrastructure/API layers · no new dependency without
   justification
 - **Plan compliance** (if plan): one verdict per step 3 check
-- **Design**: step 5 *Design*
+- **Design**: step 5 *Design*, plus anything general practice finds in the
+  code (e.g. unhandled edge cases or dependency failures)
 - **Tests**: step 5 *Tests*; list the scenarios you built and which lacked a
   test
 - **Privacy and fitness tests**: step 5 *Privacy* and *Fitness tests*
