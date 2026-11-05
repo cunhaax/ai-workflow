@@ -240,3 +240,8 @@ file at the path this run last wrote (1d or `plan.md` → *Rewrite*) or read
 (`--from-plan`), then set the frontmatter's `consumed: <PR URL>` line
 (replacing any existing one). The check fails → ask. The edit fails → report
 the PR URL and the failure per Rule 2. PR not opened → no marker
+
+## Output
+
+- Open PR with the description and the first comment from step 9
+- The plan file marked consumed, if one was saved or read

@@ -85,10 +85,10 @@ and `EDGE-<slug>-n` has a tagged Test Strategy entry.
 
 ## Output
 
-- Open PR with the description and the first comment from step 9, and the
-  plan file marked consumed (`--plan-only`: the plan file's absolute path
-  instead of a PR)
-- Summary of skipped steps, plan deviations, `context7` lookup failures, and why
+- Default and `--from-plan`: `build.md`'s *Output*
+- `--plan-only`: `plan.md`'s *Output*, reported as in the `--plan-only` STOP
+- Every mode: a summary of skipped steps, plan deviations, `context7` lookup
+  failures, and why
 
 ## Rules
 

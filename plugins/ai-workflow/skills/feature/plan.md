@@ -126,6 +126,11 @@ rewrites the file via 1c → *Rewrite* below, not here):
 - Remember the absolute path written. A write that fails (resolve, mkdir,
   write) → STOP per Rule 2
 
+## Output
+
+- The approved plan text, kept for steps 4 and 7
+- The saved plan file's absolute path
+
 This phase ends here; continue per `SKILL.md`'s mode table.
 
 ## Rewrite
