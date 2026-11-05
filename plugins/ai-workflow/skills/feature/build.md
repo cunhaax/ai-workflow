@@ -41,7 +41,7 @@ the re-critique below) or approval, and `depends-on` is not read or checked.
   output verbatim and "judge whether this plan still applies at HEAD; return
   LOW if not". Confidence LOW → STOP and present the critique as a decision;
   otherwise continue on the unamended plan, and put the verdict and amendments
-  not applied in step 9's **Review outcome**
+  not applied in step 9's (`pr.md`) **Review outcome**
 - The other `--from-plan` differences are marked in the steps below
 
 ## No automated test suite
@@ -176,6 +176,10 @@ QA was skipped and why. When in doubt, run it.
 
 `pr.md`'s *Input*: a committed HEAD with a passing review recorded (step 6),
 the approved plan text, the plan file path if one was saved or read, the
-final test evidence (step 3), and the review and QA outcomes, with every
-decision the user made on them.
+final test evidence (step 3), the review and QA outcomes with every decision
+the user made on them, and the run facts step 9 reports (`--from-plan`: the
+`base-commit`, whether a re-critique ran, whether step 2 re-approved the
+plan; otherwise whether no plan file was saved).
+
+This phase ends here; continue per `SKILL.md`'s mode table.
 

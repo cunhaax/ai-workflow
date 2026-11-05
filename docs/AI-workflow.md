@@ -356,8 +356,8 @@ The steps live in three phase files beside it, read when each phase starts:
 `pr.md` step 9, split into opening the PR (including marking the plan file
 consumed) and keeping it up to date once open, the seam a later PR feedback
 loop would use. A mode is just which phases run: by default plan, build, PR;
-`--plan-only` plan alone; `--from-plan` build then PR. Step numbers stay the same across the files, because other skills
-refer to them.
+`--plan-only` plan alone; `--from-plan` build then PR. Step numbers stay the
+same across the files, because other skills refer to them.
 
 ### `plugins/ai-workflow/skills/review-guide/SKILL.md` — `/review-guide`
 

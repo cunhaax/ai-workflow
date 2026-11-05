@@ -7,7 +7,8 @@ this phase runs). Files named below are beside this one.
 
 `build.md`'s *Output*: a committed HEAD with a passing review recorded, the
 approved plan text, the plan file path if one was saved or read, the final
-test evidence, and the review and QA outcomes.
+test evidence, the review and QA outcomes with every decision the user made
+on them, and the run facts step 9 reports.
 
 ## 9. PR
 
@@ -72,7 +73,8 @@ the PR URL and the failure per Rule 2. PR not opened → no marker
 
 Diff touches a sensitive area:
 - Spawn a new `code-critic` (not one continued from earlier rounds) as a
-  second look before merge, and apply `build.md` steps 5–6 to its output
+  second look before merge, with the inputs and the `opus` override of
+  `build.md` step 4, and apply `build.md` steps 5–6 to its output
 
 Any commit made once the PR is open (e.g. fixes from the second look):
 - Follow `build.md` step 6 (re-run step 3, commit, re-review, record) before

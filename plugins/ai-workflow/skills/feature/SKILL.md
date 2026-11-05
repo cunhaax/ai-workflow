@@ -46,7 +46,7 @@ prompt content, passed on verbatim:
 | First token | Runs |
 |---|---|
 | `--plan-only` | `plan.md`, then STOP |
-| `--from-plan` | `build.md`, loading the saved plan → `pr.md` |
+| `--from-plan` | `build.md` (loading the saved plan) → `pr.md` |
 | anything else | `plan.md` → `build.md` → `pr.md` |
 
 Only this table decides what runs next: each phase file ends at its last
