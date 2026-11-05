@@ -228,7 +228,13 @@ rules live in the skill; project-specific rules and privacy anchors live
 wherever `AGENTS.md`'s guidance section points (defaulting to
 `docs/agent-rules/code-critic.md`). Any mechanically checkable rule should
 graduate to a build-enforced test (next section), after which the reviewer
-only checks the diff doesn't weaken it.
+only checks the diff doesn't weaken it. The skill's base standards are
+deliberately short: it assumes general review practice and states only the
+calibrations that set a verdict (what is `FAIL` vs `NEEDS_DECISION`, which
+test gaps block). The three privacy fitness tests it names are backlog items
+for any project holding personal data, not per-PR prose; consent, retention
+and data classification are product flows built as tasks, not per-PR review
+items.
 
 ## Deterministic Enforcement — Below the LLM Layer
 

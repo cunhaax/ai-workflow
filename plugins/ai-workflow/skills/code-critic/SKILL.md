@@ -85,100 +85,54 @@ Per plan section:
 
 ### 5. Apply standards
 
-**Single responsibility**
-- Functions do one thing. Branch for a different concern (admin path in a
-  user path, parsing inside persistence):
-  - New function with mixed concerns → `FAIL`
-  - Existing function extended with an unrelated branch → `FAIL`
-  - Borderline, extraction hurts readability → `NEEDS_DECISION`
-- Classes: too many responsibilities = more than one independent reason to
-  change
-  - New class with too many → `FAIL`
-  - Change significantly worsens an existing violation → `FAIL`
-  - Change extends an oversized class without making it meaningfully worse →
-    `NEEDS_DECISION` (flag the debt; developer chooses refactor / tech debt /
-    accept)
+Apply general review practice; the rules below set the verdicts.
 
-**Error handling**
-- No generic catch-all in business logic. At process boundaries (top-level
-  controllers, scheduled jobs, async entry points) a catch-all that logs and
-  translates to a domain error is fine; judge by where it lives
-- Every error carries context: what operation failed and why
-- Critical-path errors logged with structured fields
-
-**Naming**
-- Functions say what they do (`calculateShippingCost`, not `calc`/`process`)
-- Booleans read as questions (`isValid`, `hasPermission`)
+**Design**
+- New code that mixes concerns (a function doing two jobs, a class with more
+  than one independent reason to change, an unrelated branch added to an
+  existing function) → `FAIL`; borderline, or extracting would hurt
+  readability → `NEEDS_DECISION`
+- Extending existing oversized code without making it meaningfully worse →
+  `NEEDS_DECISION` (flag the debt; the developer chooses refactor, tech debt
+  or accept); making it significantly worse → `FAIL`
+- No generic catch-all in business logic; at a process boundary (top-level
+  controller, scheduled job, async entry point) one that logs and translates
+  to a domain error is fine. Errors say what failed and why
 
 **Tests** (you own quality AND completeness)
 - No automated test suite (`AGENTS.md` → *Commands* says so): read "test"
   below as the plan's walkthroughs plus any extra ones recorded in the test
   evidence; only a passing or waived one covers anything. No plan → a
-  coverage gap is an Open Question
-  ("no walkthrough evidence"), not a `FAIL`
-- Quality:
-  - Every public function with non-trivial behaviour has happy-path and edge
-    tests. Exempt: trivial delegators, generated code, plain data classes,
-    pure getters. State each exemption and why
-  - Names describe the scenario (`test_order_fails_when_inventory_insufficient`)
-  - Given-When-Then; test behaviour, not implementation details
-  - Check what each assertion actually compares, not its name/comment. A test
-    that passes regardless of correctness (expression compared to itself)
-    proves nothing
-  - Diff weakens, loosens, or deletes a plan-derived test (esp. `[AC-…]`) to
-    pass the suite → `FAIL`, unless the input documents an approved plan
-    deviation
-- Completeness, against the plan: every Requirement and Edge Case has a test
-  that would fail if it broke; every branch the implementation introduces
-  (error paths, validation failures, authorization denials, empty/null) is
-  exercised
-- Completeness, beyond the plan: statically, per branch in the diff, build an
-  input or event sequence that exercises it and ask whether a test covers it.
-  For each category ask "what would I do to make this fail?":
-  - Implicit branches (`if`, `when`/`switch`, `?:`, early returns, exception
-    handlers) not in the plan
-  - Boundary values: 0, 1, max, min, off-by-one, empty, single-element,
-    at-limit vs just-over
-  - Input shapes: null, blank, whitespace, unicode, very long, leading/trailing
-    spaces, mixed case, duplicates, unsorted
-  - State/concurrency: stale reads, double submit, retries, partial writes,
-    invoked twice
-  - External dependency failure: timeouts, 4xx vs 5xx, malformed payloads,
-    slow responses
-  - Security-adjacent: authz on every entry point (not just the planned one);
-    injection-shaped input on any field reaching a query, template, or shell
-  - Gap found → `FAIL` (or `NEEDS_DECISION` if scope is ambiguous) with a
-    concrete description of the missing test
+  coverage gap is an Open Question ("no walkthrough evidence"), not a `FAIL`
+- A plan Requirement or Edge Case, or a branch the diff introduces (error
+  path, validation failure, authorization denial, empty/null), with no test
+  that would fail if it broke → `FAIL`
+- Gaps beyond the plan: for each branch in the diff, build an input or event
+  sequence that exercises it (boundaries, input shapes, state and
+  concurrency, dependency failure, authz on every entry point,
+  injection-shaped input reaching a query, template or shell) and ask
+  whether a test covers it. Gap → `FAIL` naming the missing test; ambiguous
+  scope → `NEEDS_DECISION`
+- An assertion that passes regardless of correctness (check what it
+  compares, not its name) → `FAIL`
+- A plan-derived test weakened, loosened or deleted to pass → `FAIL`, unless
+  the input documents an approved plan deviation
 
-**Privacy and data protection**
-- Prefer build-enforced tests. Any project holding personal data should have
-  three fitness tests (backlog items until they exist, not per-PR prose):
-  1. Deletion by design: every table with a user FK cascades on account
-     deletion or is in an explicit, commented allowlist
-  2. Public-surface whitelist: the model rendered on public/unauthenticated
-     surfaces is a distinct type with fields asserted against a whitelist
-     (public pages rendering from the full domain object → restructuring is
-     the prerequisite, its own task)
-  3. No personal data in logs: log statements don't reference
-     sensitive/user-content or contact-detail fields
-- Implemented ones: only check the diff doesn't WEAKEN them (deleting or
-  disabling the test, unexplained allowlist entry, code restructured out of
-  scan scope) → weakening is `FAIL`
-- Not implemented: check the invariant by hand only on diffs touching it
-  (new user-FK tables; public-view rendering; new/changed log statements)
-- Manual residue, `FAIL`:
-  - Indirect serialization into logs (rich-object `toString()`, dumped
-    request params)
-  - Personal data in URLs (emails, phones, or values embedding them in query
-    params or path segments)
-- Consent, retention, data-classification: NOT per-PR items (product flows,
-  built as tasks then protected by tests)
+**Privacy** (bound to the codebase by step 6's privacy anchors)
+- The three privacy fitness tests a project holding personal data should
+  have: deletion by design (every user-FK table cascades on account deletion
+  or is in a commented allowlist), a public-surface whitelist (public views
+  render a distinct type whose fields are asserted), and no personal data in
+  logs
+- One exists → only check the diff doesn't weaken it (below); one doesn't →
+  check its invariant by hand on diffs that touch it
+- Personal data in logs, including indirect serialization (a rich object's
+  `toString()`, dumped request params), or in URLs → `FAIL`
 
-**Architecture**
-- A layer/architecture fitness test exists → don't re-derive boundaries by
-  hand; only check the diff doesn't weaken it (deleting/disabling it,
-  widening a package glob, unexplained exemption, code moved out of the
-  scanned layer) → `FAIL`
+**Fitness tests** (architecture or privacy): one exists → don't re-derive
+what it checks by hand. Weakening it (deleting or disabling it, widening its
+scope or glob, an unexplained exemption or allowlist entry, code moved out of
+what it scans) → `FAIL`
 
 ### 6. Project rules
 
@@ -214,39 +168,17 @@ Verdicts:
   config, prod data shape, deployment topology, external behaviour); state
   the question and the evidence that would resolve it. Use freely
 
-Items:
-- **Architecture**: respects service boundaries and ADRs · no business logic
-  in infrastructure/API layers · no new dependency without justification
-- **Plan compliance** (if plan), one verdict each:
-  - every `AC-<slug>-n` has a committed `[AC-<slug>-n]` test that would fail
-    if the criterion broke
-  - every `EDGE-<slug>-n` has a committed `[EDGE-<slug>-n]` test that would
-    fail if the handling broke
-  - (no automated test suite: walkthroughs and recorded results instead,
-    step 3)
-  - Contract matches (skip if "None")
-  - plan-stated types match the signatures
-  - Requirements addressed
-  - Approach followed, all plan steps accounted for
-  - Files match the manifest
-  - nothing inside Out of Scope
-- **Code quality**: single responsibility (functions, classes) · specific
-  error handling · readable by a new team member · no implicit assumptions
-  that should be explicit comments/types
-- **Edge cases**: plan's `EDGE-<slug>-n` explicitly handled (if plan) ·
-  null/empty/zero/negative · concurrent access · external dependency failure
-  (timeouts, retries, fallbacks), each where applicable
-- **Tests**: happy path · every plan Requirement and Edge Case (if plan) ·
-  every introduced branch · boundaries · input shapes · state/concurrency ·
-  dependency failure modes (each where applicable) · critical analysis done,
-  unenumerated scenarios listed, missing ones `FAIL` · scenario-describing
-  names · Given-When-Then · no implementation-detail tests · no tautological
-  assertions
+Items, one verdict each:
+- **Architecture**: service boundaries and ADRs respected (step 2) · no
+  business logic in infrastructure/API layers · no new dependency without
+  justification
+- **Plan compliance** (if plan): one verdict per step 3 check
+- **Design**: step 5 *Design*
+- **Tests**: step 5 *Tests*; list the scenarios you built and which lacked a
+  test
+- **Privacy and fitness tests**: step 5 *Privacy* and *Fitness tests*
 - **Project-specific**: every applicable item from step 6 evaluated, or its
   absence stated in one line
-- **Privacy**: fitness tests not weakened · hand-checked invariants where the
-  diff touches them · no indirect serialization into logs, no personal data
-  in URLs
 - **Security**: no secrets/credentials in code · input validation on all
   external inputs · authorization where required
 
