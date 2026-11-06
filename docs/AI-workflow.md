@@ -345,8 +345,10 @@ rather than from the implementation, and may not be weakened to pass. The
 skill states that outcome, not an order of work; no push or PR
 until code-critic passes with no unresolved FAIL items, escalated to Opus on
 security-surface diffs; on Tier 2 or a Sensitive Area diff, the bundled
-`/code-review high` runs in parallel with code-critic as a second,
-independent bug hunt without plan context, its findings triaged with
+`/code-review high` runs in its own sub-agent, in parallel with
+code-critic's, as a second, independent bug hunt without plan context (the
+main agent never reviews its own work in its own context), its findings
+triaged with
 code-critic's and listed in the PR, while only code-critic records the pass;
 every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;

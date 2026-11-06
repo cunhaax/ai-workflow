@@ -106,10 +106,14 @@ Deviation from plan:
   sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
 - Second reviewer: the plan's Tier is 2 (the higher value on a `set by user`
-  line), or the diff touches a sensitive area → on the same commit, run the
-  bundled `/code-review high` skill while `code-critic` runs in the
-  background. Local only: never `ultra`, `--comment` or `--fix`
-  - It fails or is unavailable → STOP per Rule 2; never skip it silently
+  line), or the diff touches a sensitive area → on the same commit, spawn a
+  second sub-agent in parallel with `code-critic` (both in the background;
+  never run either review in your own context). Its task: run the bundled
+  `/code-review high` skill on the diff against the default branch and
+  return its findings verbatim, editing nothing. Local only: never `ultra`,
+  `--comment` or `--fix`
+  - It fails, or the skill is unavailable to it → STOP per Rule 2; never
+    skip it silently
   - Merge its findings with `code-critic`'s, dropping duplicates. Each is
     fixed in step 6's batch or rejected with a reason; one you are unsure of
     or disagree with goes to the user as in step 5. Never drop one silently
