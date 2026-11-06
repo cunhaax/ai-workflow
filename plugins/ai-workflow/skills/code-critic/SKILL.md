@@ -23,6 +23,8 @@ Attempt*). Apply the same stance to the tests (see *Tests*).
 
 - Plan text (optional; inline or file path)
 - Test evidence: summary of the latest full test run (optional)
+- Findings from another reviewer that were just fixed (optional): check each
+  is actually resolved in the diff; one that isn't → `FAIL`
 - The diff is not an input: step 1 selects it
 
 ## Steps
@@ -92,11 +94,12 @@ item, *Design* if none fits better.
 **Design**
 - New code that mixes concerns (a function doing two jobs, a class with more
   than one independent reason to change, an unrelated branch added to an
-  existing function) → `FAIL`; borderline, or extracting would hurt
-  readability → `NEEDS_DECISION`
-- Extending existing oversized code without making it meaningfully worse →
-  `NEEDS_DECISION` (flag the debt; the developer chooses refactor, tech debt
-  or accept); making it significantly worse → `FAIL`
+  existing function, even an already oversized one) → `FAIL`; borderline,
+  or extracting would hurt readability → `NEEDS_DECISION`
+- Adding related logic to existing oversized code without making it
+  meaningfully worse → `NEEDS_DECISION` (flag the debt; the developer
+  chooses refactor, tech debt or accept); making it significantly worse →
+  `FAIL`
 - No generic catch-all in business logic; at a process boundary (top-level
   controller, scheduled job, async entry point) one that logs and translates
   to a domain error is fine. Errors say what failed and why
@@ -106,9 +109,10 @@ item, *Design* if none fits better.
   below as the plan's walkthroughs plus any extra ones recorded in the test
   evidence; only a passing or waived one covers anything. No plan → a
   coverage gap is an Open Question ("no walkthrough evidence"), not a `FAIL`
-- A plan Requirement or Edge Case, or a branch the diff introduces (error
-  path, validation failure, authorization denial, empty/null), with no test
-  that would fail if it broke → `FAIL`
+- A plan Requirement or Edge Case, a new public function with non-trivial
+  behaviour, or a branch the diff introduces (error path, validation
+  failure, authorization denial, empty/null), with no test that would fail
+  if it broke → `FAIL`
 - Gaps beyond the plan: for each branch in the diff, build an input or event
   sequence that exercises it (boundaries, input shapes, state and
   concurrency, dependency failure, authz on every entry point,
@@ -129,8 +133,9 @@ item, *Design* if none fits better.
 - One exists → only check the diff doesn't weaken it (below); one doesn't →
   check its invariant by hand on diffs that touch it; a new violation →
   `FAIL`. A public view still built from the full domain object is existing
-  debt → `NEEDS_DECISION` (restructuring is its own task), not a `FAIL` on
-  every PR touching it
+  debt: note it as known debt under the item (restructuring is its own
+  task), with no `FAIL` or `NEEDS_DECISION` for it on every PR touching it;
+  the diff making it worse → `FAIL`
 - Personal data in logs, including indirect serialization (a rich object's
   `toString()`, dumped request params), or in URLs → `FAIL`
 

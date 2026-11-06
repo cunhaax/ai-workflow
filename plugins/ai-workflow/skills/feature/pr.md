@@ -57,9 +57,10 @@ put the plan file's absolute path in the PR description or the first comment.
   the walkthrough and its result). Every ID has a row with at least one test
   or walkthrough
 - **Review outcome**: final verdict, each `NEEDS_DECISION`, Open Question and
-  user-overridden FAIL, and the user's decision; if the second reviewer ran
-  (`build.md` step 4), each `/code-review` finding, accepted or rejected
-  with the reason
+  user-overridden FAIL, and the user's decision; for the second reviewer
+  (`build.md` step 4), each `/code-review` finding as fixed, the user's
+  decision, or a duplicate of a `code-critic` item, or that the user chose to
+  proceed without it
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
   ignored), any Blockers and the user's decision (including a partial or
   skipped QA run and why), or "skipped: no UI or API surface". Describe in

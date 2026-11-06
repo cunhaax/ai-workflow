@@ -109,27 +109,28 @@ Deviation from plan:
 #### Second reviewer (Tier 2)
 
 Runs when the plan's Tier is 2 (the higher value on a `set by user` line) or
-the diff touches a sensitive area. It is an independent bug hunt without plan
-context; it assumes a sub-agent can run the bundled `/code-review` skill,
-which the first Tier 2 run confirms.
+the diff touches a sensitive area: an independent bug hunt without plan
+context, by Claude Code's bundled `/code-review` skill.
 - On the same commit, spawn a `general-purpose` sub-agent (it needs the Skill
   tool) in parallel with `code-critic`, both in the background. Never run
-  either review in your own context. Its prompt, with the values filled in:
-  > Run the bundled `/code-review high` skill on the branch diff against
-  > `<default-branch>`, at commit `<SHA>`. Return its findings verbatim and
-  > the scope it says it reviewed. Edit nothing; never use `ultra`,
-  > `--comment` or `--fix`. If you cannot invoke the skill, or it runs in a
-  > reduced mode, reply only `UNAVAILABLE: <reason>` and do not review the
-  > diff yourself.
-- `UNAVAILABLE`, a failure, or a reviewed scope other than that diff → STOP
-  per Rule 2; never skip it silently
-- Wait for both reviews, then merge their findings, dropping duplicates. A
-  `/code-review` finding you can show from the code is a false positive →
-  reject it, citing the code. Any other you would not fix → the user, as in
-  step 5. Never drop one silently; the rest are fixed in step 6's batch
-- It runs once per run, and at most once more, only if a step 6 fix changes
-  the approach or adds files. Other re-reviews use `code-critic` only.
-  `/code-review`'s findings never record a pass
+  either review in your own context. The second sub-agent's prompt, with the
+  values filled in:
+  > Run Claude Code's bundled `/code-review high` skill with target
+  > `origin/<default-branch>...<SHA>`. Return its findings verbatim and the
+  > scope it says it reviewed. Edit nothing; never use `ultra`, `--comment`
+  > or `--fix`. If you cannot invoke the skill, or it runs in a reduced mode,
+  > reply only `UNAVAILABLE: <reason>` and do not review the diff yourself.
+- `UNAVAILABLE`, a failure, or a reviewed scope other than that target → STOP
+  per Rule 2; never skip it silently. Proceeding without it is the user's
+  choice, recorded in the PR's **Review outcome**
+- Wait for both reviews, then merge their findings; a `/code-review` finding
+  that repeats a `code-critic` item is listed as a duplicate of it. Each
+  finding is fixed in step 6's batch, or, if you would not fix it, goes to
+  the user as in step 5 (never rejected on your own). Never drop one silently
+- It runs once per run, and at most once more: when a later fix (step 6, 8
+  or after the PR opens) adds files or touches a sensitive-area path. Other
+  re-reviews use `code-critic` only. `/code-review`'s findings never record a
+  pass
 
 ### 5. NEEDS_DECISION and Open Questions
 
@@ -141,9 +142,10 @@ which the first Tier 2 run confirms.
 
 ### 6. FAIL
 
-- Any FAIL, or `/code-review` finding accepted at step 4 → fix, re-run step
-  3, commit, re-call `code-critic` with the new test summary; repeat until
-  none
+- Any FAIL, or `/code-review` finding to fix (from step 4, or one the user
+  said to fix at step 5) → fix, re-run step 3, commit, re-call `code-critic`
+  with the new test summary and the `/code-review` findings just fixed, so it
+  checks they are resolved; repeat until none
 - Same FAIL after a fix, or you disagree with a FAIL → present it to the
   user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
   to satisfy it. A FAIL the user explicitly overrides counts as resolved (the
