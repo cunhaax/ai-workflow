@@ -86,9 +86,8 @@ Per plan section:
 ### 5. Apply standards
 
 Apply general review practice. The rules below fix the verdicts where
-judgment would vary; report anything else you find (e.g. unhandled
-null/empty input or dependency failures in the code) under the closest step
-7 item.
+judgment would vary; report anything else you find under the closest step 7
+item, *Design* if none fits better.
 
 **Design**
 - New code that mixes concerns (a function doing two jobs, a class with more
@@ -128,9 +127,10 @@ null/empty input or dependency failures in the code) under the closest step
   render a distinct type whose fields are asserted), and no personal data in
   logs
 - One exists → only check the diff doesn't weaken it (below); one doesn't →
-  check its invariant by hand on diffs that touch it. A public view still
-  built from the full domain object is existing debt → `NEEDS_DECISION`
-  (restructuring is its own task), not a `FAIL` on every PR touching it
+  check its invariant by hand on diffs that touch it; a new violation →
+  `FAIL`. A public view still built from the full domain object is existing
+  debt → `NEEDS_DECISION` (restructuring is its own task), not a `FAIL` on
+  every PR touching it
 - Personal data in logs, including indirect serialization (a rich object's
   `toString()`, dumped request params), or in URLs → `FAIL`
 
