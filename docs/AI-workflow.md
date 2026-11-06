@@ -344,7 +344,11 @@ cover every acceptance criterion and edge case, are written from the plan
 rather than from the implementation, and may not be weakened to pass. The
 skill states that outcome, not an order of work; no push or PR
 until code-critic passes with no unresolved FAIL items, escalated to Opus on
-security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
+security-surface diffs; on Tier 2 or a Sensitive Area diff, the bundled
+`/code-review high` runs in parallel with code-critic as a second,
+independent bug hunt without plan context, its findings triaged with
+code-critic's and listed in the PR, while only code-critic records the pass;
+every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;
 QA runs only for changes with a UI and/or API surface; the PR description is
 a short, commit-ready summary (what and why, Tier, test evidence), since it

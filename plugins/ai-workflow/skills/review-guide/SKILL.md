@@ -61,9 +61,9 @@ comments on a PR.
   `/feature`, the one in context). Standalone, read it from the given plan
   file; with no plan, n is the floor, marked "no plan tier"
 - The reason names each sensitive area touched, as a fact
-- Floor or a judged area above the plan's tier → tell the user before the PR opens:
-  `/feature` step 4's `opus` override may not have been applied, and step 9's
-  second look applies
+- Floor or a judged area above the plan's tier → tell the user before the PR
+  opens: `/feature` step 4's `opus` override and second reviewer may not have
+  run, and the user decides whether to run them now
 
 ### 3. Review guide
 

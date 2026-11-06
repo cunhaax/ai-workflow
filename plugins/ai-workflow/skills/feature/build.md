@@ -102,9 +102,19 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3)
-- Every `code-critic` call (including the step 6 re-reviews and step 9's
-  second look): diff touches a sensitive area → model override `opus`
+- Every `code-critic` call (including the step 6 re-reviews): diff touches a
+  sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
+- Second reviewer: the plan's Tier is 2 (the higher value on a `set by user`
+  line), or the diff touches a sensitive area → on the same commit, run the
+  bundled `/code-review high` skill while `code-critic` runs in the
+  background. Local only: never `ultra`, `--comment` or `--fix`
+  - It fails or is unavailable → STOP per Rule 2; never skip it silently
+  - Merge its findings with `code-critic`'s, dropping duplicates. Each is
+    fixed in step 6's batch or rejected with a reason; one you are unsure of
+    or disagree with goes to the user as in step 5. Never drop one silently
+  - Once per run: step 6 re-reviews use `code-critic` only, unless a fix
+    changes the approach or adds files. Its findings never record a pass
 
 ### 5. NEEDS_DECISION and Open Questions
 
@@ -116,8 +126,9 @@ Deviation from plan:
 
 ### 6. FAIL
 
-- Any FAIL → fix, re-run step 3, commit, re-call `code-critic` with the new
-  test summary; repeat until none
+- Any FAIL, or `/code-review` finding accepted at step 4 → fix, re-run step
+  3, commit, re-call `code-critic` with the new test summary; repeat until
+  none
 - Same FAIL after a fix, or you disagree with a FAIL → present it to the
   user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
   to satisfy it. A FAIL the user explicitly overrides counts as resolved (the
