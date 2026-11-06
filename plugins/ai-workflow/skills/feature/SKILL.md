@@ -22,6 +22,8 @@ task tracking.
 `planner`, `plan-critic`, `code-critic` and `adversarial-qa` below are
 sub-agents: "call" means spawn the sub-agent of that name, never load the
 same-named skill into your own context (you would be reviewing your own work).
+The same holds for `build.md` step 4's second reviewer, a `general-purpose`
+sub-agent that runs the bundled `/code-review` skill.
 
 ## Input
 

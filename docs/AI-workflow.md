@@ -228,7 +228,13 @@ rules live in the skill; project-specific rules and privacy anchors live
 wherever `AGENTS.md`'s guidance section points (defaulting to
 `docs/agent-rules/code-critic.md`). Any mechanically checkable rule should
 graduate to a build-enforced test (next section), after which the reviewer
-only checks the diff doesn't weaken it.
+only checks the diff doesn't weaken it. The skill's base standards are
+deliberately short: it assumes general review practice and states only the
+calibrations that set a verdict (what is `FAIL` vs `NEEDS_DECISION`, which
+test gaps block). The three privacy fitness tests it names are backlog items
+for any project holding personal data, not per-PR prose; consent, retention
+and data classification are product flows built as tasks, not per-PR review
+items.
 
 ## Deterministic Enforcement — Below the LLM Layer
 
@@ -338,7 +344,11 @@ cover every acceptance criterion and edge case, are written from the plan
 rather than from the implementation, and may not be weakened to pass. The
 skill states that outcome, not an order of work; no push or PR
 until code-critic passes with no unresolved FAIL items, escalated to Opus on
-security-surface diffs; every `NEEDS_DECISION` and Open Question from review,
+security-surface diffs; on Tier 2 or a Sensitive Area diff, a second
+sub-agent runs the bundled `/code-review high` in parallel with code-critic,
+as an independent bug hunt without plan context, and its findings are
+triaged with code-critic's and listed in the PR, while only code-critic
+records the pass; every `NEEDS_DECISION` and Open Question from review,
 and every QA Blocker, is relayed to the user rather than decided by the agent;
 QA runs only for changes with a UI and/or API surface; the PR description is
 a short, commit-ready summary (what and why, Tier, test evidence), since it

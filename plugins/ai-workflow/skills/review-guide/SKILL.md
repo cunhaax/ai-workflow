@@ -61,9 +61,14 @@ comments on a PR.
   `/feature`, the one in context). Standalone, read it from the given plan
   file; with no plan, n is the floor, marked "no plan tier"
 - The reason names each sensitive area touched, as a fact
-- Floor or a judged area above the plan's tier → tell the user before the PR opens:
-  `/feature` step 4's `opus` override may not have been applied, and step 9's
-  second look applies
+- Floor or a judged area above the plan's tier → tell the user before the PR
+  opens: `/feature` step 4's `opus` override and second reviewer may not have
+  run, and the user decides whether to run them now (inside `/feature`:
+  `build.md` step 4 on HEAD with both, counting as the second reviewer's
+  first run if it has not run, else its one extra run (already used → the
+  user decides whether to exceed it), then
+  steps 5–6, steps 7–8 again if a fix touches a UI or API surface, then this
+  skill again)
 
 ### 3. Review guide
 
