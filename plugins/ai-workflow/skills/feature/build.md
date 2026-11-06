@@ -129,9 +129,8 @@ context, by Claude Code's bundled `/code-review` skill.
   the user as in step 5 (never rejected on your own). Never drop one silently
 - It runs once per run, and at most once more: when a later fix (step 6, 8
   or after the PR opens) adds files, changes the approach, or touches a
-  sensitive-area path. Other
-  re-reviews use `code-critic` only. `/code-review`'s findings never record a
-  pass
+  sensitive-area path. Other re-reviews use `code-critic` only.
+  `/code-review`'s findings never record a pass
 
 ### 5. NEEDS_DECISION and Open Questions
 
@@ -146,7 +145,8 @@ context, by Claude Code's bundled `/code-review` skill.
 - Any FAIL, or `/code-review` finding to fix (from step 4, or one the user
   said to fix at step 5) → fix, re-run step 3, commit, re-call `code-critic`
   with the new test summary and the `/code-review` findings just fixed, so it
-  checks they are resolved; repeat until none
+  checks they are resolved (and the second reviewer, if step 4's extra-run
+  condition holds); repeat until none
 - Same FAIL after a fix, or you disagree with a FAIL → present it to the
   user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
   to satisfy it. A FAIL the user explicitly overrides counts as resolved (the
