@@ -63,7 +63,8 @@ comments on a PR.
 - The reason names each sensitive area touched, as a fact
 - Floor or a judged area above the plan's tier → tell the user before the PR
   opens: `/feature` step 4's `opus` override and second reviewer may not have
-  run, and the user decides whether to run them now
+  run, and the user decides whether to run them now (inside `/feature`:
+  `build.md` step 4 on HEAD with both, then steps 5–6, then this skill again)
 
 ### 3. Review guide
 
