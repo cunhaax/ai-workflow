@@ -65,8 +65,9 @@ comments on a PR.
   opens: `/feature` step 4's `opus` override and second reviewer may not have
   run, and the user decides whether to run them now (inside `/feature`:
   `build.md` step 4 on HEAD with both, counting as the second reviewer's one
-  extra run, then steps 5–6, step 7 again if a fix touches a UI or API
-  surface, then this skill again)
+  extra run (already used → the user decides whether to exceed it), then
+  steps 5–6, steps 7–8 again if a fix touches a UI or API surface, then this
+  skill again)
 
 ### 3. Review guide
 

@@ -134,8 +134,8 @@ item, *Design* if none fits better.
   check its invariant by hand on diffs that touch it; a new violation →
   `FAIL`. A public view still built from the full domain object is existing
   debt: note it as known debt under the item (restructuring is its own
-  task), with no `FAIL` or `NEEDS_DECISION` for it on every PR touching it;
-  the diff making it worse → `FAIL`
+  task), with no `FAIL` or `NEEDS_DECISION` for it; the diff making it worse
+  → `FAIL`
 - Personal data in logs, including indirect serialization (a rich object's
   `toString()`, dumped request params), or in URLs → `FAIL`
 

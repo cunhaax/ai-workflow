@@ -128,7 +128,8 @@ context, by Claude Code's bundled `/code-review` skill.
   finding is fixed in step 6's batch, or, if you would not fix it, goes to
   the user as in step 5 (never rejected on your own). Never drop one silently
 - It runs once per run, and at most once more: when a later fix (step 6, 8
-  or after the PR opens) adds files or touches a sensitive-area path. Other
+  or after the PR opens) adds files, changes the approach, or touches a
+  sensitive-area path. Other
   re-reviews use `code-critic` only. `/code-review`'s findings never record a
   pass
 
@@ -153,7 +154,8 @@ context, by Claude Code's bundled `/code-review` skill.
   only while the code it covers is unchanged: if the critic re-raises it
   after that code changed → ask again
 - After any later change (including step 8 fixes): re-run step 3, commit,
-  re-call `code-critic` with the new summary
+  re-call `code-critic` with the new summary (and the second reviewer, if
+  step 4's extra-run condition holds)
 - After each re-review, apply step 5 to anything new before continuing
 - Record only when the committed HEAD has no unresolved FAIL and every
   step 5 item is answered → run `scripts/review-ok.sh`
