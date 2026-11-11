@@ -112,7 +112,8 @@ Runs when the plan's Tier is 2 (the higher value on a `set by user` line) or
 the diff touches a sensitive area: an independent bug hunt without plan
 context, by Claude Code's bundled `/code-review` skill.
 - On the same commit, spawn a `general-purpose` sub-agent (it needs the Skill
-  tool) in parallel with `code-critic`, both in the background. Never run
+  tool) with model override `opus`, in parallel with `code-critic`, both in
+  the background. Never run
   either review in your own context. The second sub-agent's prompt, with the
   values filled in:
   > Run Claude Code's bundled `/code-review high` skill with target
