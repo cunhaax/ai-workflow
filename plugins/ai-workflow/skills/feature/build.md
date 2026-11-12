@@ -102,9 +102,36 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3)
-- Every `code-critic` call (including the step 6 re-reviews and step 9's
-  second look): diff touches a sensitive area → model override `opus`
+- Every `code-critic` call (including the step 6 re-reviews): diff touches a
+  sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
+
+#### Second reviewer (Tier 2)
+
+Runs when the plan's Tier is 2 (the higher value on a `set by user` line) or
+the diff touches a sensitive area: an independent bug hunt without plan
+context, by Claude Code's bundled `/code-review` skill.
+- On the same commit, spawn a `general-purpose` sub-agent (it needs the Skill
+  tool) with model override `opus`, in parallel with `code-critic`, both in
+  the background. Never run
+  either review in your own context. The second sub-agent's prompt, with the
+  values filled in:
+  > Run Claude Code's bundled `/code-review high` skill with target
+  > `origin/<default-branch>...<SHA>`. Return its findings verbatim and the
+  > scope it says it reviewed. Edit nothing; never use `ultra`, `--comment`
+  > or `--fix`. If you cannot invoke the skill, or it runs in a reduced mode,
+  > reply only `UNAVAILABLE: <reason>` and do not review the diff yourself.
+- `UNAVAILABLE`, a failure, or a reviewed scope other than that target → STOP
+  per Rule 2; never skip it silently. Proceeding without it is the user's
+  choice, recorded in the PR's **Review outcome**
+- Wait for both reviews, then merge their findings; a `/code-review` finding
+  that repeats a `code-critic` item is listed as a duplicate of it. Each
+  finding is fixed in step 6's batch, or, if you would not fix it, goes to
+  the user as in step 5 (never rejected on your own). Never drop one silently
+- It runs once per run, and at most once more: when a later fix (step 6, 8
+  or after the PR opens) adds files, changes the approach, or touches a
+  sensitive-area path. Other re-reviews use `code-critic` only.
+  `/code-review`'s findings never record a pass
 
 ### 5. NEEDS_DECISION and Open Questions
 
@@ -116,8 +143,11 @@ Deviation from plan:
 
 ### 6. FAIL
 
-- Any FAIL → fix, re-run step 3, commit, re-call `code-critic` with the new
-  test summary; repeat until none
+- Any FAIL, or `/code-review` finding to fix (from step 4, or one the user
+  said to fix at step 5) → fix, re-run step 3, commit, re-call `code-critic`
+  with the new test summary and the `/code-review` findings just fixed, so it
+  checks they are resolved (and the second reviewer, if step 4's extra-run
+  condition holds); repeat until none
 - Same FAIL after a fix, or you disagree with a FAIL → present it to the
   user like a NEEDS_DECISION (step 5); never loop on it or bend correct code
   to satisfy it. A FAIL the user explicitly overrides counts as resolved (the
@@ -125,7 +155,8 @@ Deviation from plan:
   only while the code it covers is unchanged: if the critic re-raises it
   after that code changed → ask again
 - After any later change (including step 8 fixes): re-run step 3, commit,
-  re-call `code-critic` with the new summary
+  re-call `code-critic` with the new summary (and the second reviewer, if
+  step 4's extra-run condition holds)
 - After each re-review, apply step 5 to anything new before continuing
 - Record only when the committed HEAD has no unresolved FAIL and every
   step 5 item is answered → run `scripts/review-ok.sh`

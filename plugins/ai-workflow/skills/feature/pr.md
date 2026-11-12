@@ -57,7 +57,10 @@ put the plan file's absolute path in the PR description or the first comment.
   the walkthrough and its result). Every ID has a row with at least one test
   or walkthrough
 - **Review outcome**: final verdict, each `NEEDS_DECISION`, Open Question and
-  user-overridden FAIL, and the user's decision
+  user-overridden FAIL, and the user's decision; for the second reviewer
+  (`build.md` step 4), each `/code-review` finding as fixed, the user's
+  decision, or a duplicate of a `code-critic` item, or that the user chose to
+  proceed without it
 - **QA outcome**: findings + disposition (fixed / deferred with task id /
   ignored), any Blockers and the user's decision (including a partial or
   skipped QA run and why), or "skipped: no UI or API surface". Describe in
@@ -71,12 +74,7 @@ the PR URL and the failure per Rule 2. PR not opened → no marker
 
 ### After the PR is open
 
-Diff touches a sensitive area:
-- Spawn a new `code-critic` (not one continued from earlier rounds) as a
-  second look before merge, with the inputs and the `opus` override of
-  `build.md` step 4, and apply `build.md` steps 5–6 to its output
-
-Any commit made once the PR is open (e.g. fixes from the second look):
+Any commit made once the PR is open (e.g. fixes after a review comment):
 - Follow `build.md` step 6 (re-run step 3, commit, re-review, record) before
   pushing
 - Then run `review-guide` again, passing the PR URL, and replace the Tier
