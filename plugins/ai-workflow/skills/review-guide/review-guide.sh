@@ -5,8 +5,9 @@
 #        sh review-guide.sh --areas
 #        sh review-guide.sh --links <pr-url> <path>...
 # Run inside the work tree (--links needs none). Prints markdown to stdout;
-# /feature step 9 pastes it verbatim at the top of the PR's first comment
-# (--links lines are entries the guide's author extends, see below).
+# /feature step 9 pastes it verbatim, last, in the review guide at the top of
+# the PR's first comment (--links lines are entries the guide's author
+# extends, see below).
 #   <plan-file>        absolute path of the saved plan (.workflow-plans/<slug>.md
 #                      under the main worktree; the caller passes it, nothing
 #                      is resolved here)
