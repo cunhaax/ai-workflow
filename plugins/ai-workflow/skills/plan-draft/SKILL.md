@@ -20,6 +20,9 @@ Draft a structured implementation plan before any code is written.
 - Source contents: the full text of every link/ticket/doc the prompt
   references, already read by the caller, verbatim and labelled
 - Prior plan and requested changes (optional; on a re-plan)
+- On a later call: whether a version has been presented this run; the
+  last-shown version, labelled delta baseline, when the prior plan is not it;
+  or that the baseline is unavailable
 
 ## Steps
 
@@ -43,7 +46,20 @@ Draft a structured implementation plan before any code is written.
 
 ### 2. Draft the plan
 
-Fill the template below, following these rules.
+Fill the template below, following these rules. Start the output with the
+frontmatter's `---` line. Fill only the plan sections and `## Delta`; copy the
+frontmatter and both critique slots (`## Critique verdict`,
+`# Plan-critic review`) exactly as the template writes them, even when a prior
+plan has them filled.
+
+**Delta** (first match wins; a non-None delta replaces any earlier one)
+- Given a labelled last-shown version (delta baseline) → one line per change
+  against it, even when nothing has been presented this run
+- Told nothing has been presented this run, or no prior plan →
+  `None (first draft)`
+- Told the baseline is unavailable → `Baseline unavailable: changes vs. the
+  prior plan only`, then one line per change against the prior plan
+- Otherwise → one line per change against the prior plan
 
 **Approval Summary** (read on a phone; what the developer approves)
 - Goal: 1–2 sentences
@@ -82,7 +98,7 @@ Fill the template below, following these rules.
     prior plan carries forward unless the requested changes set a new one:
     `<n> — set by user; derived: <d> — <reason>`, with `<d>` re-derived. The
     user's number is recorded, but anything acting on the tier uses the higher
-    of the two (say in the delta if the newly derived tier is higher)
+    of the two (say in `## Delta` if the newly derived tier is higher)
   - Mirrors `/feature` 1b minus size, except "public": here only an externally
     consumed or versioned contract counts
 - Sections below must never contradict the summary
@@ -133,7 +149,7 @@ Fill the template below, following these rules.
 
 ## Output
 
-- Plan as markdown text, per the template
+- The whole document as markdown text, per the template
 - Write no files, no implementation code
 
 ## Plan Template
@@ -141,7 +157,14 @@ Fill the template below, following these rules.
 <!-- COUPLING NOTE: section names and semantics are consumed elsewhere.
      code-critic cross-checks diffs against Approval Summary / Contract /
      Requirements / Approach / Edge Cases / Test Strategy / Files / Out of
-     Scope. feature presents the Approval Summary (Step 1c), requires an
+     Scope, and treats Delta, Critique verdict and Plan-critic review as
+     context. This template is the whole document; each slot has one writer:
+     the planner writes the plan sections and ## Delta; feature fills both
+     critique slots (Step 1b) and the frontmatter, writing the file from the
+     output's first --- line (Step 1d). The verdict slot holds no line whose
+     text, after an optional "- ", starts with **Tier:**, **Slug:**, AC- or
+     EDGE-. feature presents the document from # Implementation Plan: on,
+     Approval Summary first after ## Delta (Step 1c), requires an
      [AC-<slug>-n] / [EDGE-<slug>-n]-tagged test per ID (Step 2), and builds the
      PR's plan ID → test table (Step 9), and checks the **Slug:** line, the
      AC numbering and the tagged Test Strategy entries before presenting the
@@ -153,12 +176,25 @@ Fill the template below, following these rules.
      gate for a low tier uses the higher of the user-set and derived tier.
      the review-guide skill's script reads the plan text's `## Files`
      bullets (tag, backticked path; a MOVE gives both), skipping frontmatter
-     and fenced blocks and stopping at a line starting `# Plan-critic review`.
+     and fenced blocks and stopping at a line starting `# Plan-critic review`,
+     which is also where the approved plan text ends: keep that exact text,
+     at column 0.
      adversarial-qa reads Requirements for context.
      Add/rename/remove a section → update those consumers. -->
 
 ```markdown
+---
+slug: TODO(1d)
+base-commit: TODO(1d)
+depends-on: TODO(1d)
+tier: TODO(1d)
+---
+
 # Implementation Plan: [Feature Name]
+
+## Delta
+[Per the Delta rule: "None (first draft)", or one line per change vs. the
+last-shown version]
 
 ## Approval Summary
 **Goal:** [1–2 sentences — what the user gains]
@@ -179,8 +215,11 @@ new dependency: [yes/no] · new/changed route: [yes/no]
 
 **NEEDS_DECISION:** [one line each, or "None"]
 
-*(The summary above is what the developer approves; everything below is the
-detailed contract it stands on.)*
+*(The summary above is what the developer approves; everything from Source on
+is the detailed contract it stands on.)*
+
+## Critique verdict
+TODO(1b): the critique's Confidence verdict and top findings
 
 ## Source
 [User prompt summary / external doc title + URL]
@@ -228,4 +267,8 @@ detailed contract it stands on.)*
 
 ## Risks
 - [Anything that could go wrong or needs extra attention]
+
+# Plan-critic review
+TODO(1b): the full critique, verbatim; suggested amendments marked (folded) /
+(not applied) at approval
 ```

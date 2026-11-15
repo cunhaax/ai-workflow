@@ -74,6 +74,8 @@ Per plan section:
 - **Out of Scope**: don't flag listed items as missing; flag code straying
   into it as scope creep
 - **Test Strategy**: cross-reference against actual tests
+- **Delta**, **Critique verdict**, and a `# Plan-critic review` section if
+  present: context, never requirements; don't cross-check them
 - Quote the exact plan line and the exact violating diff line; never
   paraphrase the plan
 
