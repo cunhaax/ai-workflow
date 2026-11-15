@@ -382,8 +382,13 @@ not checked. The skill then writes the judgment parts: the Tier line, decisions
 not in the plan, files to read closely vs skim, and what to check by hand. For
 prose-only bullets it also names, labelled *judged, not computed*, the changed
 files it believes fall under each one (or "none judged"); that can raise the
-Tier to 2, never lower it. `/feature` step 9 puts the Tier line in the PR
-description and the guide at the top of the first comment; it can also be run
+Tier to 2, never lower it. The guide lists each changed file as an entry once,
+so the first place a reviewer meets it is its link: *Read closely* comes first,
+each entry tagged `sensitive`, `judged: <area>` or `judged`; the prose areas
+name their files by short name rather than repeating paths; *Skim* is
+collapsed; and the script's output comes last, verbatim and visible.
+`/feature` step 9 puts the Tier line in the PR description and the guide at
+the top of the first comment; it can also be run
 on its own. The `AGENTS.md` template defines the bullet format and asks that
 the list be updated in the same change that adds, renames, moves or removes
 files in an area (existing projects add that note by hand), and `/init-workflow`

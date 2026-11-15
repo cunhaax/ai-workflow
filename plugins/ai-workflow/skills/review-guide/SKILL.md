@@ -72,24 +72,41 @@ comments on a PR.
 
 ### 3. Review guide
 
-For the reviewer; commit SHAs are allowed here.
+For the reviewer; commit SHAs are allowed here. Each file is an entry once,
+so the first place a reviewer meets it is its link:
 
-- The script's stdout, verbatim, first
-- **Prose Sensitive Areas (judged, not computed)** under it, when the script
-  prints `Not path-checked: <k>` or the branch's `AGENTS.md` diff removes a
-  prose-only bullet (no leading backticked path, not a `[TODO` placeholder; read `git show HEAD:AGENTS.md`
-  plus the removed ones, marked ` (removed on this branch)`). One line per area,
-  named by its text before ` — `: each changed file whose diff changes behaviour
-  it describes, `` `<path>` — <reason> `` (not mere nearness; if unsure, reason
-  `unsure`), else `none judged`. Your count differs from `<k>` → say so
-- **Decisions not in the plan**: one line each; every unplanned path
-  accounted for, or "None"
-- **Read closely** / **Skim**: paths, one line why each. Copy each path from
-  `git -c core.quotepath=off -c diff.relative=false diff --no-renames
-  --name-only <base ref from the script's header>...HEAD`, never type it from
-  memory
-- **Check by hand**: what to try in the running app, or "nothing: no UI or API
-  surface"
+- Every path from `git -c core.quotepath=off -c diff.relative=false diff
+  --no-renames --name-only <base ref from the script's header>...HEAD` is an
+  entry in exactly one of **Read closely** or **Skim**, copied, never typed
+  from memory; the two lists' entries together equal its line count. Other
+  sections name a file by its short name (basename, plus parent directories
+  only when two changed files share it), never as a link or entry
+
+In this order:
+
+1. **Read closely**: `` - `<path>` — <tag> · <reason> ``, or "none". Tag
+   `sensitive` for every path the script lists as sensitive, `judged: <area>`
+   for a file judged under a prose area (below), `judged` for any other file
+   you pick; several join with `, ` in that order, and entries are grouped in
+   that order before step 4
+2. **Prose Sensitive Areas (judged, not computed)**, when the script prints
+   `Not path-checked: <k>` or the branch's `AGENTS.md` diff removes a
+   prose-only bullet (no leading backticked path, not a `[TODO` placeholder; read `git show HEAD:AGENTS.md`
+   plus the removed ones, marked ` (removed on this branch)`). One line per area,
+   named by its text before ` — `: the short names of each changed file whose
+   diff changes behaviour it describes (not mere nearness), then
+   `(see Read closely)`, else `none judged`. If unsure, still judge it, its
+   *Read closely* reason starting `unsure`. Your count differs from `<k>` → say so
+3. **Decisions not in the plan**: one line each; every unplanned path
+   accounted for, or "None"
+4. **Check by hand**: what to try in the running app, or "nothing: no UI or API
+   surface"
+5. **Skim**: `` - `<path>` — <reason> ``, test files last, inside a
+   `<details>` block with `<summary>Skim (<n> files)</summary>`. Leave a blank
+   line before `<details>`, after `</summary>` and on both sides of
+   `</details>`, or GitHub shows the list or what follows as raw text. None →
+   `**Skim**: none`, no block
+6. The script's stdout, verbatim, last, never inside `<details>`
 
 ### 4. Links
 
@@ -101,8 +118,9 @@ empty, skip it (the caller's incomplete-guide rule does not apply).
 - One call: pass every **Read closely** path, then every **Skim** path, in
   single quotes when it has spaces or shell-special characters
 - Its lines replace those entries (split back into the two lists by argument
-  order); append ` — <why>` to each. A `Links: not computed (…)` line goes
-  verbatim once under the lists, and tell the user
+  order); append ` — <tag> · <reason>` to each (**Skim**: ` — <reason>`). A
+  `Links: not computed (…)` line goes verbatim once, directly under
+  **Read closely**, and tell the user
 - Exit 1, any stderr or empty stdout → STOP per `AGENTS.md` Rule 2. Report the
   PR URL, the error and the guide with plain paths, ready to post by hand; the
   plan file stays unconsumed
@@ -118,10 +136,11 @@ made once the PR is open (including step 4).
 
 ## Rules
 
-- Never alter, trim or contradict the script's output; an omission in your own
-  parts must stay visible next to it. Its `→ none` covers computed paths only,
-  so a judged raise beside it is not a contradiction
-- Step 4's lines are entries to extend with ` — <why>`; never drop or reorder
-  one or edit its path
+- Never alter, trim, collapse or contradict the script's output; it goes last,
+  after your sections, and an omission in your own parts must stay visible.
+  Its `→ none` covers computed paths only, so a judged raise beside it is not
+  a contradiction
+- Step 4's lines are entries to extend with their tag and reason; never drop
+  or reorder one or edit its path
 - Never put the plan file's absolute path in the output: the script prints the
   basename only
