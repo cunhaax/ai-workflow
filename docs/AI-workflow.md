@@ -118,8 +118,8 @@ never committed — the planner returns plan text to the main agent, which
 presents it via plan mode. The plan is one document with a fixed layout from
 `plan-draft`'s template, filled in place (the planner writes the plan sections
 and `## Delta`, `/feature` the two critique slots and the frontmatter), so
-what is approved is what is saved. Every `/feature` run that plans saves the approved
-plan (`--plan-only` then stops): it goes to `.workflow-plans/<slug>.md` under
+what is approved is what is saved. Every `/feature` run that plans saves the
+approved plan (`--plan-only` then stops): it goes to `.workflow-plans/<slug>.md` under
 the main worktree — local-only like `.workflow-log/`, but self-ignored by a
 `.gitignore` inside the directory; its frontmatter `tier:` copies the approved
 plan's Tier. A substantive re-approval later in the same run rewrites it.

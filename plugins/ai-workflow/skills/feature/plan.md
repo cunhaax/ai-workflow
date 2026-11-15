@@ -17,8 +17,8 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
 
 **1a. Draft**
 - Record `git rev-parse HEAD` as the base commit (fails → STOP per Rule 2).
-  `git status --porcelain` non-empty → tell the user at approval that the plan
-  was drafted against uncommitted changes
+  `git status --porcelain` non-empty → tell the user in chat, before
+  presenting at 1c, that the plan was drafted against uncommitted changes
 - Read every source the prompt references yourself (links, tickets, docs,
   files), with whatever tool the session has for it: the tracker's tools for
   a tracker item (`AGENTS.md` → *Task Tracking*), `WebFetch` for a public
@@ -42,8 +42,8 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
     When the prior plan it passes is not the last-shown version, also pass the
     last-shown version, labelled "last-shown version (delta baseline)". No
     longer in context (e.g. after compaction) → re-read it from the harness's
-    plan-mode file if that still holds it; else say "baseline unavailable" and,
-    at re-presentation, tell the user the delta covers only the latest change
+    plan-mode file if that still holds it; else say "baseline unavailable" (the
+    planner's `## Delta` then says so)
 - Planner returns `BLOCKED: need <source>` (a source it needs for the
   requirements and wasn't given, e.g. a link inside one) → read it, re-call
   with the added content; still blocked after 2 rounds → STOP per Rule 2

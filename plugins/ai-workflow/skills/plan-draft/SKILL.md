@@ -52,7 +52,7 @@ frontmatter and both critique slots (`## Critique verdict`,
 `# Plan-critic review`) exactly as the template writes them, even when a prior
 plan has them filled.
 
-**Delta** (first match wins; a non-None delta replaces any earlier one)
+**Delta** (first match wins; it always replaces any earlier delta)
 - Given a labelled last-shown version (delta baseline) → one line per change
   against it, even when nothing has been presented this run
 - Told nothing has been presented this run, or no prior plan →
@@ -161,12 +161,13 @@ plan has them filled.
      context. This template is the whole document; each slot has one writer:
      the planner writes the plan sections and ## Delta; feature fills both
      critique slots (Step 1b) and the frontmatter, writing the file from the
-     output's first --- line (Step 1d). The verdict slot holds no line whose
-     text, after an optional "- ", starts with **Tier:**, **Slug:**, AC- or
-     EDGE-. feature presents the document from # Implementation Plan: on,
-     Approval Summary first after ## Delta (Step 1c), requires an
+     output's first --- line (Step 1d). The verdict slot holds paraphrased
+     bullets only: no headings, no fences, and no line whose text, after an
+     optional "- ", starts with **Tier:**, **Slug:**, AC- or EDGE-.
+     feature presents the document from # Implementation Plan: on (Step 1c),
+     requires an
      [AC-<slug>-n] / [EDGE-<slug>-n]-tagged test per ID (Step 2), and builds the
-     PR's plan ID → test table (Step 9), and checks the **Slug:** line, the
+     PR's plan ID → test table (Step 9), and checks the ## Delta, the **Slug:** line, the
      AC numbering and the tagged Test Strategy entries before presenting the
      plan (Step 1c), and the **Tier:** line (0/1/2 plus reason). When it saves
      the plan (Step 1d) it copies the Tier number into the saved plan's
