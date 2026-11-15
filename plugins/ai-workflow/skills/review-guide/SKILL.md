@@ -78,25 +78,27 @@ so the first place a reviewer meets it is its link:
 - Every path from `git -c core.quotepath=off -c diff.relative=false diff
   --no-renames --name-only <base ref from the script's header>...HEAD` is an
   entry in exactly one of **Read closely** or **Skim**, copied, never typed
-  from memory; the two lists' entries together equal its line count. Other
-  sections name a file by its short name (basename, plus parent directories
-  only when two changed files share it), never as a link or entry
+  from memory; the two lists' entries together equal its line count. Your
+  other sections name a file by its short name (basename, plus the fewest
+  parent directories that tell two changed files apart), never as a link or
+  entry
 
 In this order:
 
 1. **Read closely**: `` - `<path>` — <tag> · <reason> ``, or "none". Tag
    `sensitive` for every path the script lists as sensitive, `judged: <area>`
    for a file judged under a prose area (below), `judged` for any other file
-   you pick; several join with `, ` in that order, and entries are grouped in
-   that order before step 4
+   you pick; several join with `, ` in that order, and entries are grouped by
+   their first tag in that order before step 4
 2. **Prose Sensitive Areas (judged, not computed)**, when the script prints
    `Not path-checked: <k>` or the branch's `AGENTS.md` diff removes a
    prose-only bullet (no leading backticked path, not a `[TODO` placeholder; read `git show HEAD:AGENTS.md`
    plus the removed ones, marked ` (removed on this branch)`). One line per area,
    named by its text before ` — `: the short names of each changed file whose
    diff changes behaviour it describes (not mere nearness), then
-   `(see Read closely)`, else `none judged`. If unsure, still judge it, its
-   *Read closely* reason starting `unsure`. Your count differs from `<k>` → say so
+   `(see Read closely)`, else `none judged`. If unsure, still name the file;
+   its *Read closely* reason starts `unsure`, and an area naming only `unsure`
+   files does not raise the Tier. Your count differs from `<k>` → say so
 3. **Decisions not in the plan**: one line each; every unplanned path
    accounted for, or "None"
 4. **Check by hand**: what to try in the running app, or "nothing: no UI or API
@@ -140,7 +142,7 @@ made once the PR is open (including step 4).
   after your sections, and an omission in your own parts must stay visible.
   Its `→ none` covers computed paths only, so a judged raise beside it is not
   a contradiction
-- Step 4's lines are entries to extend with their tag and reason; never drop
-  or reorder one or edit its path
+- Step 4's lines are entries to extend as step 4 says; never drop or reorder
+  one or edit its path
 - Never put the plan file's absolute path in the output: the script prints the
   basename only

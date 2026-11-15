@@ -102,8 +102,8 @@ Fill the template below, following these rules.
 - **Files**: every touched file tagged `NEW`/`EDIT`/`DELETE`/`MOVE` + what
   changes and why (a diff file not listed = undiscussed change)
   - One bullet per file, its exact repo-relative path in backticks (the review
-    guide script reads one path per bullet; a `MOVE` gives both); test files
-    included. Never "A, B and C", "and siblings", globs, directories or
+    guide script reads only a bullet's first path, both on a `MOVE`, and drops
+    the rest silently); test files included. Never "A, B and C", "and siblings", globs, directories or
     "etc.": files that share a reason each get their own bullet repeating it
 - **Out of Scope**: what a reader might expect but is deliberately excluded.
   "None" only if meant
