@@ -3,8 +3,8 @@
 Part of `/feature` (`SKILL.md` beside this file, whose mode table decides when
 this phase runs). Files named below are beside this one.
 
-`--plan-only`: strip it from the prompt given to `planner`. Plans one task and
-saves the plan; run it again for the next.
+`--plan-only` or a leading `--hands-off`: strip it from the prompt given to
+`planner`. `--plan-only` plans and saves one task; run it again for the next.
 
 ## 1. Plan
 
@@ -79,12 +79,12 @@ Enter plan mode. Stay in it through 1a–1c; exit only in 1c on approval.
   re-run `plan-critic` on the revised plan (unless 1b was skipped); don't
   present until it passes. Still failing after 2 attempts → STOP per Rule 2
   and show the user the gap
-- `--plan-only`: open `NEEDS_DECISION` items are asked here, before the plan
-  is presented: ask each one and fold the answers in as decisions (an answer
-  that changes scope, approach, a Risk flag or a Tier criterion takes the 1c
-  substantive-change path, so the tier is re-derived). Present only when
-  none remain, so both `NEEDS_DECISION` places read "None". An item left
-  unanswered → STOP: nothing is saved, say so, no path to report
+- `--plan-only` and `--hands-off`: open `NEEDS_DECISION` items are asked
+  here, before the plan is presented: ask each one and fold the answers in as
+  decisions (an answer that changes scope, approach, a Risk flag or a Tier
+  criterion takes the 1c substantive-change path, so the tier is re-derived).
+  Present only when none remain, so both `NEEDS_DECISION` places read "None".
+  An item left unanswered → STOP: nothing is saved, say so, no path to report
 - Present the document from its `# Implementation Plan:` line on, as it is,
   in one piece, using the harness's mechanism for exiting plan mode (not
   chat). Its slots already give the order (Delta, Approval Summary, critique

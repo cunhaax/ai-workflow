@@ -341,7 +341,8 @@ The full lifecycle the **main** agent runs for non-trivial work: **plan →
 critique → implement → test → code-review → QA → PR**. The gates worth
 naming: the session must start on a human-created feature branch (agents
 may not create one — Rule 3; `--plan-only`, which plans and stops, is exempt; `--from-plan <slug>` still requires one but skips planning
-and approval, re-running plan-critic only if the plan's base commit moved);
+and approval, re-running plan-critic only if the plan's base commit moved;
+`--hands-off` needs one too);
 plan mode is entered before any planning;
 plan-critic may be skipped only for trivial changes **and** only when the
 user explicitly asks; `[AC-<slug>-n]`/`[EDGE-<slug>-n]` tests (slug-namespaced so
@@ -355,7 +356,12 @@ sub-agent runs the bundled `/code-review high` in parallel with code-critic,
 as an independent bug hunt without plan context, and its findings are
 triaged with code-critic's and listed in the PR, while only code-critic
 records the pass; every `NEEDS_DECISION` and Open Question from review,
-and every QA Blocker, is relayed to the user rather than decided by the agent;
+and every QA Blocker, is relayed to the user rather than decided by the agent
+— unless the run is `--hands-off`, where after approval the agent decides
+them (QA Blockers excepted), lists each under **Decided without you** at the
+top of the first PR comment, and opens the PR as a draft when it decided
+anything or the Tier is 2; a FAIL it disputes or one surviving two fix rounds,
+and any Rule 2 failure, still stop the run;
 QA runs only for changes with a UI and/or API surface; the PR description is
 a short, commit-ready summary (what and why, Tier, test evidence), since it
 usually becomes the merge commit message, and the first PR comment carries the
@@ -372,8 +378,26 @@ The steps live in three phase files beside it, read when each phase starts:
 `pr.md` step 9, split into opening the PR (including marking the plan file
 consumed) and keeping it up to date once open, the seam a later PR feedback
 loop would use. A mode is just which phases run: by default plan, build, PR;
-`--plan-only` plan alone; `--from-plan` build then PR. Step numbers stay the
-same across the files, because other skills refer to them.
+`--plan-only` plan alone; `--from-plan` build then PR. `--hands-off` is not a
+mode but a modifier: first token (`/feature --hands-off <prompt>`) or right
+after the slug (`/feature --from-plan <slug> --hands-off`), never with
+`--plan-only` (nothing would execute). Step numbers stay the same across the
+files, because other skills refer to them.
+
+**Unattended runs and permission prompts.** A hands-off run still stalls on
+any permission prompt: the bundled `review-guide` script, `git push`,
+`gh pr create`/`gh pr comment`/`gh issue list`/`gh issue create`, and writes
+to the main worktree's `.workflow-plans/` (above). Allow them before starting,
+by answering "don't ask again" once or with narrow `permissions.allow` rules
+in a personal `.claude/settings.local.json`; never a broad `gh` wildcard, and
+never allow `gh pr ready` or `gh pr merge`. The script's path includes the
+plugin version, so expect to approve it again after an update (a wildcard
+rule for it is unverified). Don't use a mode that skips permission checks:
+the gate's deny rules are best-effort. Two more stops to expect: the decision
+list lives only in context, so a run that can no longer see all of it (e.g.
+after compaction) stops before the PR rather than post a partial list, and a
+host without draft PRs (some GitHub plans, for private repos) stops at step
+9, after the push.
 
 ### `plugins/ai-workflow/skills/review-guide/SKILL.md` — `/review-guide`
 

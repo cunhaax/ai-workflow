@@ -8,7 +8,7 @@ this phase runs). Files named below are beside this one.
 `build.md`'s *Output*: a committed HEAD with a passing review recorded, the
 approved plan text, the plan file path if one was saved or read, the final
 test evidence, the review and QA outcomes with every decision the user made
-on them, and the run facts step 9 reports.
+on them, and the run facts step 9 reports (hands-off: with the `D<n>` list).
 
 ## 9. PR
 
@@ -21,7 +21,7 @@ Blocker decided (or QA skipped).
 returns the Tier line and the Review guide. Pass it the default branch and the
 plan source: the plan file path this run last wrote (1d or `plan.md` →
 *Rewrite*) or `--from-plan` read;
-`--plan-reapproved` after a `--from-plan` step 2 material deviation; nothing
+`--plan-reapproved` after a `--from-plan` step 2 re-approval; nothing
 if no plan file was saved. Its paths are plain until the PR is open; then apply
 its step 4 (links) with the PR URL before posting the first comment.
 
@@ -42,12 +42,20 @@ comment`): the **Review guide** `review-guide` returned (addressed to the
 reviewer; SHAs allowed), then *Review & traceability*. On a github.com PR with a
 non-empty *Read closely* or *Skim*, a guide with neither link lines nor a
 `Links: not computed` line is incomplete.
-If the host can't post comments, put both under `##` headings at the end of
-the description, guide first (plain paths), and tell the user to trim them at
-merge. `--from-plan`: the first comment also says: run from a saved plan via
-`--from-plan`, the `base-commit`, and whether a re-critique ran. No plan file
-was saved (the user chose to continue) → say so in the first comment. Never
-put the plan file's absolute path in the PR description or the first comment.
+No comments on the host → put them under `##` headings at the end of the
+description, guide first (hands-off: Decided without you first; plain paths),
+and tell the user to trim them at merge. `--from-plan`: the first comment
+also says: run from a saved plan via `--from-plan`, the `base-commit`, and
+whether a re-critique ran. No plan file was saved (the user chose to continue)
+→ say so in the first comment. Never put the plan file's absolute path in the
+PR description or the first comment.
+
+**Hands-off** (`SKILL.md`): open a draft (`gh pr create --draft`) when any
+`D<n>` exists or the Tier line says 2, and never mark it ready; no draft
+possible → STOP per Rule 2, never a normal PR. The first comment opens with
+**Decided without you**: one line per `D<n>`, deviations first (step, item,
+what, chosen, rejected because, basis), else `Hands-off run: no decisions
+were needed.` Review/QA outcome and the guide cite the `D<n>`, not restate it.
 
 **Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per
