@@ -115,8 +115,11 @@ areas (auth, payments) where mistakes are expensive. `docs/adr/` holds
 Architecture Decision Records; `docs/product-context/` holds the product
 vision/strategy the planner and plan-critic ground their work in. Plans are
 never committed — the planner returns plan text to the main agent, which
-presents it via plan mode. Every `/feature` run that plans saves the approved
-plan (`--plan-only` then stops): it goes to `.workflow-plans/<slug>.md` under
+presents it via plan mode. The plan is one document with a fixed layout from
+`plan-draft`'s template, filled in place (the planner writes the plan sections
+and `## Delta`, `/feature` the two critique slots and the frontmatter), so
+what is approved is what is saved. Every `/feature` run that plans saves the
+approved plan (`--plan-only` then stops): it goes to `.workflow-plans/<slug>.md` under
 the main worktree — local-only like `.workflow-log/`, but self-ignored by a
 `.gitignore` inside the directory; its frontmatter `tier:` copies the approved
 plan's Tier. A substantive re-approval later in the same run rewrites it.
@@ -186,7 +189,10 @@ bulky reference material into sibling files in the skill's directory).
 
 ### `plugins/ai-workflow/skills/plan-draft/SKILL.md` — `/plan-draft`
 
-Produces the implementation plan before any code is written. Opens with a
+Produces the implementation plan before any code is written. Its template
+covers the whole plan document: frontmatter, a `## Delta` of what changed
+since the version last shown, the plan sections, and slots for the
+plan-critic's verdict and full review. Opens with a
 phone-sized **Approval Summary**, pins a **Contract** section before the
 Approach, and treats **tests as the plan's deterministic oracle** — every
 user-visible claim maps to a committed test tagged `[AC-<slug>-n]`, and every
