@@ -16,7 +16,9 @@ what actually ships.
 - **It stops and asks instead of guessing.** When a critic raises a
   `NEEDS_DECISION`, or QA turns up something the plan didn't anticipate, the
   loop halts and hands you the decision — fix now, defer with a filed
-  issue, or ignore. Nothing gets silently resolved on your behalf.
+  issue, or ignore. Nothing gets silently resolved on your behalf. Opt into
+  `/feature --hands-off` and, once you approve the plan, the agent decides
+  those questions itself and lists every decision in the PR for you to read.
 - **A review gate enforced by git, not by an LLM's good behavior.** A
   pre-push hook blocks pushing any commit that doesn't match a recorded,
   passing review — deterministic and outside the model's control. See

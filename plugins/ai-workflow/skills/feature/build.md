@@ -11,10 +11,12 @@ The approved plan text, and the plan file path if one was saved or read:
 
 ### Loading a saved plan (`--from-plan`)
 
-The second token is the slug; it must match `a-z0-9-`, max 30 characters, and
-nothing may follow it, else STOP and ask (trailing text could be an unapproved
-amendment). Runs a saved plan without watching: no planning, critique (except
-the re-critique below) or approval, and `depends-on` is not read or checked.
+The second token is the slug: `a-z0-9-`, max 30 characters, never
+`--hands-off`. Only the single token `--hands-off` may follow it (`SKILL.md` →
+**Hands-off**); no slug, or anything else after it → STOP and ask (trailing
+text could be an unapproved amendment). Runs a saved plan without watching:
+no planning, critique (except the re-critique below) or approval, and
+`depends-on` is not read or checked.
 
 - Find the file at `SKILL.md` → **Plan file location** and read it by
   absolute path. A missing or unreadable file → STOP per Rule 2, naming the
@@ -81,7 +83,7 @@ Implement the approved plan. The result must hold:
 
 Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
-  briefly, continue
+  briefly, continue (hands-off: record it as a `D<n>`)
 - Material (scope, approach, requirements): STOP → re-read `plan.md` and
   re-plan via its step 1c substantive-change path → get re-approval (then
   `plan.md` → *Rewrite* runs) → return here and continue step 2; 1d does not
@@ -90,6 +92,11 @@ Deviation from plan:
     path, as the original prompt and sources, and also as the
     "last-shown version (delta baseline)"; the file is never rewritten
     (*Rewrite* does not apply)
+  - Hands-off: no re-plan or re-approval; take the smallest deviation that
+    works and record it as a `D<n>` marked `deviation`; never rewrite the file.
+    One that changes a plan-derived test, AC or EDGE STOPs instead (`SKILL.md`
+    → **Hands-off**); if the user approves it, take the path above, then
+    resume hands-off
 
 ### 3. Test
 
@@ -104,6 +111,9 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3)
+  - hands-off, on every call (step 6 re-reviews included): the `D<n>` list so
+    far, labelled "hands-off decisions, not user-approved; judge each on its
+    merits"
 - Every `code-critic` call (including the step 6 re-reviews): diff touches a
   sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
@@ -129,7 +139,8 @@ context, by Claude Code's bundled `/code-review` skill.
 - Wait for both reviews, then merge their findings; a `/code-review` finding
   that repeats a `code-critic` item is listed as a duplicate of it. Each
   finding is fixed in step 6's batch, or, if you would not fix it, goes to
-  the user as in step 5 (never rejected on your own). Never drop one silently
+  the user as in step 5 (never rejected on your own; hands-off: `SKILL.md` →
+  **Hands-off**). Never drop one silently
 - It runs once per run, and at most once more: when a later fix (step 6, 8
   or after the PR opens) adds files, changes the approach, or touches a
   sensitive-area path. Other re-reviews use `code-critic` only.
@@ -138,10 +149,12 @@ context, by Claude Code's bundled `/code-review` skill.
 ### 5. NEEDS_DECISION and Open Questions
 
 - Any present → STOP, present ALL to the user, wait for direction on each
-- Never decide them yourself
+  (hands-off: decide them)
+- Never decide them yourself (hands-off: `SKILL.md` → **Hands-off**)
 - An item the user already answered earlier this session, re-raised by the
   critic about code unchanged since that answer → don't ask again; carry the
   earlier answer forward and say so. Code changed since → ask again
+  (hands-off: the same for a `D<n>`, deciding again under the same number)
 
 ### 6. FAIL
 
@@ -156,12 +169,16 @@ context, by Claude Code's bundled `/code-review` skill.
   critic will keep returning it) and goes in the PR **Review outcome**, but
   only while the code it covers is unchanged: if the critic re-raises it
   after that code changed → ask again
+- Hands-off: in the bullet above, a FAIL surviving one fix gets one more fix
+  instead of going to the user; disputed, or the same item still returned
+  after your second fix aimed at it (counted over the whole run) → STOP.
+  Never override one yourself; a user override at that STOP works as above
 - After any later change (including step 8 fixes): re-run step 3, commit,
   re-call `code-critic` with the new summary (and the second reviewer, if
   step 4's extra-run condition holds)
 - After each re-review, apply step 5 to anything new before continuing
 - Record only when the committed HEAD has no unresolved FAIL and every
-  step 5 item is answered → run `scripts/review-ok.sh`
+  step 5 item is answered (hands-off: or decided) → run `scripts/review-ok.sh`
   - Any later commit makes the record stale: re-review, re-run the script
   - Never run it without a passing review of the current HEAD
 - No push or PR until a passing review of HEAD is recorded
@@ -192,7 +209,8 @@ QA was skipped and why. When in doubt, run it.
   chooses: resolve and re-run step 7, or proceed without (full or partial)
   QA, which the PR records
 - Any findings → present to the user, wait for a decision on each:
-  fix now / defer / ignore
+  fix now / defer / ignore (hands-off: each is a `D<n>`, a fix included: fix
+  a small one, else defer; ignore only with its reason)
 - Defer → file a task tagged `known-issue`:
   - `AGENTS.md` → *Task Tracking* → *File a deferred QA finding* holds a real
     command/tool call → use it
@@ -212,7 +230,7 @@ the approved plan text, the plan file path if one was saved or read, the
 final test evidence (step 3), the review and QA outcomes with every decision
 the user made on them, and the run facts step 9 reports (`--from-plan`: the
 `base-commit`, whether a re-critique ran, whether step 2 re-approved the
-plan; otherwise whether no plan file was saved).
+plan; otherwise whether no plan file was saved; hands-off: the `D<n>` list).
 
 This phase ends here; continue per `SKILL.md`'s mode table.
 

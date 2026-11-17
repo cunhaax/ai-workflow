@@ -7,6 +7,7 @@ description: >
   feature, or to implement a change that needs a plan, review, and PR. Every
   planning run saves the approved plan to a file; with `--plan-only` it stops
   there, and `--from-plan <slug>` runs such a saved plan without re-planning.
+  `--hands-off` runs from approval to a PR, listing each decision it took.
 license: MIT
 metadata:
   author: André Cunha
@@ -42,13 +43,15 @@ skill. Read each with `Read` when its phase starts:
   itself (`--from-plan`)
 - `pr.md`: step 9, opening the PR and keeping it up to date once open
 
-The mode is set by the first token of the arguments; a flag anywhere else is
-prompt content, passed on verbatim:
+The mode is set by the first token of the arguments; except the exact token
+`--hands-off` where the table places it, a flag anywhere else is prompt
+content, passed on verbatim:
 
 | First token | Runs |
 |---|---|
-| `--plan-only` | `plan.md`, then STOP |
-| `--from-plan` | `build.md` (loading the saved plan) → `pr.md` |
+| `--plan-only` | `plan.md`, then STOP; `--hands-off` next → STOP: nothing would execute |
+| `--from-plan` | `build.md` (loading the saved plan) → `pr.md`; **Hands-off** if `--hands-off` directly follows the slug |
+| `--hands-off` | the rest runs as *anything else*, under **Hands-off**; nothing after it → STOP and ask; `--plan-only` next → STOP: they can't combine; `--from-plan` next → STOP, give the form `--from-plan <slug> --hands-off` |
 | anything else | `plan.md` → `build.md` → `pr.md` |
 
 Only this table decides what runs next: each phase file ends at its last
@@ -82,6 +85,24 @@ wrote to it, or read from it for `--from-plan` (when marking consumed, a
 `consumed:` line is not part of the comparison). Content no longer available,
 e.g. after context compaction → can't verify → ask.
 
+**Hands-off**: from approval (`--from-plan`: once loading passes) to the open
+PR, on any Tier, the user is not waiting:
+- Decide whatever a step would ask them: `NEEDS_DECISION`s, Open Questions,
+  every QA finding, minor and material deviations, and `review-guide` step 2's
+  extra reviews (run them once per run, even past step 4's extra-run cap)
+- Take the most conservative, reversible option, citing the plan or an
+  `AGENTS.md` rule where one applies. Record it as `D<n>`: step, item, what it
+  was about, the option chosen (a deferral: its task id), the one rejected and
+  why, basis, any earlier choice if re-decided, and `deviation` if material;
+  no absolute local paths
+- These still STOP rather than being decided: a FAIL you dispute or one
+  surviving two fix rounds (`build.md` step 6); a `/code-review` finding you
+  would not fix; a deviation that changes, weakens or removes a plan-derived
+  test, AC or EDGE; a plan file collision or location question at 1d; any
+  Rule 2 failure (an unavailable second reviewer, a walkthrough you can't run,
+  QA Blockers); the `D<n>` list no longer fully in context before the PR opens.
+  The user's answer at a STOP is not a `D<n>`; then continue hands-off
+
 ## Output
 
 - Default and `--from-plan`: `pr.md`'s *Output*
@@ -100,7 +121,7 @@ e.g. after context compaction → can't verify → ask.
 - Never enter plan mode from a sub-agent
 - Never present work to the user before `code-critic` has reviewed it
 - Relay ALL `NEEDS_DECISION` items and Open Questions to the user; never
-  decide them
+  decide them, except under **Hands-off**
 - Sub-agents never modify the project's code; only the main agent implements
   changes (`adversarial-qa` also writes `.qa-evidence/`)
 
