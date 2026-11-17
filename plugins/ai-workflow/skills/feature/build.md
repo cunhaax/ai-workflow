@@ -151,7 +151,8 @@ context, by Claude Code's bundled `/code-review` skill.
 - An item the user already answered earlier this session, re-raised by the
   critic about code unchanged since that answer → don't ask again; carry the
   earlier answer forward and say so. Code changed since → ask again
-  (hands-off: the same for a `D<n>`, deciding again under the same number)
+  (hands-off: the same for a `D<n>`; decide again under the same number,
+  keeping the earlier choice in the entry)
 
 ### 6. FAIL
 

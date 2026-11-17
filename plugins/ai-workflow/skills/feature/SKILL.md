@@ -89,16 +89,17 @@ e.g. after context compaction → can't verify → ask.
 PR, on any Tier, the user is not waiting:
 - Decide whatever a step would ask them: `NEEDS_DECISION`s, Open Questions,
   every QA finding, minor and material deviations, and `review-guide` step 2's
-  extra reviews (run them, even past step 4's extra-run cap)
+  extra reviews (run them once per run, even past step 4's extra-run cap)
 - Take the most conservative, reversible option, citing the plan or an
   `AGENTS.md` rule where one applies. Record it as `D<n>`: step, item, what it
   was about, the option chosen (a deferral: its task id), the one rejected and
-  why, basis, and `deviation` if it is one; no absolute local paths
+  why, basis, and `deviation` if material; no absolute local paths
 - These still STOP rather than being decided: a FAIL you dispute or one
   surviving two fix rounds (`build.md` step 6); a `/code-review` finding you
-  would not fix; a plan file collision or location question at 1d; any Rule 2
-  failure (an unavailable second reviewer, a walkthrough you can't run, QA
-  Blockers); the `D<n>` list no longer fully in context before the PR opens.
+  would not fix; a deviation that changes, weakens or removes a plan-derived
+  test, AC or EDGE; a plan file collision or location question at 1d; any
+  Rule 2 failure (an unavailable second reviewer, a walkthrough you can't run,
+  QA Blockers); the `D<n>` list no longer fully in context before the PR opens.
   The user's answer at a STOP is not a `D<n>`; then continue hands-off
 
 ## Output
