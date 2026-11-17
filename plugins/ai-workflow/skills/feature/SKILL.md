@@ -51,7 +51,7 @@ content, passed on verbatim:
 |---|---|
 | `--plan-only` | `plan.md`, then STOP; `--hands-off` next → STOP: nothing would execute |
 | `--from-plan` | `build.md` (loading the saved plan) → `pr.md`; **Hands-off** if `--hands-off` directly follows the slug |
-| `--hands-off` | the rest runs as *anything else*, under **Hands-off**; `--plan-only` next → STOP: they can't combine; `--from-plan` next → STOP, give the form `--from-plan <slug> --hands-off` |
+| `--hands-off` | the rest runs as *anything else*, under **Hands-off**; nothing after it → STOP and ask; `--plan-only` next → STOP: they can't combine; `--from-plan` next → STOP, give the form `--from-plan <slug> --hands-off` |
 | anything else | `plan.md` → `build.md` → `pr.md` |
 
 Only this table decides what runs next: each phase file ends at its last
@@ -86,18 +86,20 @@ wrote to it, or read from it for `--from-plan` (when marking consumed, a
 e.g. after context compaction → can't verify → ask.
 
 **Hands-off**: from approval (`--from-plan`: once loading passes) to the open
-PR, decide whatever a step would ask the user, on any Tier: `NEEDS_DECISION`s,
-Open Questions, every QA finding, a `/code-review` finding you would not fix,
-`review-guide` step 2's extra reviews (run them); minor deviations count too.
-Take the most conservative, reversible option, citing the plan or an
-`AGENTS.md` rule where one applies, and record it as `D<n>`: step, item, what
-it was about, the option chosen, the one rejected and why, basis; no absolute
-local paths. These still STOP rather than being decided: a FAIL you dispute or
-one surviving two fix rounds (`build.md` step 6); an unfixed high- or
-critical-severity `/code-review` finding; a plan file collision at 1d; any
-Rule 2 failure (an unavailable second reviewer, a walkthrough you can't run,
-QA Blockers); the `D<n>` list no longer fully in context before the PR opens.
-The user's answer at a STOP is not a `D<n>`; then continue hands-off.
+PR, on any Tier, the user is not waiting:
+- Decide whatever a step would ask them: `NEEDS_DECISION`s, Open Questions,
+  every QA finding, minor and material deviations, and `review-guide` step 2's
+  extra reviews (run them, even past step 4's extra-run cap)
+- Take the most conservative, reversible option, citing the plan or an
+  `AGENTS.md` rule where one applies. Record it as `D<n>`: step, item, what it
+  was about, the option chosen (a deferral: its task id), the one rejected and
+  why, basis, and `deviation` if it is one; no absolute local paths
+- These still STOP rather than being decided: a FAIL you dispute or one
+  surviving two fix rounds (`build.md` step 6); a `/code-review` finding you
+  would not fix; a plan file collision or location question at 1d; any Rule 2
+  failure (an unavailable second reviewer, a walkthrough you can't run, QA
+  Blockers); the `D<n>` list no longer fully in context before the PR opens.
+  The user's answer at a STOP is not a `D<n>`; then continue hands-off
 
 ## Output
 

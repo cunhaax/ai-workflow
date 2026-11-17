@@ -54,8 +54,8 @@ PR description or the first comment.
 `D<n>` exists or the Tier line's tier is 2, and never mark it ready; no draft
 possible → STOP per Rule 2, never a normal PR. The first comment opens with
 **Decided without you**: one line per `D<n>` with its fields (`SKILL.md`),
-deviations first, else `Hands-off run: no decisions were needed.` Review/QA
-outcome and the guide cite the `D<n>`, not restate it.
+material deviations first, else `Hands-off run: no decisions were needed.`
+Review/QA outcome and the guide cite the `D<n>`, not restate it.
 
 **Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per

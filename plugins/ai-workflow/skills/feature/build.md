@@ -108,8 +108,9 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3)
-  - hands-off: the `D<n>` list so far, labelled "hands-off decisions, not
-    user-approved; judge each on its merits"
+  - hands-off, on every call (step 6 re-reviews included): the `D<n>` list so
+    far, labelled "hands-off decisions, not user-approved; judge each on its
+    merits"
 - Every `code-critic` call (including the step 6 re-reviews): diff touches a
   sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
@@ -145,6 +146,7 @@ context, by Claude Code's bundled `/code-review` skill.
 ### 5. NEEDS_DECISION and Open Questions
 
 - Any present → STOP, present ALL to the user, wait for direction on each
+  (hands-off: decide them)
 - Never decide them yourself (hands-off: `SKILL.md` → **Hands-off**)
 - An item the user already answered earlier this session, re-raised by the
   critic about code unchanged since that answer → don't ask again; carry the
@@ -164,10 +166,10 @@ context, by Claude Code's bundled `/code-review` skill.
   critic will keep returning it) and goes in the PR **Review outcome**, but
   only while the code it covers is unchanged: if the critic re-raises it
   after that code changed → ask again
-- Hands-off, instead of the bullet above: never override or decide a FAIL.
-  After one surviving fix, fix it again; disputed, or the same item still
-  returned after your second fix aimed at it (counted over the whole run) →
-  STOP
+- Hands-off: in the bullet above, a FAIL surviving one fix gets one more fix
+  instead of going to the user; disputed, or the same item still returned
+  after your second fix aimed at it (counted over the whole run) → STOP.
+  Never override one yourself; a user override at that STOP works as above
 - After any later change (including step 8 fixes): re-run step 3, commit,
   re-call `code-critic` with the new summary (and the second reviewer, if
   step 4's extra-run condition holds)
