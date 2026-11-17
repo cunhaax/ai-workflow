@@ -93,7 +93,8 @@ PR, on any Tier, the user is not waiting:
 - Take the most conservative, reversible option, citing the plan or an
   `AGENTS.md` rule where one applies. Record it as `D<n>`: step, item, what it
   was about, the option chosen (a deferral: its task id), the one rejected and
-  why, basis, and `deviation` if material; no absolute local paths
+  why, basis, any earlier choice if re-decided, and `deviation` if material;
+  no absolute local paths
 - These still STOP rather than being decided: a FAIL you dispute or one
   surviving two fix rounds (`build.md` step 6); a `/code-review` finding you
   would not fix; a deviation that changes, weakens or removes a plan-derived

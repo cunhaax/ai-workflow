@@ -93,7 +93,10 @@ Deviation from plan:
     "last-shown version (delta baseline)"; the file is never rewritten
     (*Rewrite* does not apply)
   - Hands-off: no re-plan or re-approval; take the smallest deviation that
-    works and record it as a `D<n>` marked `deviation`; never rewrite the file
+    works and record it as a `D<n>` marked `deviation`; never rewrite the file.
+    One that changes a plan-derived test, AC or EDGE STOPs instead (`SKILL.md`
+    → **Hands-off**); if the user approves it, take the path above, then
+    resume hands-off
 
 ### 3. Test
 
@@ -151,8 +154,7 @@ context, by Claude Code's bundled `/code-review` skill.
 - An item the user already answered earlier this session, re-raised by the
   critic about code unchanged since that answer → don't ask again; carry the
   earlier answer forward and say so. Code changed since → ask again
-  (hands-off: the same for a `D<n>`; decide again under the same number,
-  keeping the earlier choice in the entry)
+  (hands-off: the same for a `D<n>`, deciding again under the same number)
 
 ### 6. FAIL
 
