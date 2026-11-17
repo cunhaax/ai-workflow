@@ -43,14 +43,15 @@ skill. Read each with `Read` when its phase starts:
   itself (`--from-plan`)
 - `pr.md`: step 9, opening the PR and keeping it up to date once open
 
-The mode is set by the first token of the arguments; except `--hands-off`
-where the table places it, a flag anywhere else is prompt content, verbatim:
+The mode is set by the first token of the arguments; except the exact token
+`--hands-off` where the table places it, a flag anywhere else is prompt
+content, passed on verbatim:
 
 | First token | Runs |
 |---|---|
 | `--plan-only` | `plan.md`, then STOP; `--hands-off` next → STOP: nothing would execute |
 | `--from-plan` | `build.md` (loading the saved plan) → `pr.md`; **Hands-off** if `--hands-off` directly follows the slug |
-| `--hands-off` | as *anything else* on the rest, **Hands-off**; `--plan-only` or `--from-plan` next → STOP, give the right form |
+| `--hands-off` | the rest runs as *anything else*, under **Hands-off**; `--plan-only` next → STOP: they can't combine; `--from-plan` next → STOP, give the form `--from-plan <slug> --hands-off` |
 | anything else | `plan.md` → `build.md` → `pr.md` |
 
 Only this table decides what runs next: each phase file ends at its last
@@ -85,14 +86,18 @@ wrote to it, or read from it for `--from-plan` (when marking consumed, a
 e.g. after context compaction → can't verify → ask.
 
 **Hands-off**: from approval (`--from-plan`: once loading passes) to the open
-PR, decide whatever a step would ask the user (`NEEDS_DECISION`, Open
-Question, a `/code-review` or QA finding you would not fix), on any Tier: the
-most conservative, reversible option, citing the plan or an `AGENTS.md` rule
-where one applies, recorded as `D<n>` (what, chosen, rejected and why). These
-still STOP, over deciding: a FAIL you dispute or one surviving two fix rounds
-(`build.md` step 6); any Rule 2 failure (an unavailable second reviewer, a
-walkthrough you can't run, QA Blockers); the `D<n>` list no longer fully in
-context before the PR opens. The user's answer at a STOP is not a `D<n>`.
+PR, decide whatever a step would ask the user, on any Tier: `NEEDS_DECISION`s,
+Open Questions, every QA finding, a `/code-review` finding you would not fix,
+`review-guide` step 2's extra reviews (run them); minor deviations count too.
+Take the most conservative, reversible option, citing the plan or an
+`AGENTS.md` rule where one applies, and record it as `D<n>`: step, item, what
+it was about, the option chosen, the one rejected and why, basis; no absolute
+local paths. These still STOP rather than being decided: a FAIL you dispute or
+one surviving two fix rounds (`build.md` step 6); an unfixed high- or
+critical-severity `/code-review` finding; a plan file collision at 1d; any
+Rule 2 failure (an unavailable second reviewer, a walkthrough you can't run,
+QA Blockers); the `D<n>` list no longer fully in context before the PR opens.
+The user's answer at a STOP is not a `D<n>`; then continue hands-off.
 
 ## Output
 

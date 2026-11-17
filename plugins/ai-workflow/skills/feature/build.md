@@ -83,7 +83,7 @@ Implement the approved plan. The result must hold:
 
 Deviation from plan:
 - Minor (implied edge case, small clarification): note it, tell the user
-  briefly, continue
+  briefly, continue (hands-off: record it as a `D<n>`)
 - Material (scope, approach, requirements): STOP → re-read `plan.md` and
   re-plan via its step 1c substantive-change path → get re-approval (then
   `plan.md` → *Rewrite* runs) → return here and continue step 2; 1d does not
@@ -108,7 +108,8 @@ Deviation from plan:
   - approved plan text
   - summary output of the latest full test run on the state being reviewed
     (step 3)
-  - hands-off: the `D<n>` list so far, labelled "not approved deviations"
+  - hands-off: the `D<n>` list so far, labelled "hands-off decisions, not
+    user-approved; judge each on its merits"
 - Every `code-critic` call (including the step 6 re-reviews): diff touches a
   sensitive area → model override `opus`
 - Returns: per-item PASS / FAIL / NEEDS_DECISION, plus Open Questions
@@ -134,8 +135,8 @@ context, by Claude Code's bundled `/code-review` skill.
 - Wait for both reviews, then merge their findings; a `/code-review` finding
   that repeats a `code-critic` item is listed as a duplicate of it. Each
   finding is fixed in step 6's batch, or, if you would not fix it, goes to
-  the user as in step 5 (never rejected on your own; hands-off: a `D<n>`).
-  Never drop one silently
+  the user as in step 5 (never rejected on your own; hands-off: `SKILL.md` →
+  **Hands-off**). Never drop one silently
 - It runs once per run, and at most once more: when a later fix (step 6, 8
   or after the PR opens) adds files, changes the approach, or touches a
   sensitive-area path. Other re-reviews use `code-critic` only.
@@ -163,15 +164,16 @@ context, by Claude Code's bundled `/code-review` skill.
   critic will keep returning it) and goes in the PR **Review outcome**, but
   only while the code it covers is unchanged: if the critic re-raises it
   after that code changed → ask again
-- Hands-off: never override a FAIL. Disputed → STOP as above; the same item
-  at the same code location still returned after two of your fix commits
-  aimed at it, counted over the whole run → STOP
+- Hands-off, instead of the bullet above: never override or decide a FAIL.
+  After one surviving fix, fix it again; disputed, or the same item still
+  returned after your second fix aimed at it (counted over the whole run) →
+  STOP
 - After any later change (including step 8 fixes): re-run step 3, commit,
   re-call `code-critic` with the new summary (and the second reviewer, if
   step 4's extra-run condition holds)
 - After each re-review, apply step 5 to anything new before continuing
 - Record only when the committed HEAD has no unresolved FAIL and every
-  step 5 item is answered (or decided) → run `scripts/review-ok.sh`
+  step 5 item is answered (hands-off: or decided) → run `scripts/review-ok.sh`
   - Any later commit makes the record stale: re-review, re-run the script
   - Never run it without a passing review of the current HEAD
 - No push or PR until a passing review of HEAD is recorded
@@ -202,8 +204,8 @@ QA was skipped and why. When in doubt, run it.
   chooses: resolve and re-run step 7, or proceed without (full or partial)
   QA, which the PR records
 - Any findings → present to the user, wait for a decision on each:
-  fix now / defer / ignore (hands-off: decide each, fixing a small one, else
-  deferring; ignore only with its reason in the `D<n>`)
+  fix now / defer / ignore (hands-off: each is a `D<n>`, a fix included: fix
+  a small one, else defer; ignore only with its reason)
 - Defer → file a task tagged `known-issue`:
   - `AGENTS.md` → *Task Tracking* → *File a deferred QA finding* holds a real
     command/tool call → use it

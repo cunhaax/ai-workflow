@@ -43,7 +43,7 @@ reviewer; SHAs allowed), then *Review & traceability*. On a github.com PR with a
 non-empty *Read closely* or *Skim*, a guide with neither link lines nor a
 `Links: not computed` line is incomplete.
 No comments on the host → put them under `##` headings at the end of the
-description, guide first (hands-off: Decided without you first; plain paths),
+description, guide first (plain paths; hands-off: Decided without you first),
 and tell the user to trim them at merge. `--from-plan`: the first comment
 also says: run from a saved plan via `--from-plan`, the `base-commit`, and
 whether a re-critique ran. No plan file was saved (the user chose to continue)
@@ -51,11 +51,11 @@ whether a re-critique ran. No plan file was saved (the user chose to continue)
 PR description or the first comment.
 
 **Hands-off** (`SKILL.md`): open a draft (`gh pr create --draft`) when any
-`D<n>` exists or the Tier line says 2, and never mark it ready; no draft
+`D<n>` exists or the Tier line's tier is 2, and never mark it ready; no draft
 possible → STOP per Rule 2, never a normal PR. The first comment opens with
-**Decided without you**: one line per `D<n>`, deviations first (step, item,
-what, chosen, rejected because, basis), else `Hands-off run: no decisions
-were needed.` Review/QA outcome and the guide cite the `D<n>`, not restate it.
+**Decided without you**: one line per `D<n>` with its fields (`SKILL.md`),
+deviations first, else `Hands-off run: no decisions were needed.` Review/QA
+outcome and the guide cite the `D<n>`, not restate it.
 
 **Review & traceability**:
 - **Plan ID → test table**: the slug once in the heading, then one row per

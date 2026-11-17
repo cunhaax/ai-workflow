@@ -361,7 +361,8 @@ and every QA Blocker, is relayed to the user rather than decided by the agent
 them (QA Blockers excepted), lists each under **Decided without you** at the
 top of the first PR comment, and opens the PR as a draft when it decided
 anything or the Tier is 2; a FAIL it disputes or one surviving two fix rounds,
-and any Rule 2 failure, still stop the run;
+an unfixed high- or critical-severity `/code-review` finding, a plan file
+collision, and any Rule 2 failure still stop the run;
 QA runs only for changes with a UI and/or API surface; the PR description is
 a short, commit-ready summary (what and why, Tier, test evidence), since it
 usually becomes the merge commit message, and the first PR comment carries the
@@ -385,9 +386,11 @@ after the slug (`/feature --from-plan <slug> --hands-off`), never with
 files, because other skills refer to them.
 
 **Unattended runs and permission prompts.** A hands-off run still stalls on
-any permission prompt: the bundled `review-guide` script, `git push`,
-`gh pr create`/`gh pr comment`/`gh issue list`/`gh issue create`, and writes
-to the main worktree's `.workflow-plans/` (above). Allow them before starting,
+any permission prompt. What a run needs: `git commit` and `git push`,
+`scripts/review-ok.sh`, the project's test (or walkthrough) commands and its
+run command for QA, the bundled `review-guide` script, `gh pr create`/
+`gh pr comment`/`gh pr view`/`gh issue list`/`gh issue create`, and writes to
+the main worktree's `.workflow-plans/` (above). Allow them before starting,
 by answering "don't ask again" once or with narrow `permissions.allow` rules
 in a personal `.claude/settings.local.json`; never a broad `gh` wildcard, and
 never allow `gh pr ready` or `gh pr merge`. The script's path includes the
